@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — Condo Notice Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="display:flex;align-items:center;justify-content:center;padding:20px;position:relative;">
+    <button onclick="toggleAdminTheme()" id="adminThemeToggle" title="Toggle light/dark mode" style="position:absolute;top:16px;right:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:16px;color:var(--text);">🌙</button>
+    <div class="login-card">
+        <div class="login-icon">🏢</div>
+        <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;">Admin Login</h1>
+        <p style="color:var(--text-dim);font-size:14px;margin-bottom:32px;">Condo Notice Board Management</p>
+        <div class="flash flash-error" id="errorFlash"></div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" class="form-control" required autocomplete="email" autofocus>
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" class="form-control" required autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="handleLogin()" id="loginBtn">Sign In</button>
+        <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-dim);">
+            First time? Create an admin user in<br>Firebase Console → Authentication → Users
+        </p>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script>
+        (function(){
+            const t = localStorage.getItem('adminTheme') || 'dark';
+            document.documentElement.setAttribute('data-admin-theme', t);
+            const btn = document.getElementById('adminThemeToggle');
+            if (btn) btn.textContent = t === 'light' ? '☀️' : '🌙';
+        })();
+        function toggleAdminTheme() {
+            const c = document.documentElement.getAttribute('data-admin-theme') || 'dark';
+            const n = c === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-admin-theme', n);
+            localStorage.setItem('adminTheme', n);
+            document.getElementById('adminThemeToggle').textContent = n === 'light' ? '☀️' : '🌙';
+        }
+    </script>
+    <script type="module">
+        import { login, onAuthChange } from '/js/app.js';
+
+        // If already logged in, redirect
+        onAuthChange(user => {
+            if (user) window.location.href = '/admin.html';
+        });
+
+        window.handleLogin = async function() {
+            const email = document.getElementById('email').value.trim();
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const flash = document.getElementById('errorFlash');
+            flash.classList.remove('show');
+
+            if (!email || !pass) {
+                flash.textContent = 'Please enter email and password';
+                flash.classList.add('show');
+                return;
+            }
+
+            btn.textContent = 'Signing in...';
+            btn.disabled = true;
+            try {
+                await login(email, pass);
+                window.location.href = '/admin.html';
+            } catch (e) {
+                flash.textContent = e.code === 'auth/invalid-credential'
+                    ? 'Invalid email or password'
+                    : e.message;
+                flash.classList.add('show');
+                btn.textContent = 'Sign In';
+                btn.disabled = false;
+            }
+        };
+
+        // Enter key
+        document.getElementById('password').addEventListener('keypress', e => {
+            if (e.key === 'Enter') window.handleLogin();
+        });
+    </script>
+</body>
+</html>

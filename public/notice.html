@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice — Condo Notice Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <div class="topnav">
+        <div class="topnav-left">
+            <a href="/admin.html" style="text-decoration:none;font-size:20px;color:var(--text-dim);">←</a>
+            <div class="topnav-title" id="pageTitle">New Notice</div>
+        </div>
+        <div class="topnav-actions">
+            <button class="btn btn-outline btn-sm" id="adminThemeToggle" onclick="toggleAdminTheme()" title="Toggle light/dark mode">🌙</button>
+            <button class="btn btn-primary" onclick="handleSave()" id="saveBtn">💾 Publish Notice</button>
+        </div>
+    </div>
+
+    <div class="container" style="max-width:900px;">
+        <div class="flash flash-success" id="successFlash"></div>
+        <div class="flash flash-error" id="errorFlash"></div>
+
+        <div class="card">
+            <!-- Title -->
+            <div class="form-group">
+                <label>Notice Title</label>
+                <input type="text" id="title" class="form-control" placeholder="e.g., Pool Closure for Annual Maintenance" autofocus>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label>Category</label>
+                <select id="category" class="form-control">
+                    <option value="general">📋 General</option>
+                    <option value="maintenance">🔧 Maintenance</option>
+                    <option value="safety">🛡️ Safety</option>
+                    <option value="event">🎉 Event</option>
+                    <option value="rules">📜 Rules & Policies</option>
+                    <option value="financial">💰 Financial</option>
+                    <option value="parking">🅿️ Parking</option>
+                    <option value="amenities">🏊 Amenities</option>
+                </select>
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group">
+                <label>Priority</label>
+                <div class="priority-options">
+                    <div class="priority-option selected" data-value="0" onclick="selectPriority(this)">Normal</div>
+                    <div class="priority-option important" data-value="1" onclick="selectPriority(this)">⚡ Important</div>
+                    <div class="priority-option urgent" data-value="2" onclick="selectPriority(this)">🚨 Urgent</div>
+                </div>
+                <input type="hidden" id="priority" value="0">
+            </div>
+
+            <!-- Body -->
+            <div class="form-group">
+                <label>Notice Body</label>
+                <textarea id="body" class="form-control" placeholder="Details about the notice..."></textarea>
+            </div>
+
+            <!-- Media Upload -->
+            <div class="form-group">
+                <label>Media (Optional)</label>
+                <div class="file-upload" id="mediaUpload" onclick="document.getElementById('mediaFile').click()">
+                    <input type="file" id="mediaFile" accept="image/*,video/*,application/pdf" onchange="handleMediaPreview(this.files[0])">
+                    <div class="file-upload-icon" id="uploadIcon">📎</div>
+                    <div class="file-upload-text" id="uploadText">Click to upload an image, video, or PDF</div>
+                </div>
+                <div id="mediaPreviewContainer" style="margin-top:12px;display:none;">
+                    <img id="imagePreview" class="preview-media" style="display:none;">
+                    <video id="videoPreview" class="preview-media" style="display:none;" controls muted></video>
+                    <div id="pdfPreview" style="display:none;padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;"><span style="font-size:24px;">📄</span> <span id="pdfFileName" style="font-size:14px;font-weight:600;"></span></div>
+                    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="clearMedia()">✕ Remove Media</button>
+                </div>
+            </div>
+
+            <!-- Display Mode -->
+            <div class="form-group" id="displayModeGroup" style="display:none;">
+                <label>Display Mode</label>
+                <div class="display-modes">
+                    <div class="display-mode selected" data-value="media_with_text" onclick="selectDisplayMode(this)">
+                        <div class="display-mode-icon">📰</div>
+                        <div class="display-mode-label">Media + Text</div>
+                        <div class="display-mode-desc">Side by side</div>
+                    </div>
+                    <div class="display-mode" data-value="media_only" onclick="selectDisplayMode(this)">
+                        <div class="display-mode-icon">🖼️</div>
+                        <div class="display-mode-label">Media Only</div>
+                        <div class="display-mode-desc">Fullscreen media</div>
+                    </div>
+                    <div class="display-mode" data-value="text" onclick="selectDisplayMode(this)">
+                        <div class="display-mode-icon">📝</div>
+                        <div class="display-mode-label">Text Only</div>
+                        <div class="display-mode-desc">No media shown</div>
+                    </div>
+                </div>
+                <input type="hidden" id="displayMode" value="media_with_text">
+            </div>
+
+            <!-- Scheduling -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date (Optional)</label>
+                    <input type="date" id="startDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>End Date (Optional)</label>
+                    <input type="date" id="endDate" class="form-control">
+                    <div class="help-text">Leave empty for no expiry</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script>
+        (function(){
+            const t = localStorage.getItem('adminTheme') || 'dark';
+            document.documentElement.setAttribute('data-admin-theme', t);
+            const btn = document.getElementById('adminThemeToggle');
+            if (btn) btn.textContent = t === 'light' ? '☀️' : '🌙';
+        })();
+        function toggleAdminTheme() {
+            const c = document.documentElement.getAttribute('data-admin-theme') || 'dark';
+            const n = c === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-admin-theme', n);
+            localStorage.setItem('adminTheme', n);
+            document.getElementById('adminThemeToggle').textContent = n === 'light' ? '☀️' : '🌙';
+        }
+    </script>
+    <script type="module">
+        import {
+            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, db
+        } from '/js/app.js';
+        import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        let editId = null;
+        let existingMediaUrl = '';
+        let existingMediaPath = '';
+        let existingFileType = '';
+        let selectedFile = null;
+
+        // Auth guard
+        onAuthChange(user => {
+            if (!user) { window.location.href = '/login.html'; return; }
+            document.getElementById('loadingOverlay').style.display = 'none';
+            checkEdit();
+        });
+
+        async function checkEdit() {
+            const params = new URLSearchParams(window.location.search);
+            editId = params.get('id');
+            if (!editId) return;
+
+            document.getElementById('pageTitle').textContent = 'Edit Notice';
+            document.getElementById('saveBtn').textContent = '💾 Update Notice';
+
+            try {
+                const snap = await getDoc(doc(db, 'notices', editId));
+                if (!snap.exists()) { showFlash('Notice not found', 'error'); return; }
+                const n = snap.data();
+                document.getElementById('title').value = n.title || '';
+                document.getElementById('category').value = n.category || 'general';
+                document.getElementById('body').value = n.body || '';
+                document.getElementById('startDate').value = n.start_date || '';
+                document.getElementById('endDate').value = n.end_date || '';
+
+                // Priority
+                document.getElementById('priority').value = n.priority || 0;
+                document.querySelectorAll('.priority-option').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value == (n.priority || 0));
+                });
+
+                // Media
+                if (n.media_url) {
+                    existingMediaUrl = n.media_url;
+                    existingMediaPath = n.media_path || '';
+                    existingFileType = n.file_type || '';
+                    document.getElementById('displayModeGroup').style.display = '';
+                    document.getElementById('mediaPreviewContainer').style.display = '';
+                    if (existingFileType === 'video') {
+                        document.getElementById('videoPreview').src = n.media_url;
+                        document.getElementById('videoPreview').style.display = 'block';
+                    } else if (existingFileType === 'pdf') {
+                        document.getElementById('pdfFileName').textContent = (n.media_path || 'document.pdf').split('/').pop();
+                        document.getElementById('pdfPreview').style.display = 'flex';
+                    } else {
+                        document.getElementById('imagePreview').src = n.media_url;
+                        document.getElementById('imagePreview').style.display = 'block';
+                    }
+                }
+
+                // Display mode
+                if (n.display_mode) {
+                    document.getElementById('displayMode').value = n.display_mode;
+                    document.querySelectorAll('.display-mode').forEach(el => {
+                        el.classList.toggle('selected', el.dataset.value === n.display_mode);
+                    });
+                }
+            } catch (e) { showFlash('Error loading notice', 'error'); }
+        }
+
+        // Priority
+        window.selectPriority = (el) => {
+            document.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('priority').value = el.dataset.value;
+        };
+
+        // Display mode
+        window.selectDisplayMode = (el) => {
+            document.querySelectorAll('.display-mode').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('displayMode').value = el.dataset.value;
+        };
+
+        // Media preview
+        window.handleMediaPreview = (file) => {
+            if (!file) return;
+            selectedFile = file;
+            const ft = getFileType(file.name);
+            document.getElementById('displayModeGroup').style.display = '';
+            document.getElementById('mediaPreviewContainer').style.display = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('pdfPreview').style.display = 'none';
+
+            const url = URL.createObjectURL(file);
+            if (ft === 'video') {
+                document.getElementById('videoPreview').src = url;
+                document.getElementById('videoPreview').style.display = 'block';
+            } else if (ft === 'pdf') {
+                document.getElementById('pdfFileName').textContent = file.name;
+                document.getElementById('pdfPreview').style.display = 'flex';
+                // Auto-set to media only for PDFs
+                document.getElementById('displayMode').value = 'media_only';
+                document.querySelectorAll('.display-mode').forEach(el => el.classList.toggle('selected', el.dataset.value === 'media_only'));
+            } else {
+                document.getElementById('imagePreview').src = url;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            document.getElementById('uploadIcon').textContent = '✅';
+            document.getElementById('uploadText').textContent = file.name;
+        };
+
+        window.clearMedia = () => {
+            selectedFile = null;
+            existingMediaUrl = '';
+            existingMediaPath = '';
+            existingFileType = '';
+            document.getElementById('mediaFile').value = '';
+            document.getElementById('mediaPreviewContainer').style.display = 'none';
+            document.getElementById('displayModeGroup').style.display = 'none';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('pdfPreview').style.display = 'none';
+            document.getElementById('uploadIcon').textContent = '📎';
+            document.getElementById('uploadText').textContent = 'Click to upload an image, video, or PDF';
+        };
+
+        // Save
+        window.handleSave = async () => {
+            const title = document.getElementById('title').value.trim();
+            if (!title) { showFlash('Please enter a title', 'error'); return; }
+
+            const btn = document.getElementById('saveBtn');
+            btn.textContent = '⏳ Saving...';
+            btn.disabled = true;
+
+            try {
+                let mediaUrl = existingMediaUrl;
+                let mediaPath = existingMediaPath;
+                let fileType = existingFileType;
+
+                if (selectedFile) {
+                    const result = await uploadMedia(selectedFile);
+                    mediaUrl = result.url;
+                    mediaPath = result.path;
+                    fileType = result.type;
+                }
+
+                const data = {
+                    title,
+                    category: document.getElementById('category').value,
+                    priority: parseInt(document.getElementById('priority').value),
+                    body: document.getElementById('body').value,
+                    media_url: mediaUrl,
+                    media_path: mediaPath,
+                    file_type: fileType,
+                    display_mode: document.getElementById('displayMode').value,
+                    start_date: document.getElementById('startDate').value || '',
+                    end_date: document.getElementById('endDate').value || '',
+                };
+
+                if (editId) {
+                    await updateNotice(editId, data);
+                } else {
+                    await createNotice(data);
+                }
+                window.location.href = '/admin.html';
+            } catch (e) {
+                showFlash('Error saving: ' + e.message, 'error');
+                btn.textContent = editId ? '💾 Update Notice' : '💾 Publish Notice';
+                btn.disabled = false;
+            }
+        };
+
+        function showFlash(msg, type) {
+            const el = document.getElementById(type === 'error' ? 'errorFlash' : 'successFlash');
+            el.textContent = msg; el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+    </script>
+</body>
+</html>

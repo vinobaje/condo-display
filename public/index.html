@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Libre+Baskerville:wght@400;700&family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root,[data-theme="dark-modern"]{--bg-primary:#0a0e1a;--bg-card:#111827;--bg-card-hover:#1a2332;--text-primary:#f0f2f5;--text-secondary:#94a3b8;--accent:#3b82f6;--accent-glow:rgba(59,130,246,0.25);--urgent:#ef4444;--urgent-glow:rgba(239,68,68,0.3);--important:#f59e0b;--success:#10b981;--border:rgba(255,255,255,0.06);--border-light:rgba(255,255,255,0.1);--header-bg:rgba(10,14,26,.85);--header-border:var(--border);--ticker-bg:rgba(10,14,26,.9);--orb1:#3b82f6;--orb2:#8b5cf6;--orb3:#06b6d4;--orb-opacity:.12;--font-heading:'Playfair Display',serif;--font-body:'DM Sans',sans-serif;--transition-speed:1.2s}
+        [data-theme="light-classic"]{--bg-primary:#f0f2f5;--bg-card:#ffffff;--bg-card-hover:#f8f9fb;--text-primary:#1a1a2e;--text-secondary:#64748b;--accent:#2563eb;--accent-glow:rgba(37,99,235,0.15);--urgent:#dc2626;--urgent-glow:rgba(220,38,38,0.15);--important:#d97706;--success:#059669;--border:rgba(0,0,0,0.08);--border-light:rgba(0,0,0,0.12);--header-bg:rgba(255,255,255,.92);--header-border:rgba(0,0,0,0.06);--ticker-bg:rgba(255,255,255,.95);--orb1:#93c5fd;--orb2:#c4b5fd;--orb3:#a5f3fc;--orb-opacity:.25;--font-heading:'Libre Baskerville',serif;--font-body:'Source Sans 3',sans-serif}
+        [data-theme="warm-luxury"]{--bg-primary:#1a1410;--bg-card:#241e17;--bg-card-hover:#2e2620;--text-primary:#f5efe6;--text-secondary:#a89880;--accent:#d4a553;--accent-glow:rgba(212,165,83,0.2);--urgent:#e85d4a;--urgent-glow:rgba(232,93,74,0.25);--important:#d4a553;--success:#7ab648;--border:rgba(212,165,83,0.08);--border-light:rgba(212,165,83,0.15);--header-bg:rgba(26,20,16,.9);--header-border:rgba(212,165,83,0.08);--ticker-bg:rgba(26,20,16,.92);--orb1:#d4a553;--orb2:#8b5e3c;--orb3:#c07040;--orb-opacity:.08;--font-heading:'Crimson Pro',serif;--font-body:'DM Sans',sans-serif}
+        [data-theme="corporate-navy"]{--bg-primary:#0c1829;--bg-card:#132035;--bg-card-hover:#1a2d4a;--text-primary:#e8edf5;--text-secondary:#8899b0;--accent:#4da6ff;--accent-glow:rgba(77,166,255,0.2);--urgent:#ff6b6b;--urgent-glow:rgba(255,107,107,0.25);--important:#ffc857;--success:#47d185;--border:rgba(77,166,255,0.06);--border-light:rgba(77,166,255,0.12);--header-bg:rgba(12,24,41,.9);--header-border:rgba(77,166,255,0.08);--ticker-bg:rgba(12,24,41,.92);--orb1:#4da6ff;--orb2:#2563eb;--orb3:#0891b2;--orb-opacity:.1;--font-heading:'Outfit',sans-serif;--font-body:'Outfit',sans-serif}
+        [data-theme="nature-green"]{--bg-primary:#0a1a12;--bg-card:#112118;--bg-card-hover:#193022;--text-primary:#e6f0ea;--text-secondary:#7fa890;--accent:#34d399;--accent-glow:rgba(52,211,153,0.2);--urgent:#f87171;--urgent-glow:rgba(248,113,113,0.25);--important:#fbbf24;--success:#34d399;--border:rgba(52,211,153,0.06);--border-light:rgba(52,211,153,0.12);--header-bg:rgba(10,26,18,.9);--header-border:rgba(52,211,153,0.08);--ticker-bg:rgba(10,26,18,.92);--orb1:#34d399;--orb2:#059669;--orb3:#0d9488;--orb-opacity:.1;--font-heading:'Playfair Display',serif;--font-body:'DM Sans',sans-serif}
+        [data-theme="light-classic"] .media-overlay-text{background:linear-gradient(transparent,rgba(0,0,0,.75))}
+        [data-theme="light-classic"] .media-overlay-text .notice-title{color:#fff}
+        [data-theme="light-classic"] .news-ticker-label{background:var(--accent)}
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);overflow:hidden;height:100vh;width:100vw;cursor:none;display:flex;flex-direction:column}
+        .ambient-bg{position:fixed;inset:0;z-index:0;overflow:hidden}
+        .orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:var(--orb-opacity);animation:orb-float 25s ease-in-out infinite}
+        .orb-1{width:600px;height:600px;background:var(--orb1);top:-10%;left:-5%}
+        .orb-2{width:500px;height:500px;background:var(--orb2);bottom:-10%;right:-5%;animation-delay:-8s}
+        .orb-3{width:400px;height:400px;background:var(--orb3);top:40%;left:40%;animation-delay:-16s}
+        @keyframes orb-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
+
+        .header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:var(--header-bg);backdrop-filter:blur(24px);border-bottom:1px solid var(--header-border);flex-shrink:0}
+        .header-left{display:flex;align-items:center;gap:16px}
+        .header-logo{width:44px;height:44px;border-radius:11px;object-fit:cover}
+        .header-logo-placeholder{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent),#8b5cf6));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff}
+        .building-name{font-family:var(--font-heading);font-size:24px;font-weight:700}
+        .building-subtitle{font-size:12px;color:var(--text-secondary);margin-top:1px}
+        .header-center{display:flex;align-items:center;gap:24px}
+        .weather-widget{display:flex;align-items:center;gap:20px;padding:14px 28px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px}
+        .weather-icon{font-size:48px;line-height:1}
+        .weather-temp{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums}
+        .weather-details{font-size:14px;color:var(--text-secondary);line-height:1.4;font-weight:500}
+        .weather-label{font-size:12px;color:var(--text-secondary);opacity:.6;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+        .forecast-mini{display:flex;gap:14px}
+        .forecast-day{text-align:center;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;font-size:13px;color:var(--text-secondary);font-weight:500}
+        .forecast-day-icon{font-size:22px;margin:4px 0}
+        .forecast-day-temp{font-size:13px;font-weight:700;color:var(--text-primary)}
+        .header-right{display:flex;align-items:center;gap:24px}
+        .datetime-block{text-align:right}
+        .clock{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+        .date-display{font-size:15px;color:var(--text-secondary);margin-top:2px;font-weight:500}
+
+        /* Widget Grid */
+        .widget-grid{position:relative;z-index:5;flex:1;min-height:0;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr);padding:16px 24px;gap:12px}
+        .widget{position:relative;overflow:hidden;border-radius:16px;min-width:0;min-height:0}
+
+        /* Notice Slideshow */
+        .w-notices{background:var(--bg-card);border:1px solid var(--border)}
+        .w-notices .slide-area{position:absolute;inset:0;overflow:hidden;border-radius:16px}
+        .slide{position:absolute;inset:0;opacity:0;transform:scale(.97);transition:opacity var(--transition-speed) ease,transform var(--transition-speed) ease;pointer-events:none}
+        .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+        .notice-card{height:100%;display:flex;flex-direction:column;overflow:hidden}
+        .notice-card.has-media-side{flex-direction:row}
+        .notice-card.media-only{position:relative}
+        .media-fullscreen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+        .media-fullscreen:has(.pdf-embed){background:#fff}
+        .media-fullscreen img,.media-fullscreen video,.media-fullscreen iframe{width:100%;height:100%;object-fit:contain}
+        .media-fullscreen iframe.pdf-embed{background:#fff}
+        .media-overlay-text{position:absolute;bottom:0;left:0;right:0;padding:32px 40px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+        .media-overlay-text .notice-title{font-size:32px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+        .media-side{flex:0 0 48%;position:relative;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
+        .media-side img,.media-side video,.media-side iframe{width:100%;height:100%;object-fit:contain}
+        .media-side iframe.pdf-embed{background:#fff}
+        .pdf-embed{width:100%;height:100%;border:none;background:#fff}
+        .notice-content{flex:1;padding:40px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+        .notice-category{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:16px}
+        .notice-category .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+        .priority-urgent .notice-category{color:var(--urgent)}
+        .priority-urgent .notice-category .dot{background:var(--urgent);box-shadow:0 0 10px var(--urgent-glow)}
+        .priority-important .notice-category{color:var(--important)}
+        .priority-important .notice-category .dot{background:var(--important)}
+        .notice-title{font-family:var(--font-heading);font-size:38px;font-weight:700;line-height:1.15;margin-bottom:20px;letter-spacing:-.5px}
+        .notice-body{font-size:20px;line-height:1.65;color:var(--text-secondary);overflow:hidden}
+        .notice-meta{margin-top:auto;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:14px;font-size:12px;color:var(--text-secondary)}
+        .progress-bar{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),#8b5cf6);border-radius:2px;z-index:20;transition:width linear}
+
+        /* Notice List */
+        .w-notice-list{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;padding:14px}
+        .w-notice-list .wt{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:10px;padding:0 4px}
+        .w-notice-list .list{flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+        .sidebar-card{background:var(--bg-card-hover);border:1px solid var(--border);border-radius:12px;padding:12px 14px;transition:all .3s;display:flex;align-items:center;gap:10px}
+        .sidebar-card.current{border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+        .sidebar-card-thumb{width:40px;height:40px;border-radius:8px;background:rgba(255,255,255,.04);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px}
+        .sidebar-card-thumb img,.sidebar-card-thumb video{width:100%;height:100%;object-fit:cover}
+        .sidebar-card-info{flex:1;min-width:0}
+        .sidebar-card-cat{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:2px}
+        .sidebar-card-title{font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+        /* News Widget */
+        .w-news{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;padding:10px 10px 6px}
+        .w-news .wt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:6px;padding:0 4px}
+        .w-news .carousel{position:relative;flex:1;overflow:hidden;border-radius:10px}
+        .news-card{position:absolute;inset:0;opacity:0;transform:translateY(8px);transition:opacity .6s ease,transform .6s ease;display:flex;flex-direction:row;overflow:hidden}
+        .news-card.active{opacity:1;transform:translateY(0)}
+        .news-card-img{width:40%;height:100%;object-fit:cover;background:rgba(255,255,255,.03);flex-shrink:0}
+        .news-card-body{flex:1;padding:12px 14px;display:flex;flex-direction:column;overflow:hidden}
+        .news-card-source{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+        .news-card-source .live-dot{width:5px;height:5px;border-radius:50%;background:var(--urgent);animation:pulse-dot 2s ease infinite}
+        .news-card-title{font-size:15px;font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+        .news-card-desc{font-size:12px;line-height:1.4;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .news-card-time{margin-top:auto;font-size:10px;color:var(--text-secondary);opacity:.7;padding-top:4px}
+        .news-dots{display:flex;justify-content:center;gap:5px;padding:4px 0;flex-shrink:0}
+        .news-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s}
+        .news-dot.active{background:var(--accent);width:16px;border-radius:3px}
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+        /* Contacts */
+        .w-contacts{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column}
+        .ec-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(239,68,68,.08);border-bottom:1px solid var(--border);flex-shrink:0}
+        .ec-icon{font-size:14px}.ec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--urgent)}
+        .ec-list{flex:1;padding:4px 0;overflow:hidden}.ec-item{display:flex;justify-content:space-between;align-items:center;padding:5px 14px}
+        .ec-label{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ec-number{font-size:13px;font-weight:600;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:12px}
+
+        /* Weather Widget (standalone) */
+        .w-weather{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+        .w-weather .wi{font-size:48px;margin-bottom:8px}
+        .w-weather .wtemp{font-size:52px;font-weight:700}
+        .w-weather .wdesc{font-size:14px;color:var(--text-secondary);margin-top:4px}
+        .w-weather .wloc{font-size:12px;color:var(--text-secondary);opacity:.7;margin-top:8px;text-transform:uppercase;letter-spacing:.5px}
+        .w-weather .wfc{display:flex;gap:16px;margin-top:16px}
+        .w-weather .wfc-d{text-align:center;padding:8px;background:rgba(255,255,255,.03);border-radius:8px}
+        .w-weather .wfc-d .fn{font-size:11px;color:var(--text-secondary)}
+        .w-weather .wfc-d .fi{font-size:22px;margin:4px 0}
+        .w-weather .wfc-d .ft{font-size:12px;font-weight:600}
+
+        /* Clock Widget (standalone) */
+        .w-clock{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+        .w-clock .wc-time{font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+        .w-clock .wc-date{font-size:16px;color:var(--text-secondary);margin-top:8px}
+
+        /* Ticker */
+        .news-ticker{position:relative;z-index:10;height:44px;background:var(--ticker-bg);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:center;overflow:hidden;flex-shrink:0}
+        .news-ticker.hidden{display:none}
+        .news-ticker-label{flex-shrink:0;padding:0 20px;height:100%;display:flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+        .news-ticker-label .pulse-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse-dot 2s ease infinite}
+        .news-ticker-track{flex:1;overflow:hidden;position:relative;height:100%;display:flex;align-items:center}
+        .news-ticker-content{display:flex;white-space:nowrap;animation:ticker-scroll linear infinite}
+        .news-item{display:inline-flex;align-items:center;gap:8px;padding:0 32px;font-size:14px;color:var(--text-secondary)}
+        .news-item-source{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--accent);letter-spacing:.5px;padding:2px 8px;background:rgba(59,130,246,.1);border-radius:4px}
+        .news-item-dot{color:var(--border-light)}
+        @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+        .emergency-overlay{position:fixed;inset:0;z-index:1000;background:#1a0000;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:64px}
+        .emergency-overlay.active{display:flex}
+        .emergency-icon-big{font-size:80px;margin-bottom:32px;animation:em-pulse 1.5s ease-in-out infinite}
+        @keyframes em-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.1)}}
+        .emergency-title{font-family:var(--font-heading);font-size:64px;font-weight:700;color:var(--urgent);margin-bottom:24px}
+        .emergency-text{font-size:28px;color:var(--text-secondary);max-width:800px;line-height:1.6}
+        .no-notices{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;opacity:.5}
+        .no-notices-icon{font-size:56px;margin-bottom:20px;opacity:.4}
+        .no-notices-text{font-size:22px;color:var(--text-secondary)}
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="emergency-overlay" id="emergencyOverlay"><div class="emergency-icon-big">⚠️</div><div class="emergency-title">EMERGENCY NOTICE</div><div class="emergency-text" id="emergencyText"></div></div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo-placeholder" id="logoContainer">W</div>
+            <div><div class="building-name" id="buildingName">Loading...</div><div class="building-subtitle" id="managementCompany"></div></div>
+        </div>
+        <div class="header-center">
+            <div class="weather-widget" id="weatherWidget" style="display:none;">
+                <div class="weather-icon" id="weatherIcon">--</div>
+                <div><div class="weather-temp"><span id="weatherTemp">--</span>°</div><div class="weather-details" id="weatherDetails">Loading...</div></div>
+                <div style="border-left:1px solid var(--border);padding-left:12px;"><div class="weather-label" id="weatherLocation"></div><div class="forecast-mini" id="forecastMini"></div></div>
+            </div>
+        </div>
+        <div class="header-right"><div class="datetime-block"><div class="date-display" id="dateDisplay"></div><div class="clock" id="clockDisplay"></div></div></div>
+    </div>
+
+    <div class="widget-grid" id="widgetGrid"></div>
+
+    <div class="news-ticker hidden" id="newsTicker">
+        <div class="news-ticker-label" id="newsTickerLabel"><div class="pulse-dot"></div>NEWS</div>
+        <div class="news-ticker-track"><div class="news-ticker-content" id="newsTickerContent"><span class="news-item">Loading news...</span></div></div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script type="module">
+        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
+
+        let settings = {}, notices = [], currentIndex = 0, slideTimer = null, currentVideoEl = null;
+        let newsItems = [], feedGroups = [], newsTimers = [];
+        let lastCacheVersion = null;
+
+        const DEFAULT_LAYOUT = [
+            { id:'notices', x:0, y:0, w:8, h:8 },
+            { id:'notice_list', x:8, y:0, w:4, h:3 },
+            { id:'news_0', x:8, y:3, w:4, h:3 },
+            { id:'emergency_contacts', x:8, y:6, w:4, h:2 },
+        ];
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+            document.querySelectorAll('.w-clock').forEach(el => {
+                el.querySelector('.wc-time').textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                el.querySelector('.wc-date').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+            });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function buildWidgetGrid(layout) {
+            const grid = document.getElementById('widgetGrid');
+            grid.innerHTML = '';
+            layout.forEach(w => {
+                const el = document.createElement('div');
+                el.className = 'widget';
+                el.style.gridColumn = `${w.x+1} / ${w.x+w.w+1}`;
+                el.style.gridRow = `${w.y+1} / ${w.y+w.h+1}`;
+                el.id = `widget-${w.id}`;
+                if (w.id === 'notices') {
+                    el.classList.add('w-notices');
+                    el.innerHTML = '<div class="slide-area" id="slideArea"><div class="progress-bar" id="progressBar"></div></div>';
+                } else if (w.id === 'notice_list') {
+                    el.classList.add('w-notice-list');
+                    el.innerHTML = '<div class="wt">📋 All Notices</div><div class="list" id="sidebarList"></div>';
+                } else if (w.id.startsWith('news_')) {
+                    el.classList.add('w-news');
+                    el.innerHTML = `<div class="wt" id="newsTitle-${w.id}">📰 News</div><div class="carousel" id="newsCarousel-${w.id}"></div><div class="news-dots" id="newsDots-${w.id}"></div>`;
+                } else if (w.id === 'emergency_contacts') {
+                    el.classList.add('w-contacts');
+                    el.innerHTML = '<div class="ec-header"><span class="ec-icon">🚨</span><span class="ec-title">Contacts</span></div><div class="ec-list" id="contactsList"></div>';
+                } else if (w.id === 'weather') {
+                    el.classList.add('w-weather');
+                    el.innerHTML = '<div class="wi" id="wWeatherIcon">🌡️</div><div class="wtemp" id="wWeatherTemp">--°</div><div class="wdesc" id="wWeatherDesc">Loading...</div><div class="wloc" id="wWeatherLoc"></div><div class="wfc" id="wWeatherForecast"></div>';
+                } else if (w.id === 'clock') {
+                    el.classList.add('w-clock');
+                    el.innerHTML = '<div class="wc-time"></div><div class="wc-date"></div>';
+                }
+                grid.appendChild(el);
+            });
+            updateClock();
+        }
+
+        onSettingsChange(async (s) => {
+            settings = s;
+
+            // Check if admin triggered a cache clear
+            const cv = s.cache_version || 0;
+            if (lastCacheVersion !== null && cv !== lastCacheVersion) {
+                console.log('Cache clear triggered by admin');
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage('clear-cache');
+                }
+                setTimeout(() => location.reload(), 2000);
+            }
+            lastCacheVersion = cv;
+
+            document.documentElement.setAttribute('data-theme', s.display_theme || 'dark-modern');
+            document.getElementById('buildingName').textContent = s.building_name;
+            document.getElementById('managementCompany').textContent = s.management_company;
+            const logo = document.getElementById('logoContainer');
+            if (s.logo_url) { logo.outerHTML = `<img src="${s.logo_url}" class="header-logo" id="logoContainer" alt="">`; }
+            else if (logo.tagName === 'IMG') { logo.outerHTML = `<div class="header-logo-placeholder" id="logoContainer">${s.building_name[0]}</div>`; }
+            else { logo.textContent = s.building_name[0]; }
+            document.documentElement.style.setProperty('--transition-speed', s.transition_speed + 's');
+
+            const overlay = document.getElementById('emergencyOverlay');
+            if (s.emergency_mode) { overlay.classList.add('active'); document.getElementById('emergencyText').textContent = s.emergency_message || 'Please follow building emergency procedures.'; }
+            else { overlay.classList.remove('active'); }
+
+            const layout = s.layout || DEFAULT_LAYOUT;
+            buildWidgetGrid(layout);
+
+            const contactsList = document.getElementById('contactsList');
+            if (contactsList) {
+                const contacts = s.emergency_contacts || [];
+                contactsList.innerHTML = contacts.map(c => `<div class="ec-item"><span class="ec-label">${escapeHtml(c.label)}</span><span class="ec-number">${escapeHtml(c.number)}</span></div>`).join('');
+            }
+
+            if (s.show_weather) loadWeather();
+            if (s.show_news !== false) loadNews();
+
+            // Ticker
+            const tickerEl = document.getElementById('newsTicker');
+            const tickerLabel = document.getElementById('newsTickerLabel');
+            const showTicker = s.show_ticker !== false;
+            const tickerMode = s.ticker_mode || 'news';
+            tickerEl.classList.toggle('hidden', !showTicker);
+
+            if (showTicker && tickerMode === 'custom') {
+                const messages = s.ticker_messages || (s.ticker_custom_text ? [s.ticker_custom_text] : []);
+                if (messages.length > 0) {
+                    tickerLabel.innerHTML = '<div class="pulse-dot"></div>INFO';
+                    const ticker = document.getElementById('newsTickerContent');
+                    let single = messages.map(m => `<span class="news-item">${escapeHtml(m)}<span class="news-item-dot">◆</span></span>`).join('');
+                    // Repeat enough times to guarantee filling 2x screen width
+                    let half = '';
+                    for (let r = 0; r < 20; r++) half += single;
+                    ticker.innerHTML = half + half;
+                    requestAnimationFrame(() => { ticker.style.animationDuration = (ticker.scrollWidth / 2 / 60) + 's'; });
+                }
+            } else {
+                tickerLabel.innerHTML = '<div class="pulse-dot"></div>NEWS';
+            }
+
+            renderNotices();
+            startRotation();
+        });
+
+        onNoticesChange((allNotices) => {
+            const now = new Date().toISOString();
+            notices = allNotices.filter(n => { if (!n.active) return false; if (n.start_date && n.start_date > now) return false; if (n.end_date && n.end_date < now) return false; return true; }).sort((a, b) => (b.priority || 0) - (a.priority || 0));
+            renderNotices();
+            startRotation();
+        });
+
+        async function loadWeather() {
+            try {
+                const data = await fetchWeather(settings);
+                if (data.error) return;
+                const c = data.current, code = c.weather_code, units = settings.weather_units || 'metric';
+                document.getElementById('weatherIcon').textContent = WMO_ICONS[code] || '🌡️';
+                document.getElementById('weatherTemp').textContent = Math.round(c.temperature_2m);
+                document.getElementById('weatherDetails').innerHTML = `${WMO_DESC[code] || 'N/A'}<br>Humidity ${c.relative_humidity_2m}% · Wind ${Math.round(c.wind_speed_10m)} ${units === 'metric' ? 'km/h' : 'mph'}`;
+                document.getElementById('weatherLocation').textContent = data.location_name || '';
+                if (data.daily) {
+                    const fg = document.getElementById('forecastMini'); fg.innerHTML = '';
+                    for (let i=1;i<Math.min(data.daily.time.length,4);i++) { const d=new Date(data.daily.time[i]); fg.innerHTML += `<div class="forecast-day"><div>${DAY_NAMES[d.getDay()]}</div><div class="forecast-day-icon">${WMO_ICONS[data.daily.weather_code[i]]||'🌡️'}</div><div class="forecast-day-temp">${Math.round(data.daily.temperature_2m_max[i])}° / ${Math.round(data.daily.temperature_2m_min[i])}°</div></div>`; }
+                }
+                document.getElementById('weatherWidget').style.display = 'flex';
+                // Standalone weather widget
+                const ww = document.getElementById('wWeatherIcon');
+                if (ww) {
+                    ww.textContent = WMO_ICONS[code] || '🌡️';
+                    document.getElementById('wWeatherTemp').textContent = Math.round(c.temperature_2m) + '°';
+                    document.getElementById('wWeatherDesc').textContent = WMO_DESC[code] || '';
+                    document.getElementById('wWeatherLoc').textContent = data.location_name || '';
+                    if (data.daily) {
+                        const fc = document.getElementById('wWeatherForecast'); fc.innerHTML = '';
+                        for (let i=1;i<Math.min(data.daily.time.length,4);i++) { const d=new Date(data.daily.time[i]); fc.innerHTML += `<div class="wfc-d"><div class="fn">${DAY_NAMES[d.getDay()]}</div><div class="fi">${WMO_ICONS[data.daily.weather_code[i]]||'🌡️'}</div><div class="ft">${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div></div>`; }
+                    }
+                }
+            } catch (e) { console.error('Weather error:', e); }
+        }
+        setInterval(() => { if (settings.show_weather) loadWeather(); }, 600000);
+
+        async function loadNews() {
+            try {
+                newsItems = await fetchNews(settings);
+                feedGroups = await fetchNewsByFeed(settings);
+                const tickerMode = settings.ticker_mode || 'news';
+                if (tickerMode === 'news' && newsItems.length > 0) {
+                    const ticker = document.getElementById('newsTickerContent');
+                    let html = '';
+                    for (let r=0;r<10;r++) { newsItems.forEach(item => { html += `<span class="news-item"><span class="news-item-source">${escapeHtml(item.source)}</span>${escapeHtml(item.title)}<span class="news-item-dot">◆</span></span>`; }); }
+                    ticker.innerHTML = html + html;
+                    requestAnimationFrame(() => { ticker.style.animationDuration = (ticker.scrollWidth / 2 / 80) + 's'; });
+                }
+                newsTimers.forEach(t => clearInterval(t));
+                newsTimers = [];
+                feedGroups.forEach((group, gi) => {
+                    const carousel = document.getElementById(`newsCarousel-news_${gi}`);
+                    const dotsEl = document.getElementById(`newsDots-news_${gi}`);
+                    const titleEl = document.getElementById(`newsTitle-news_${gi}`);
+                    if (!carousel) return;
+                    if (titleEl) titleEl.textContent = `📰 ${group.name}`;
+                    let ch = '', dh = '';
+                    group.items.forEach((item, i) => {
+                        const img = item.image ? `<img src="${item.image}" class="news-card-img" alt="" onerror="this.style.width='0';this.style.flex='0'">` : '';
+                        ch += `<div class="news-card nc-${gi} ${i===0?'active':''}" data-idx="${i}">${img}<div class="news-card-body"><div class="news-card-source"><span class="live-dot"></span>${escapeHtml(item.source)}</div><div class="news-card-title">${escapeHtml(item.title)}</div><div class="news-card-desc">${escapeHtml(item.description||'')}</div><div class="news-card-time">${formatTimeAgo(item.pub_date)}</div></div></div>`;
+                        dh += `<div class="news-dot nd-${gi} ${i===0?'active':''}"></div>`;
+                    });
+                    carousel.innerHTML = ch;
+                    if (dotsEl) dotsEl.innerHTML = dh;
+                    if (group.items.length > 1) {
+                        let idx = 0;
+                        const timer = setInterval(() => {
+                            const cards = document.querySelectorAll(`.nc-${gi}`), dots = document.querySelectorAll(`.nd-${gi}`);
+                            cards.forEach(c => c.classList.remove('active')); dots.forEach(d => d.classList.remove('active'));
+                            idx = (idx+1) % cards.length; cards[idx].classList.add('active'); dots[idx].classList.add('active');
+                        }, 8000 + gi * 2000);
+                        newsTimers.push(timer);
+                    }
+                });
+            } catch (e) { console.error('News error:', e); }
+        }
+        setInterval(() => { if (settings.show_news) loadNews(); }, 600000);
+
+        function getPriorityClass(p) { return p >= 2 ? 'priority-urgent' : p >= 1 ? 'priority-important' : ''; }
+        function renderMedia(n) { const u=n.media_url||'';if(!u)return'';const ft=n.file_type||getFileType(u);if(ft==='video')return`<video src="${u}" muted autoplay loop playsinline></video>`;if(ft==='pdf')return`<iframe src="${u}#toolbar=0&navpanes=0&scrollbar=0&view=Fit" class="pdf-embed" frameborder="0"></iframe>`;return`<img src="${u}" alt="">`; }
+
+        function buildSlide(notice, index) {
+            const cat = CATEGORIES[notice.category] || CATEGORIES.general, pc = getPriorityClass(notice.priority), hasMedia = notice.media_url;
+            const ft = notice.file_type || getFileType(notice.media_url || '');
+            let mode = notice.display_mode || (hasMedia ? 'media_with_text' : 'text');
+            if (ft === 'pdf') mode = 'media_only';
+            let inner;
+            if (mode === 'media_only' && hasMedia) { inner = `<div class="notice-card media-only ${pc}"><div class="media-fullscreen">${renderMedia(notice)}</div></div>`; }
+            else if (hasMedia && mode !== 'text') { inner = `<div class="notice-card has-media-side ${pc}"><div class="media-side">${renderMedia(notice)}</div><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
+            else { inner = `<div class="notice-card ${pc}"><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
+            return `<div class="slide ${index===0?'active':''}" data-index="${index}">${inner}</div>`;
+        }
+
+        function buildSidebarCard(notice, index) {
+            const cat = CATEGORIES[notice.category] || CATEGORIES.general, ft = notice.file_type || getFileType(notice.media_url||'');
+            let thumb = cat.icon;
+            if (notice.media_url) { thumb = ft==='video'?`<video src="${notice.media_url}" muted></video>`:ft==='pdf'?'📄':`<img src="${notice.media_url}" alt="">`; }
+            return `<div class="sidebar-card ${index===0?'current':''}" data-index="${index}"><div class="sidebar-card-thumb">${thumb}</div><div class="sidebar-card-info"><div class="sidebar-card-cat">${cat.icon} ${cat.label}</div><div class="sidebar-card-title">${escapeHtml(notice.title)}</div></div></div>`;
+        }
+
+        function renderNotices() {
+            const area = document.getElementById('slideArea'), sidebar = document.getElementById('sidebarList');
+            if (!area) return;
+            const bar = document.getElementById('progressBar');
+            if (notices.length === 0) { area.innerHTML = '<div class="no-notices"><div class="no-notices-icon">📭</div><div class="no-notices-text">No notices at this time</div></div>'; area.appendChild(bar); if (sidebar) sidebar.innerHTML = ''; return; }
+            area.innerHTML = notices.map((n,i) => buildSlide(n,i)).join('');
+            area.appendChild(bar);
+            if (sidebar) sidebar.innerHTML = notices.map((n,i) => buildSidebarCard(n,i)).join('');
+        }
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slide'), cards = document.querySelectorAll('.sidebar-card');
+            if (!slides.length) return;
+            if (currentVideoEl) { currentVideoEl.pause(); currentVideoEl = null; }
+            if (slideTimer) { clearTimeout(slideTimer); slideTimer = null; }
+            slides.forEach(s => s.classList.remove('active')); cards.forEach(c => c.classList.remove('current'));
+            currentIndex = index % slides.length;
+            slides[currentIndex].classList.add('active');
+            if (cards[currentIndex]) cards[currentIndex].classList.add('current');
+            const vid = slides[currentIndex].querySelector('video');
+            if (vid) { vid.currentTime = 0; vid.play().catch(()=>{}); }
+            const ft = notices[currentIndex]?.file_type, vsd = (settings.video_slide_duration||0)*1000;
+            let duration;
+            if (ft==='video'&&vsd===0&&vid) { vid.loop=false;currentVideoEl=vid;vid.addEventListener('ended',()=>{setTimeout(()=>showSlide(currentIndex+1),500)},{once:true});duration=120000; }
+            else if (ft==='video'&&vsd>0) { if(vid)vid.loop=true;duration=vsd; }
+            else { duration=(settings.slide_duration||12)*1000; }
+            const bar = document.getElementById('progressBar');
+            bar.style.transition='none';bar.style.width='0%';
+            requestAnimationFrame(()=>{requestAnimationFrame(()=>{bar.style.transition=`width ${duration}ms linear`;bar.style.width='100%';});});
+            slideTimer = setTimeout(() => showSlide(currentIndex+1), duration);
+        }
+
+        function startRotation() { if(slideTimer)clearTimeout(slideTimer);if(notices.length>0)showSlide(0); }
+    </script>
+    <script>
+        // Register media cache service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                console.log('Media cache SW registered');
+            }).catch(err => console.warn('SW registration failed:', err));
+        }
+    </script>
+</body>
+</html>
