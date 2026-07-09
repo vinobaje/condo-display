@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice — Condo Notice Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800;900&family=Bebas+Neue&family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .ai-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .ai-btn-group{display:flex;gap:8px;}
+        .poster-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+        .poster-modal-overlay.active{display:flex;}
+        .poster-modal{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;}
+        .poster-modal h3{font-size:18px;font-weight:700;margin-bottom:16px;}
+        .poster-preview-wrap{display:flex;justify-content:center;margin-bottom:20px;background:var(--bg-dark);border-radius:12px;padding:20px;overflow:hidden;}
+        .poster-canvas{width:1920px;height:1080px;border-radius:8px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.3);flex-shrink:0;position:relative;transform:scale(0.42);transform-origin:top left;margin-bottom:-626px;margin-right:-1114px;}
+        .poster-actions{display:flex;gap:10px;justify-content:flex-end;}
+        .poster-templates{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+        .poster-tpl{cursor:pointer;border:2px solid var(--border);border-radius:10px;padding:4px;transition:all .2s;text-align:center;}
+        .poster-tpl:hover{border-color:var(--border-light);}
+        .poster-tpl.selected{border-color:var(--accent);background:rgba(99,102,241,.08);}
+        .poster-tpl-preview{height:60px;border-radius:6px;margin-bottom:4px;overflow:hidden;}
+        .poster-tpl-name{font-size:10px;font-weight:600;color:var(--text-dim);}
+        .poster-img-btn{transition:all .2s;}
+        .poster-img-btn.active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
+        .ai-generate-btn{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;cursor:pointer;text-align:left;box-shadow:0 4px 14px rgba(124,58,237,.35);transition:all .2s;font-family:inherit;}
+        .ai-generate-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.5);filter:brightness(1.08);}
+        .ai-generate-btn:disabled{opacity:.65;cursor:wait;transform:none;}
+        .ai-generate-btn.active{outline:3px solid rgba(168,85,247,.4);outline-offset:2px;}
+        .ai-generate-btn .ai-spinner{width:16px;height:16px;border-color:rgba(255,255,255,.35);border-top-color:#fff;flex-shrink:0;}
+        .poster-img-divider{display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--text-dim);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+        .poster-img-divider::before,.poster-img-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+        .ai-action-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+        .ai-action-btn{flex:1;min-width:240px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit;}
+        .ai-action-btn .ai-icon{font-size:22px;line-height:1;flex-shrink:0;}
+        .ai-action-btn .ai-text{flex:1;}
+        .ai-action-btn .ai-title{display:block;font-size:14px;font-weight:700;letter-spacing:.2px;}
+        .ai-action-btn .ai-sub{display:block;font-size:11px;opacity:.8;margin-top:1px;}
+        .ai-action-btn:disabled{opacity:.65;cursor:wait;transform:none;}
+        .ai-write-btn{background:rgba(124,106,240,.07);border:2px solid rgba(124,106,240,.35);color:var(--accent);}
+        .ai-write-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(124,106,240,.12);transform:translateY(-1px);}
+        .ai-poster-btn{background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.3);}
+        .ai-poster-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.45);filter:brightness(1.08);}
+        .ai-action-btn .ai-spinner{width:16px;height:16px;flex-shrink:0;}
+        .ai-poster-btn .ai-spinner{border-color:rgba(255,255,255,.35);border-top-color:#fff;}
+        .poster-layout-btn{background:var(--bg-dark);color:var(--text-dim);border:2px solid var(--border);cursor:pointer;transition:all .2s;border-radius:10px;}
+        .poster-layout-btn:hover{border-color:var(--border-light);background:var(--bg-card-hover);}
+        .poster-layout-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.08);}
+        .ai-img-item{cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid transparent;transition:all .2s;aspect-ratio:4/3;}
+        .ai-img-item:hover{border-color:var(--accent);opacity:.9;}
+        .ai-img-item.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);}
+        .ai-img-item img{width:100%;height:100%;object-fit:cover;}
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <div class="topnav">
+        <div class="topnav-left">
+            <a href="/admin.html" style="text-decoration:none;font-size:20px;color:var(--text-dim);">←</a>
+            <div class="topnav-title" id="pageTitle">New Notice</div>
+        </div>
+        <div class="topnav-actions">
+            <button class="btn btn-outline btn-sm" id="adminThemeToggle" onclick="toggleAdminTheme()" title="Toggle light/dark mode">🌙</button>
+            <button class="btn btn-primary" onclick="handleSave()" id="saveBtn">💾 Publish Notice</button>
+        </div>
+    </div>
+
+    <div class="container" style="max-width:900px;">
+        <div class="flash flash-success" id="successFlash"></div>
+        <div class="flash flash-error" id="errorFlash"></div>
+
+        <div class="card">
+            <!-- Title -->
+            <div class="form-group">
+                <label>Notice Title</label>
+                <input type="text" id="title" class="form-control" placeholder="e.g., Pool Closure for Annual Maintenance" autofocus>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label>Category</label>
+                <select id="category" class="form-control">
+                    <option value="general">📋 General</option>
+                    <option value="maintenance">🔧 Maintenance</option>
+                    <option value="safety">🛡️ Safety</option>
+                    <option value="event">🎉 Event</option>
+                    <option value="rules">📜 Rules & Policies</option>
+                    <option value="financial">💰 Financial</option>
+                    <option value="parking">🅿️ Parking</option>
+                    <option value="amenities">🏊 Amenities</option>
+                </select>
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group">
+                <label>Priority</label>
+                <div class="priority-options">
+                    <div class="priority-option selected" data-value="0" onclick="selectPriority(this)">Normal</div>
+                    <div class="priority-option important" data-value="1" onclick="selectPriority(this)">⚡ Important</div>
+                    <div class="priority-option urgent" data-value="2" onclick="selectPriority(this)">🚨 Urgent</div>
+                </div>
+                <input type="hidden" id="priority" value="0">
+            </div>
+
+            <!-- Body -->
+            <div class="form-group">
+                <label>Notice Body</label>
+                <textarea id="body" class="form-control" placeholder="Type a brief description or leave empty — AI will generate a professional notice from your title."></textarea>
+                <div class="ai-action-row">
+                    <button type="button" class="ai-action-btn ai-write-btn" id="aiGenerateBtn" onclick="generateWithAI()">
+                        <span class="ai-icon">✨</span>
+                        <span class="ai-text">
+                            <span class="ai-title">Write with AI</span>
+                            <span class="ai-sub">Turn your title or rough notes into a polished notice</span>
+                        </span>
+                    </button>
+                    <button type="button" class="ai-action-btn ai-poster-btn" id="aiPosterBtn" onclick="designPoster()">
+                        <span class="ai-icon">🎨</span>
+                        <span class="ai-text">
+                            <span class="ai-title">Design Poster</span>
+                            <span class="ai-sub">Create a ready-to-display poster from this notice</span>
+                        </span>
+                        <span style="font-size:16px;opacity:.7;flex-shrink:0;">→</span>
+                    </button>
+                </div>
+                <div id="aiStatus" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);"><span class="ai-spinner"></span> Generating professional notice...</div>
+            </div>
+
+            <!-- Media Upload -->
+            <div class="form-group">
+                <label>Media (Optional)</label>
+                <div class="file-upload" id="mediaUpload" onclick="document.getElementById('mediaFile').click()">
+                    <input type="file" id="mediaFile" accept="image/*,video/*,application/pdf" onchange="handleMediaPreview(this.files[0])">
+                    <div class="file-upload-icon" id="uploadIcon">📎</div>
+                    <div class="file-upload-text" id="uploadText">Click to upload an image, video, or PDF</div>
+                </div>
+                <div id="mediaPreviewContainer" style="margin-top:12px;display:none;">
+                    <img id="imagePreview" class="preview-media" style="display:none;">
+                    <video id="videoPreview" class="preview-media" style="display:none;" controls muted></video>
+                    <div id="pdfPreview" style="display:none;padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;"><span style="font-size:24px;">📄</span> <span id="pdfFileName" style="font-size:14px;font-weight:600;"></span></div>
+                    <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="clearMedia()">✕ Remove Media</button>
+                </div>
+            </div>
+
+            <!-- Display Mode -->
+            <div class="form-group" id="displayModeGroup" style="display:none;">
+                <label>Display Mode</label>
+                <div class="display-modes">
+                    <div class="display-mode selected" data-value="media_with_text" onclick="selectDisplayMode(this)">
+                        <div class="display-mode-icon">📰</div>
+                        <div class="display-mode-label">Media + Text</div>
+                        <div class="display-mode-desc">Side by side</div>
+                    </div>
+                    <div class="display-mode" data-value="media_only" onclick="selectDisplayMode(this)">
+                        <div class="display-mode-icon">🖼️</div>
+                        <div class="display-mode-label">Media Only</div>
+                        <div class="display-mode-desc">Fullscreen media</div>
+                    </div>
+                    <div class="display-mode" data-value="text" onclick="selectDisplayMode(this)">
+                        <div class="display-mode-icon">📝</div>
+                        <div class="display-mode-label">Text Only</div>
+                        <div class="display-mode-desc">No media shown</div>
+                    </div>
+                </div>
+                <input type="hidden" id="displayMode" value="media_with_text">
+            </div>
+
+            <!-- Scheduling -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date (Optional)</label>
+                    <input type="date" id="startDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>End Date (Optional)</label>
+                    <input type="date" id="endDate" class="form-control">
+                    <div class="help-text">Leave empty for no expiry</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Poster Preview Modal -->
+    <div class="poster-modal-overlay" id="posterModal">
+        <div class="poster-modal">
+            <h3>🎨 AI Poster Preview</h3>
+
+            <!-- Layout Mode Toggle -->
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <button class="btn btn-sm poster-layout-btn active" data-layout="detailed" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">📋 Detailed</button>
+                <button class="btn btn-sm poster-layout-btn" data-layout="visual" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">🎨 Visual / Bold</button>
+            </div>
+
+            <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+                <!-- Style Picker -->
+                <div style="flex:1;min-width:200px;">
+                    <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:8px;">Poster Style</label>
+                    <div class="poster-templates" id="posterStyleGrid">
+                        <div class="poster-tpl" data-style="bold" onclick="switchPosterStyle(this)">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#ef4444,#f97316);"></div>
+                            <div class="poster-tpl-name">Bold</div>
+                        </div>
+                        <div class="poster-tpl selected" data-style="corporate" onclick="switchPosterStyle(this)">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);"></div>
+                            <div class="poster-tpl-name">Corporate</div>
+                        </div>
+                        <div class="poster-tpl" data-style="minimal" onclick="switchPosterStyle(this)">
+                            <div class="poster-tpl-preview" style="background:#f8fafc;"></div>
+                            <div class="poster-tpl-name">Minimal</div>
+                        </div>
+                        <div class="poster-tpl" data-style="dark" onclick="switchPosterStyle(this)">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#0f172a,#1e293b);"></div>
+                            <div class="poster-tpl-name">Dark</div>
+                        </div>
+                        <!-- Visual-only styles (hidden by default) -->
+                        <div class="poster-tpl visual-style-only" data-style="teal-fun" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#0d9488,#06b6d4);"></div>
+                            <div class="poster-tpl-name">Teal</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="sunset" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#f59e0b,#ef4444);"></div>
+                            <div class="poster-tpl-name">Sunset</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="purple-pop" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#7c3aed,#ec4899);"></div>
+                            <div class="poster-tpl-name">Purple Pop</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="forest" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#166534,#4ade80);"></div>
+                            <div class="poster-tpl-name">Forest</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="neon" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:#0a0a1e;border:1px solid #00f0ff;box-shadow:inset 0 0 20px rgba(0,240,255,.15);"></div>
+                            <div class="poster-tpl-name">Neon</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="glass" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border:1px solid rgba(255,255,255,.15);"></div>
+                            <div class="poster-tpl-name">Glass</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="diagonal" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#f43f5e 0%,#f43f5e 50%,#000 50%,#000 100%);"></div>
+                            <div class="poster-tpl-name">Diagonal</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="luxury" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:#0f0a05;border:1px solid #d4a853;"></div>
+                            <div class="poster-tpl-name">Luxury</div>
+                        </div>
+                        <div class="poster-tpl visual-style-only" data-style="ocean" onclick="switchPosterStyle(this)" style="display:none;">
+                            <div class="poster-tpl-preview" style="background:linear-gradient(135deg,#020617,#0c4a6e);"></div>
+                            <div class="poster-tpl-name">Deep Ocean</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Options -->
+                <div style="flex:1;min-width:200px;">
+                    <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:8px;">Poster Image</label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn btn-outline btn-sm poster-img-btn" id="btnNoImage" onclick="setPosterImage('none')" style="font-size:11px;">🚫 No Image</button>
+                        <button class="btn btn-outline btn-sm poster-img-btn active" id="btnIconsOnly" onclick="setPosterImage('icons')" style="font-size:11px;">✨ Icons Only</button>
+                        <label class="btn btn-outline btn-sm poster-img-btn" style="font-size:11px;cursor:pointer;">
+                            📤 Upload Photo
+                            <input type="file" id="posterImageUpload" accept="image/*" onchange="handlePosterImageUpload(this.files[0])" style="display:none;">
+                        </label>
+                        <button class="btn btn-outline btn-sm poster-img-btn" id="btnStockSearch" onclick="searchPixabayPhotos()" style="font-size:11px;">📷 Stock Photos</button>
+                        <button class="btn btn-outline btn-sm poster-img-btn" id="btnAiImage" onclick="generateAiIllustration()" style="font-size:11px;">🎨 Illustrations</button>
+                    </div>
+                    <div class="poster-img-divider">or let AI design it</div>
+                    <button class="ai-generate-btn poster-img-btn" id="btnAiGenerate" onclick="generateAiPosterImage()">
+                        <span style="font-size:22px;line-height:1;flex-shrink:0;">🤖</span>
+                        <span style="flex:1;">
+                            <span style="display:block;font-size:14px;font-weight:700;letter-spacing:.2px;">AI Generate Poster</span>
+                            <span style="display:block;font-size:11px;opacity:.85;margin-top:1px;">Designs the entire poster — select or upload a photo first to feature it (~20 sec)</span>
+                        </span>
+                        <span style="font-size:16px;opacity:.7;flex-shrink:0;">→</span>
+                    </button>
+                    <div id="posterImagePreview" style="display:none;margin-top:8px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <img id="posterImgThumb" style="width:60px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
+                            <span id="posterImgLabel" style="font-size:11px;color:var(--text-dim);"></span>
+                            <button class="btn btn-outline btn-sm" onclick="removePosterImage()" style="font-size:10px;padding:2px 8px;">✕</button>
+                        </div>
+                    </div>
+                    <div id="aiImageStatus" style="display:none;margin-top:8px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="ai-spinner"></span>
+                            <span id="aiImageStatusText" style="font-size:11px;color:var(--text-dim);">Generating illustration...</span>
+                        </div>
+                    </div>
+                    <div id="aiImageResults" style="display:none;margin-top:8px;">
+                        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">Pick an illustration for your poster:</div>
+                        <div id="aiImageGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:280px;overflow-y:auto;padding-right:4px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Font Size Slider (detailed layout only) -->
+            <div id="posterFontSliderWrap" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+                <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);white-space:nowrap;">Font Size</label>
+                <span style="font-size:16px;">A</span>
+                <input type="range" id="posterFontSlider" min="80" max="160" value="100" step="5" oninput="updatePosterFontScale(this.value)" style="flex:1;accent-color:#7c6af0;">
+                <span style="font-size:22px;font-weight:700;">A</span>
+                <span id="posterFontScaleLabel" style="font-size:12px;color:var(--text-dim);min-width:36px;text-align:center;">100%</span>
+            </div>
+
+            <div class="poster-preview-wrap">
+                <div class="poster-canvas" id="posterCanvas"></div>
+            </div>
+            <div class="poster-actions">
+                <button class="btn btn-outline" onclick="closePosterModal()">Cancel</button>
+                <button class="btn btn-outline" onclick="regeneratePoster()">🔄 Regenerate</button>
+                <button class="btn btn-primary" onclick="usePoster()">✅ Use This Poster</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script>
+        (function(){
+            const t = localStorage.getItem('adminTheme') || 'dark';
+            document.documentElement.setAttribute('data-admin-theme', t);
+            const btn = document.getElementById('adminThemeToggle');
+            if (btn) btn.textContent = t === 'light' ? '☀️' : '🌙';
+        })();
+        function toggleAdminTheme() {
+            const c = document.documentElement.getAttribute('data-admin-theme') || 'dark';
+            const n = c === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-admin-theme', n);
+            localStorage.setItem('adminTheme', n);
+            document.getElementById('adminThemeToggle').textContent = n === 'light' ? '☀️' : '🌙';
+        }
+    </script>
+    <script type="module">
+        import {
+            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, db
+        } from '/js/app.js';
+        import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        let editId = null;
+        let existingMediaUrl = '';
+        let existingMediaPath = '';
+        let existingFileType = '';
+        let selectedFile = null;
+        let aiConfig = { provider: 'gemini', gemini: '', groq: '', openai: '', deepseek: '', pixabay: '' };
+
+        // Load AI settings from Firestore
+        async function loadAISettings() {
+            try {
+                const snap = await getDoc(doc(db, 'settings', 'main'));
+                if (snap.exists()) {
+                    const s = snap.data();
+                    aiConfig.provider = s.ai_provider || 'gemini';
+                    aiConfig.gemini = s.gemini_api_key || '';
+                    aiConfig.groq = s.groq_api_key || '';
+                    aiConfig.openai = s.openai_api_key || '';
+                    aiConfig.deepseek = s.deepseek_api_key || '';
+                    aiConfig.pixabay = s.pixabay_api_key || '';
+                    const activeKey = aiConfig[aiConfig.provider];
+                    if (!activeKey) {
+                        document.getElementById('aiGenerateBtn').title = 'Add an API key in Admin → Settings → AI Integration';
+                        document.getElementById('aiGenerateBtn').style.opacity = '0.5';
+                    }
+                }
+            } catch (e) { console.warn('Could not load AI settings'); }
+        }
+
+        async function callGemini(prompt, apiKey) {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        }
+
+        async function callGroq(prompt, apiKey) {
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7, max_tokens: 1500
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message || data.error);
+            return data.choices?.[0]?.message?.content || '';
+        }
+
+        async function callOpenAI(prompt, apiKey) {
+            const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7, max_tokens: 1500
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+            return data.choices?.[0]?.message?.content || '';
+        }
+
+        async function callDeepSeek(prompt, apiKey) {
+            const res = await fetch('https://api.deepseek.com/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({
+                    model: 'deepseek-chat',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7, max_tokens: 1500
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error.message);
+            return data.choices?.[0]?.message?.content || '';
+        }
+
+        const providerNames = { gemini: 'Gemini', groq: 'Groq', openai: 'OpenAI', deepseek: 'DeepSeek' };
+
+        window.generateWithAI = async function() {
+            const provider = aiConfig.provider;
+            const apiKey = aiConfig[provider];
+            if (!apiKey) {
+                alert(`No API key set for ${providerNames[provider]}.\n\nGo to Admin → Settings → AI Integration to add your key.`);
+                return;
+            }
+            const title = document.getElementById('title').value.trim();
+            const body = document.getElementById('body').value.trim();
+            const category = document.getElementById('category').value;
+
+            if (!title && !body) {
+                alert('Please enter at least a title or brief description.');
+                return;
+            }
+
+            const statusEl = document.getElementById('aiStatus');
+            const btn = document.getElementById('aiGenerateBtn');
+            statusEl.style.display = '';
+            statusEl.innerHTML = `<span class="ai-spinner"></span> Writing with ${providerNames[provider]}...`;
+            btn.disabled = true;
+            const origWriteHtml = btn.innerHTML;
+            btn.innerHTML = `<span class="ai-spinner"></span>
+                <span class="ai-text">
+                    <span class="ai-title">Writing your notice…</span>
+                    <span class="ai-sub">${providerNames[provider]} is drafting the text</span>
+                </span>`;
+
+            const prompt = `You are a professional property management assistant writing a notice for a condominium building's digital display board.
+
+Title: ${title || '(generate an appropriate title)'}
+Category: ${category}
+${body ? `Brief notes: ${body}` : ''}
+
+Write a clear, professional, and friendly notice. Keep it concise — it will be displayed on a TV screen. Use 2-4 short paragraphs maximum. Do not use markdown formatting, bullet points, or special characters. Just plain text paragraphs.
+
+${!title ? 'Also suggest a short, clear title on the first line prefixed with "TITLE: "' : 'Do not include the title in your response, just the body text.'}`;
+
+            try {
+                let text = '';
+                if (provider === 'gemini') text = await callGemini(prompt, apiKey);
+                else if (provider === 'groq') text = await callGroq(prompt, apiKey);
+                else if (provider === 'openai') text = await callOpenAI(prompt, apiKey);
+                else if (provider === 'deepseek') text = await callDeepSeek(prompt, apiKey);
+
+                if (!text) throw new Error('No response from AI');
+
+                // Extract title if generated
+                if (!title && text.startsWith('TITLE:')) {
+                    const lines = text.split('\n');
+                    document.getElementById('title').value = lines[0].replace('TITLE:', '').trim();
+                    text = lines.slice(1).join('\n').trim();
+                }
+                document.getElementById('body').value = text;
+            } catch (e) {
+                alert(`AI generation failed (${providerNames[provider]}): ${e.message}`);
+            } finally {
+                statusEl.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = origWriteHtml;
+            }
+        };
+
+        // ═══ AI POSTER DESIGNER ═══
+        let posterData = null;
+        let currentPosterStyle = 'corporate';
+        let currentPosterLayout = 'detailed'; // 'detailed' or 'visual'
+        let posterImageMode = 'icons'; // 'none', 'icons', 'photo'
+        let posterFontScale = 1.0; // 0.8 to 1.6 range
+        let posterImageUrl = null;
+        let posterImageSearchTerms = '';
+
+        const POSTER_STYLES = {
+            corporate: { overlay: 'rgba(15,39,68,.95)',
+                bg: 'linear-gradient(160deg,#1e3a5f 0%,#0f2744 100%)',
+                headerBg: 'rgba(255,255,255,.06)',
+                text: '#ffffff', heading: '#ffffff',
+                accent: '#60a5fa', sub: '#cbd5e1', dim: '#94a3b8',
+                sectionBg: 'rgba(255,255,255,.04)', sectionBorder: 'rgba(255,255,255,.08)',
+                badgeBg: 'rgba(255,255,255,.12)', badgeText: '#ffffff',
+                bulletColor: '#60a5fa', divider: 'rgba(255,255,255,.1)',
+                highlightBg: 'rgba(96,165,250,.12)', highlightBorder: '#60a5fa',
+            },
+            bold: { overlay: 'rgba(239,68,68,.9)',
+                bg: '#EF4444',
+                headerBg: 'rgba(0,0,0,.08)',
+                text: '#1a1a1a', heading: '#1a1a1a',
+                accent: '#ffffff', sub: '#2d2d2d', dim: '#4a4a4a',
+                sectionBg: 'rgba(0,0,0,.06)', sectionBorder: 'rgba(0,0,0,.1)',
+                badgeBg: 'rgba(0,0,0,.15)', badgeText: '#ffffff',
+                bulletColor: '#1a1a1a', divider: 'rgba(0,0,0,.12)',
+                highlightBg: 'rgba(0,0,0,.08)', highlightBorder: '#1a1a1a',
+            },
+            minimal: { overlay: 'rgba(255,255,255,.92)',
+                bg: '#ffffff',
+                headerBg: '#f1f5f9',
+                text: '#0f172a', heading: '#0f172a',
+                accent: '#2563eb', sub: '#334155', dim: '#64748b',
+                sectionBg: '#f8fafc', sectionBorder: '#e2e8f0',
+                badgeBg: '#2563eb', badgeText: '#ffffff',
+                bulletColor: '#2563eb', divider: '#e2e8f0',
+                highlightBg: '#eff6ff', highlightBorder: '#2563eb',
+            },
+            dark: { overlay: 'rgba(15,23,42,.95)',
+                bg: 'linear-gradient(160deg,#0f172a 0%,#1e293b 50%,#0f172a 100%)',
+                headerBg: 'rgba(255,255,255,.04)',
+                text: '#e2e8f0', heading: '#f1f5f9',
+                accent: '#818cf8', sub: '#94a3b8', dim: '#64748b',
+                sectionBg: 'rgba(255,255,255,.03)', sectionBorder: 'rgba(255,255,255,.06)',
+                badgeBg: 'rgba(129,140,248,.2)', badgeText: '#818cf8',
+                bulletColor: '#818cf8', divider: 'rgba(255,255,255,.06)',
+                highlightBg: 'rgba(129,140,248,.08)', highlightBorder: '#818cf8',
+            },
+            // Visual-only styles
+            'teal-fun': { overlay: 'rgba(13,148,136,.9)',
+                bg: 'linear-gradient(135deg,#0d9488 0%,#06b6d4 50%,#0891b2 100%)',
+                heading: '#ffffff', text: '#ffffff', sub: '#ccfbf1', dim: '#99f6e4', accent: '#fbbf24',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'transparent',
+                badgeBg: '#fbbf24', badgeText: '#0d4444', bulletColor: '#fbbf24', divider: 'rgba(255,255,255,.2)',
+                highlightBg: 'rgba(251,191,36,.15)', highlightBorder: '#fbbf24',
+            },
+            'sunset': { overlay: 'rgba(220,38,38,.9)',
+                bg: 'linear-gradient(135deg,#dc2626 0%,#f59e0b 100%)',
+                heading: '#ffffff', text: '#ffffff', sub: '#fef3c7', dim: '#fde68a', accent: '#ffffff',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'transparent',
+                badgeBg: 'rgba(0,0,0,.2)', badgeText: '#ffffff', bulletColor: '#ffffff', divider: 'rgba(255,255,255,.2)',
+                highlightBg: 'rgba(255,255,255,.12)', highlightBorder: '#ffffff',
+            },
+            'purple-pop': { overlay: 'rgba(124,58,237,.9)',
+                bg: 'linear-gradient(135deg,#7c3aed 0%,#ec4899 100%)',
+                heading: '#ffffff', text: '#ffffff', sub: '#f5d0fe', dim: '#e9d5ff', accent: '#fbbf24',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'transparent',
+                badgeBg: '#fbbf24', badgeText: '#581c87', bulletColor: '#fbbf24', divider: 'rgba(255,255,255,.2)',
+                highlightBg: 'rgba(251,191,36,.12)', highlightBorder: '#fbbf24',
+            },
+            'forest': { overlay: 'rgba(22,101,52,.9)',
+                bg: 'linear-gradient(135deg,#166534 0%,#4ade80 100%)',
+                heading: '#ffffff', text: '#ffffff', sub: '#dcfce7', dim: '#bbf7d0', accent: '#fbbf24',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'transparent',
+                badgeBg: '#fbbf24', badgeText: '#14532d', bulletColor: '#fbbf24', divider: 'rgba(255,255,255,.2)',
+                highlightBg: 'rgba(251,191,36,.12)', highlightBorder: '#fbbf24',
+            },
+            'neon': { overlay: 'rgba(10,10,30,.92)',
+                bg: '#0a0a1e',
+                heading: '#00f0ff', text: '#ffffff', sub: '#b0b0d8', dim: '#6060a0', accent: '#ff00aa',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'rgba(0,240,255,.08)',
+                badgeBg: '#ff00aa', badgeText: '#ffffff', bulletColor: '#00f0ff', divider: 'rgba(0,240,255,.12)',
+                highlightBg: 'rgba(0,240,255,.06)', highlightBorder: '#00f0ff',
+                glow: true,
+            },
+            'glass': { overlay: 'rgba(15,23,42,.85)',
+                bg: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%)',
+                heading: '#ffffff', text: '#ffffff', sub: '#cbd5e1', dim: '#94a3b8', accent: '#38bdf8',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'rgba(255,255,255,.08)',
+                badgeBg: 'rgba(255,255,255,.12)', badgeText: '#ffffff', bulletColor: '#38bdf8', divider: 'rgba(255,255,255,.06)',
+                highlightBg: 'rgba(56,189,248,.06)', highlightBorder: '#38bdf8',
+                glassPanel: true,
+            },
+            'diagonal': { overlay: 'rgba(0,0,0,.88)',
+                bg: '#000000',
+                heading: '#ffffff', text: '#ffffff', sub: '#e2e8f0', dim: '#94a3b8', accent: '#f43f5e',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'transparent',
+                badgeBg: '#f43f5e', badgeText: '#ffffff', bulletColor: '#f43f5e', divider: 'rgba(255,255,255,.08)',
+                highlightBg: 'rgba(244,63,94,.08)', highlightBorder: '#f43f5e',
+                diag1: '#f43f5e', diag2: '#8b5cf6',
+            },
+            'luxury': { overlay: 'rgba(15,10,5,.92)',
+                bg: 'linear-gradient(160deg,#0f0a05 0%,#1a1008 50%,#0f0a05 100%)',
+                heading: '#d4a853', text: '#ffffff', sub: '#c8b88a', dim: '#8a7a5a', accent: '#d4a853',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'rgba(212,168,83,.08)',
+                badgeBg: 'rgba(212,168,83,.15)', badgeText: '#d4a853', bulletColor: '#d4a853', divider: 'rgba(212,168,83,.12)',
+                highlightBg: 'rgba(212,168,83,.05)', highlightBorder: '#d4a853',
+            },
+            'ocean': { overlay: 'rgba(2,6,23,.9)',
+                bg: 'linear-gradient(160deg,#020617 0%,#0c4a6e 50%,#020617 100%)',
+                heading: '#ffffff', text: '#ffffff', sub: '#bae6fd', dim: '#7dd3fc', accent: '#06b6d4',
+                headerBg: 'transparent', sectionBg: 'transparent', sectionBorder: 'rgba(6,182,212,.08)',
+                badgeBg: 'rgba(6,182,212,.15)', badgeText: '#ffffff', bulletColor: '#06b6d4', divider: 'rgba(6,182,212,.1)',
+                highlightBg: 'rgba(6,182,212,.06)', highlightBorder: '#06b6d4',
+            },
+        };
+
+        // ═══ SVG CLIPART LIBRARY ═══
+        const POSTER_ICONS = {
+            wrench: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`,
+            car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-3-5H9L6 10l-2.5 1.1C2.7 11.3 2 12.1 2 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 17h8"/></svg>`,
+            water: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>`,
+            flame: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5.67 2.17 1.5 3.14 3 4.5 2.5 2.27 4 4.5 4 8a8 8 0 01-16 0c0-1.23.37-2.39 1-3.39.5-.79 1.5-1.61 3-1.61z"/></svg>`,
+            elevator: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18M3 12h18"/><path d="M8 8l-2 2 2 2M16 8l2 2-2 2"/></svg>`,
+            pool: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.5 0 2.5 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 20c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.5 0 2.5 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M9 6v10M15 4v12"/><path d="M9 6a3 3 0 106 0"/></svg>`,
+            building: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M8 10h.01M16 10h.01M12 14h.01M8 14h.01M16 14h.01"/></svg>`,
+            shield: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>`,
+            clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
+            alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+            trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
+            leaf: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 019.8 6.9C15.5 4.9 17 3.5 17 3.5s.7 4.8-4 9.2"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
+            mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>`,
+            calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+            megaphone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>`,
+            key: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>`,
+            window: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
+            power: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>`,
+            wifi: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>`,
+            party: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3L2 22l10.7-3.8"/><path d="M4 3h.01M22 8h.01M15 2h.01M22 20h.01M22 2l-2.24.75a2.9 2.9 0 00-1.96 3.12v0L18.1 8l2.17-2"/><path d="M16 16l2-1.5 1.5 1.5"/><path d="M2 2l2.95 8.34a11 11 0 008.71 8.71L22 22"/></svg>`,
+            dog: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/><path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5"/><path d="M8 14v.5M16 14v.5"/><path d="M11.25 16.25h1.5L12 17l-.75-.75z"/><path d="M4.42 11.247A13.152 13.152 0 004 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444a11.7 11.7 0 00-.46-3.392"/></svg>`,
+            snowflake: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M20 16l-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4"/></svg>`,
+            sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+            paint: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="6" rx="2"/><path d="M6 10v8a2 2 0 002 2h0a2 2 0 002-2v-3"/></svg>`,
+        };
+
+        function renderCurrentPoster() {
+            if (!posterData) return;
+            if (posterImageMode === 'ai_full') return; // AI-generated full image — don't override
+            if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+            else renderPoster(posterData, currentPosterStyle);
+        }
+
+        function renderPoster(data, style) {
+            const s = POSTER_STYLES[style] || POSTER_STYLES.corporate;
+            const canvas = document.getElementById('posterCanvas');
+            const bgIsGrad = s.bg.includes('gradient');
+            const f = (px) => Math.round(px * posterFontScale); // scaled font size
+
+            // Pick icons
+            const icons = (data.icons || []).slice(0, 2);
+            const iconColor = style === 'bold' ? 'rgba(0,0,0,.07)' : style === 'minimal' ? 'rgba(37,99,235,.06)' : 'rgba(255,255,255,.05)';
+            const iconAccent = style === 'bold' ? 'rgba(0,0,0,.12)' : style === 'minimal' ? 'rgba(37,99,235,.1)' : 'rgba(255,255,255,.08)';
+
+            let iconHtml = '';
+            if (icons[0] && POSTER_ICONS[icons[0]]) {
+                iconHtml += `<div style="position:absolute;top:40px;right:180px;width:280px;height:280px;color:${iconColor};z-index:1;opacity:1;">${POSTER_ICONS[icons[0]]}</div>`;
+            }
+            if (icons[1] && POSTER_ICONS[icons[1]]) {
+                iconHtml += `<div style="position:absolute;bottom:60px;right:50px;width:180px;height:180px;color:${iconAccent};z-index:1;opacity:1;transform:rotate(-15deg);">${POSTER_ICONS[icons[1]]}</div>`;
+            }
+
+            // Build sections HTML
+            let sectionsHtml = '';
+            (data.sections || []).forEach(sec => {
+                let content = '';
+                if (sec.type === 'highlight') {
+                    content = `<div style="background:${s.highlightBg};border-left:6px solid ${s.highlightBorder};padding:20px 28px;border-radius:0 10px 10px 0;margin:10px 0;">
+                        <div style="font-family:'Montserrat',sans-serif;font-size:${f(26)}px;font-weight:700;color:${s.heading};margin-bottom:8px;">${sec.heading || ''}</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:${f(22)}px;color:${s.sub};line-height:1.5;">${sec.text || ''}</div>
+                    </div>`;
+                } else if (sec.type === 'bullets') {
+                    const bullets = (sec.items || []).map(item =>
+                        `<div style="display:flex;gap:14px;align-items:baseline;margin-bottom:8px;">
+                            <span style="color:${s.bulletColor};font-size:${f(14)}px;margin-top:6px;">●</span>
+                            <span style="font-family:'DM Sans',sans-serif;font-size:${f(21)}px;color:${s.sub};line-height:1.5;">${item}</span>
+                        </div>`
+                    ).join('');
+                    content = `${sec.heading ? `<div style="font-family:'Montserrat',sans-serif;font-size:${f(24)}px;font-weight:700;color:${s.heading};margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">${sec.heading}</div>` : ''}${bullets}`;
+                } else {
+                    content = `${sec.heading ? `<div style="font-family:'Montserrat',sans-serif;font-size:${f(24)}px;font-weight:700;color:${s.heading};margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">${sec.heading}</div>` : ''}
+                    <div style="font-family:'DM Sans',sans-serif;font-size:${f(21)}px;color:${s.sub};line-height:1.6;">${sec.text || ''}</div>`;
+                }
+                sectionsHtml += `<div style="margin-bottom:${f(18)}px;">${content}</div>`;
+            });
+
+            const hasPhoto = posterImageMode === 'photo' && posterImageUrl;
+            const headlineBase = data.headline.length > 25 ? (hasPhoto ? 48 : 60) : (hasPhoto ? 56 : 72);
+
+            canvas.innerHTML = `
+                <div style="width:1920px;height:1080px;background:${s.bg};display:flex;position:relative;overflow:hidden;${!bgIsGrad ? 'border:2px solid ' + s.sectionBorder + ';' : ''}">
+                    <!-- Text Side -->
+                    <div style="width:${hasPhoto ? '60%' : '100%'};display:flex;flex-direction:column;position:relative;overflow:hidden;">
+                        ${!hasPhoto ? iconHtml : ''}
+                        ${data.badge ? `<div style="position:absolute;top:36px;${hasPhoto ? 'right:36px' : 'right:36px'};background:${s.badgeBg};color:${s.badgeText};padding:12px 28px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:${f(20)}px;font-weight:700;text-transform:uppercase;letter-spacing:2px;z-index:2;">${data.badge}</div>` : ''}
+
+                        <!-- Header -->
+                        <div style="padding:48px ${hasPhoto ? '48px' : '64px'} 36px;background:${s.headerBg};position:relative;z-index:2;">
+                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:${f(20)}px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:${s.accent};margin-bottom:10px;">${data.tag}</div>` : ''}
+                            <div style="font-family:'Montserrat',sans-serif;font-size:${f(headlineBase)}px;font-weight:800;line-height:1.1;color:${s.heading};text-transform:uppercase;letter-spacing:-1px;">${data.headline}</div>
+                            ${data.subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:${f(hasPhoto ? 22 : 26)}px;color:${s.sub};margin-top:14px;line-height:1.4;">${data.subtitle}</div>` : ''}
+                            <div style="width:80px;height:4px;background:${s.accent};margin-top:20px;border-radius:2px;"></div>
+                        </div>
+
+                        <!-- Body -->
+                        <div style="padding:28px ${hasPhoto ? '48px' : '64px'} 24px;flex:1;overflow:hidden;position:relative;z-index:2;">
+                            ${sectionsHtml}
+                        </div>
+
+                        <!-- Footer -->
+                        ${data.footer ? `<div style="padding:18px ${hasPhoto ? '48px' : '64px'};border-top:1px solid ${s.divider};position:relative;z-index:2;"><div style="font-family:'DM Sans',sans-serif;font-size:${f(hasPhoto ? 18 : 20)}px;color:${s.dim};line-height:1.4;font-style:italic;">${data.footer}</div></div>` : ''}
+                        ${data.signoff ? `<div style="padding:12px ${hasPhoto ? '48px' : '64px'} 28px;position:relative;z-index:2;"><div style="font-family:'Montserrat',sans-serif;font-size:${f(hasPhoto ? 18 : 20)}px;font-weight:600;color:${s.accent};">${data.signoff}</div></div>` : ''}
+                    </div>
+
+                    ${hasPhoto ? `<!-- Photo Side -->
+                    <div style="width:40%;position:relative;overflow:hidden;">
+                        <img src="${posterImageUrl}" style="width:100%;height:100%;object-fit:cover;" />
+                        <div style="position:absolute;inset:0;background:linear-gradient(90deg,${s.overlay || 'rgba(0,0,0,.8)'} 0%, transparent 35%);"></div>
+                    </div>` : ''}
+                </div>
+            `;
+        }
+
+        window.updatePosterFontScale = (val) => {
+            posterFontScale = val / 100;
+            document.getElementById('posterFontScaleLabel').textContent = val + '%';
+            if (posterData && currentPosterLayout === 'detailed') renderPoster(posterData, currentPosterStyle);
+        };
+
+        window.switchPosterStyle = (el) => {
+            document.querySelectorAll('.poster-tpl').forEach(t => t.classList.remove('selected'));
+            el.classList.add('selected');
+            currentPosterStyle = el.dataset.style;
+            if (posterData) {
+                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+                else renderPoster(posterData, currentPosterStyle);
+            }
+        };
+
+        window.switchPosterLayout = (el) => {
+            document.querySelectorAll('.poster-layout-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            currentPosterLayout = el.dataset.layout;
+
+            // Show/hide font size slider (detailed only)
+            document.getElementById('posterFontSliderWrap').style.display = currentPosterLayout === 'detailed' ? 'flex' : 'none';
+
+            // Show/hide visual-only styles
+            document.querySelectorAll('.visual-style-only').forEach(s => {
+                s.style.display = currentPosterLayout === 'visual' ? '' : 'none';
+            });
+
+            // Auto-select a good default style for the layout
+            if (currentPosterLayout === 'visual') {
+                const first = document.querySelector('.poster-tpl[data-style="teal-fun"]');
+                if (first) { switchPosterStyle(first); return; }
+            } else {
+                const corp = document.querySelector('.poster-tpl[data-style="corporate"]');
+                if (corp) { switchPosterStyle(corp); return; }
+            }
+
+            if (posterData) {
+                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+                else renderPoster(posterData, currentPosterStyle);
+            }
+        };
+
+        function renderVisualPoster(data, style) {
+            const s = POSTER_STYLES[style] || POSTER_STYLES['teal-fun'];
+            const canvas = document.getElementById('posterCanvas');
+            const hasPhoto = posterImageMode === 'photo' && posterImageUrl;
+
+            const headline = data.visual_headline || data.headline || '';
+            const subtitle = data.visual_subtitle || data.subtitle || '';
+            const detail = data.visual_detail || '';
+
+            // Auto-scale font for 60/40 split layout
+            const hlLen = headline.length;
+            let hlSize = hlLen <= 12 ? 120 : hlLen <= 20 ? 100 : hlLen <= 30 ? 85 : hlLen <= 45 ? 70 : hlLen <= 60 ? 58 : hlLen <= 80 ? 48 : 40;
+
+            const icons = (data.icons || []).slice(0, 2);
+            const icon1 = icons[0] && POSTER_ICONS[icons[0]] ? POSTER_ICONS[icons[0]] : '';
+            const icon2 = icons[1] && POSTER_ICONS[icons[1]] ? POSTER_ICONS[icons[1]] : '';
+
+            // Visual poster: full-bleed photo background OR solid gradient with centered text
+            if (hasPhoto) {
+                const accentColor = s.accent || '#fbbf24';
+                const keyPoints = [];
+                if (data.sections) {
+                    data.sections.forEach(sec => {
+                        if (sec.type === 'highlight' && sec.text) keyPoints.push(sec.text);
+                        else if (sec.type === 'bullets' && sec.items) keyPoints.push(...sec.items);
+                        else if (sec.type === 'text' && sec.text) keyPoints.push(sec.text);
+                    });
+                }
+                const points = keyPoints.slice(0, 3);
+                const pointsHtml = points.map(p => `<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:10px;">
+                    <div style="width:8px;height:8px;min-width:8px;border-radius:50%;background:${accentColor};margin-top:12px;"></div>
+                    <div style="font-family:'DM Sans',sans-serif;font-size:26px;color:rgba(255,255,255,.9);line-height:1.3;">${p}</div>
+                </div>`).join('');
+
+                // Pick photo layout based on style
+                const photoLayout = ['teal-fun','sunset','purple-pop'].includes(style) ? 'split' :
+                    ['neon','glass'].includes(style) ? 'stripe' :
+                    ['diagonal','luxury'].includes(style) ? 'magazine' :
+                    ['ocean','forest'].includes(style) ? 'banner' : 'hero';
+
+                if (photoLayout === 'split') {
+                    // SPLIT PANEL: Colored left panel + photo right
+                    canvas.innerHTML = `
+                    <div style="width:1920px;height:1080px;display:flex;position:relative;overflow:hidden;">
+                        <div style="width:55%;background:${s.bg};display:flex;flex-direction:column;justify-content:center;padding:70px 80px;position:relative;z-index:2;">
+                            ${data.badge ? `<div style="display:inline-block;background:${accentColor};color:#000;padding:12px 28px;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;align-self:flex-start;">${data.badge}</div>` : ''}
+                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:${accentColor};margin-bottom:16px;">${data.tag}</div>` : ''}
+                            <div style="font-family:'Montserrat',sans-serif;font-size:${hlSize > 90 ? 90 : hlSize}px;font-weight:900;line-height:1.0;color:${s.heading};text-transform:uppercase;letter-spacing:-2px;">${headline}</div>
+                            <div style="width:100px;height:6px;background:${accentColor};margin:28px 0;border-radius:3px;"></div>
+                            ${subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:30px;color:${s.sub};line-height:1.4;margin-bottom:20px;">${subtitle}</div>` : ''}
+                            ${pointsHtml ? `<div style="margin-top:10px;">${pointsHtml}</div>` : ''}
+                            ${data.signoff ? `<div style="margin-top:auto;padding-top:30px;font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;color:${accentColor};letter-spacing:2px;text-transform:uppercase;">${data.signoff}</div>` : ''}
+                        </div>
+                        <div style="width:45%;position:relative;">
+                            <img src="${posterImageUrl}" style="width:100%;height:100%;object-fit:cover;" />
+                            <div style="position:absolute;inset:0;background:linear-gradient(90deg,${s.bg.includes('gradient') ? 'rgba(0,0,0,.6)' : s.bg} 0%,transparent 30%);"></div>
+                        </div>
+                    </div>`;
+
+                } else if (photoLayout === 'stripe') {
+                    // SIDE STRIPE: Full photo + bold vertical accent stripe with text
+                    canvas.innerHTML = `
+                    <div style="width:1920px;height:1080px;position:relative;overflow:hidden;">
+                        <img src="${posterImageUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
+                        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.5) 45%,transparent 100%);"></div>
+                        ${style === 'neon' ? `<div style="position:absolute;top:0;left:0;width:8px;height:100%;background:${accentColor};box-shadow:0 0 30px ${accentColor},0 0 60px ${accentColor};z-index:5;"></div>
+                        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#00f0ff,#ff00aa,#00f0ff);z-index:5;"></div>` : 
+                        `<div style="position:absolute;top:0;left:0;width:8px;height:100%;background:${accentColor};z-index:5;"></div>`}
+                        <div style="position:absolute;top:0;left:0;width:60%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:70px 60px 70px 80px;z-index:2;">
+                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:${accentColor};margin-bottom:16px;">${data.tag}</div>` : ''}
+                            <div style="font-family:'Montserrat',sans-serif;font-size:${hlSize > 100 ? 100 : hlSize}px;font-weight:900;line-height:1.0;color:#fff;text-transform:uppercase;letter-spacing:-2px;${style === 'neon' ? 'text-shadow:0 0 20px ' + s.heading + ',0 0 40px ' + accentColor + ';' : 'text-shadow:0 4px 20px rgba(0,0,0,.5);'}">${headline}</div>
+                            <div style="width:120px;height:5px;background:${accentColor};margin:28px 0;border-radius:3px;${style === 'neon' ? 'box-shadow:0 0 10px ' + accentColor + ';' : ''}"></div>
+                            ${subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:30px;color:rgba(255,255,255,.85);line-height:1.4;max-width:90%;">${subtitle}</div>` : ''}
+                            ${pointsHtml ? `<div style="margin-top:20px;">${pointsHtml}</div>` : ''}
+                            ${data.signoff ? `<div style="margin-top:auto;padding-top:20px;font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;color:${accentColor};letter-spacing:2px;text-transform:uppercase;">${data.signoff}</div>` : ''}
+                        </div>
+                    </div>`;
+
+                } else if (photoLayout === 'magazine') {
+                    // MAGAZINE: Photo with bold angled color block overlay
+                    canvas.innerHTML = `
+                    <div style="width:1920px;height:1080px;position:relative;overflow:hidden;">
+                        <img src="${posterImageUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
+                        <div style="position:absolute;inset:0;background:rgba(0,0,0,.3);"></div>
+                        ${style === 'diagonal' ? 
+                            `<div style="position:absolute;top:0;left:0;width:65%;height:100%;background:linear-gradient(135deg,${s.diag1 || '#f43f5e'}dd 0%,${s.diag2 || '#8b5cf6'}cc 100%);clip-path:polygon(0 0, 100% 0, 70% 100%, 0 100%);"></div>` :
+                            `<div style="position:absolute;top:0;left:0;width:60%;height:100%;background:linear-gradient(135deg,rgba(15,10,5,.95),rgba(15,10,5,.8));clip-path:polygon(0 0, 100% 0, 80% 100%, 0 100%);"></div>
+                            <div style="position:absolute;inset:35px;border:1px solid rgba(212,168,83,.3);pointer-events:none;z-index:3;"></div>`}
+                        <div style="position:absolute;top:0;left:0;width:55%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:80px;z-index:2;">
+                            ${data.badge ? `<div style="display:inline-block;background:${accentColor};color:${style === 'luxury' ? '#0f0a05' : '#fff'};padding:12px 28px;border-radius:${style === 'luxury' ? '0' : '8'}px;font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;align-self:flex-start;">${data.badge}</div>` : ''}
+                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:${accentColor};margin-bottom:16px;">${data.tag}</div>` : ''}
+                            <div style="font-family:'Montserrat',sans-serif;font-size:${hlSize > 90 ? 90 : hlSize}px;font-weight:900;line-height:1.0;color:#fff;text-transform:uppercase;letter-spacing:${style === 'luxury' ? '3px' : '-2px'};">${headline}</div>
+                            <div style="width:${style === 'luxury' ? '60' : '100'}px;height:${style === 'luxury' ? '2' : '5'}px;background:${style === 'luxury' ? 'linear-gradient(90deg,transparent,' + accentColor + ',transparent)' : accentColor};margin:28px 0;"></div>
+                            ${subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:28px;color:rgba(255,255,255,.85);line-height:1.4;">${subtitle}</div>` : ''}
+                            ${data.signoff ? `<div style="margin-top:auto;padding-top:30px;font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;color:${accentColor};letter-spacing:2px;text-transform:uppercase;">${data.signoff}</div>` : ''}
+                        </div>
+                    </div>`;
+
+                } else if (photoLayout === 'banner') {
+                    // BOTTOM BANNER: Full photo + bold colored banner bar at bottom
+                    canvas.innerHTML = `
+                    <div style="width:1920px;height:1080px;position:relative;overflow:hidden;">
+                        <img src="${posterImageUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
+                        <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.3) 60%,rgba(0,0,0,.7) 100%);"></div>
+                        ${data.tag ? `<div style="position:absolute;top:40px;left:60px;font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:${accentColor};background:rgba(0,0,0,.5);padding:12px 24px;border-radius:8px;z-index:3;">${data.tag}</div>` : ''}
+                        ${data.badge ? `<div style="position:absolute;top:40px;right:60px;background:${accentColor};color:#000;padding:12px 28px;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:2px;z-index:3;">${data.badge}</div>` : ''}
+                        <div style="position:absolute;bottom:0;left:0;right:0;background:${s.bg.includes('gradient') ? s.bg : s.bg + 'ee'};padding:50px 80px 45px;z-index:2;">
+                            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:60px;">
+                                <div style="flex:1;">
+                                    <div style="font-family:'Montserrat',sans-serif;font-size:${Math.min(hlSize, 80)}px;font-weight:900;line-height:1.0;color:${s.heading};text-transform:uppercase;letter-spacing:-2px;">${headline}</div>
+                                    ${subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:26px;color:${s.sub};margin-top:14px;line-height:1.3;">${subtitle}</div>` : ''}
+                                </div>
+                                ${data.signoff ? `<div style="white-space:nowrap;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;color:${accentColor};letter-spacing:2px;text-transform:uppercase;padding-bottom:8px;">${data.signoff}</div>` : ''}
+                            </div>
+                            <div style="width:120px;height:4px;background:${accentColor};margin-top:20px;border-radius:2px;"></div>
+                        </div>
+                    </div>`;
+
+                } else {
+                    // HERO (default): Enhanced centered text overlay
+                    canvas.innerHTML = `
+                    <div style="width:1920px;height:1080px;position:relative;overflow:hidden;">
+                        <img src="${posterImageUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
+                        <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.25) 40%, rgba(0,0,0,.65) 100%);"></div>
+                        <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:80px 120px;">
+                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:${accentColor};margin-bottom:24px;">${data.tag}</div>` : ''}
+                            <div style="font-family:'Montserrat',sans-serif;font-size:${hlSize}px;font-weight:900;line-height:1.05;color:#ffffff;text-transform:uppercase;letter-spacing:-2px;text-shadow:0 4px 30px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);max-width:1600px;">${headline}</div>
+                            <div style="width:120px;height:5px;background:${accentColor};margin:30px 0;border-radius:3px;"></div>
+                            ${subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:36px;font-weight:500;color:rgba(255,255,255,.9);text-shadow:0 2px 10px rgba(0,0,0,.4);max-width:1200px;line-height:1.3;">${subtitle}</div>` : ''}
+                            ${detail ? `<div style="margin-top:28px;padding:16px 40px;background:rgba(0,0,0,.4);border-radius:14px;"><div style="font-family:'DM Sans',sans-serif;font-size:30px;font-weight:600;color:#ffffff;">${detail}</div></div>` : ''}
+                        </div>
+                        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 60px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.7));display:flex;justify-content:space-between;align-items:center;">
+                            ${data.signoff ? `<div style="font-family:'Montserrat',sans-serif;font-size:22px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:1px;text-transform:uppercase;">${data.signoff}</div>` : '<div></div>'}
+                            ${data.badge ? `<div style="background:${accentColor};color:#000;padding:10px 24px;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:2px;">${data.badge}</div>` : ''}
+                        </div>
+                    </div>`;
+                }
+            } else {
+                // GRADIENT MODE: Bold text + visible icon + key points
+                const accentBar = s.accent || '#fbbf24';
+
+                // Auto-extract key points from detailed sections
+                let keyPoints = [];
+                if (data.sections) {
+                    data.sections.forEach(sec => {
+                        if (sec.type === 'highlight' && sec.text) keyPoints.push(sec.text);
+                        else if (sec.type === 'bullets' && sec.items) keyPoints.push(...sec.items);
+                        else if (sec.type === 'text' && sec.text) keyPoints.push(sec.text);
+                    });
+                }
+                keyPoints = keyPoints.slice(0, 4);
+
+                let pointsHtml = '';
+                if (keyPoints.length > 0) {
+                    const totalChars = keyPoints.reduce((sum, p) => sum + p.length, 0);
+                    const ptSize = totalChars > 400 ? 22 : totalChars > 250 ? 24 : 28;
+                    pointsHtml = `<div style="margin-top:30px;display:flex;flex-direction:column;gap:10px;">` +
+                        keyPoints.map(p => `<div style="display:flex;align-items:flex-start;gap:12px;">
+                            <div style="width:8px;height:8px;min-width:8px;border-radius:50%;background:${accentBar};margin-top:${Math.round(ptSize * 0.4)}px;"></div>
+                            <div style="font-family:'DM Sans',sans-serif;font-size:${ptSize}px;color:${s.sub};line-height:1.3;">${p}</div>
+                        </div>`).join('') + `</div>`;
+                }
+
+                canvas.innerHTML = `
+                    <div style="width:1920px;height:1080px;background:${s.bg};display:flex;position:relative;overflow:hidden;">
+                        <!-- Left accent stripe -->
+                        <div style="position:absolute;top:0;left:0;width:14px;height:100%;background:${accentBar};z-index:5;${s.glow ? 'box-shadow:0 0 30px ' + accentBar + ',0 0 60px ' + accentBar + ';' : ''}"></div>
+
+                        <!-- Style-specific decorations -->
+                        ${style === 'neon' ? `
+                            <div style="position:absolute;top:40px;right:40px;width:300px;height:300px;border:2px solid rgba(0,240,255,.15);border-radius:50%;"></div>
+                            <div style="position:absolute;top:60px;right:60px;width:260px;height:260px;border:1px solid rgba(255,0,170,.1);border-radius:50%;"></div>
+                            <div style="position:absolute;bottom:100px;right:150px;width:200px;height:200px;border:2px solid rgba(0,240,255,.08);border-radius:50%;"></div>
+                            <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#00f0ff,#ff00aa,#00f0ff);opacity:.4;"></div>
+                            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ff00aa,#00f0ff,#ff00aa);opacity:.4;"></div>
+                        ` : style === 'glass' ? `
+                            <div style="position:absolute;top:-100px;right:-50px;width:600px;height:600px;border-radius:50%;background:rgba(56,189,248,.08);filter:blur(80px);"></div>
+                            <div style="position:absolute;bottom:-150px;left:100px;width:500px;height:500px;border-radius:50%;background:rgba(139,92,246,.06);filter:blur(60px);"></div>
+                            <div style="position:absolute;top:60px;left:50px;bottom:140px;width:58%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:24px;z-index:1;"></div>
+                        ` : style === 'diagonal' ? `
+                            <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:linear-gradient(135deg,${s.diag1 || '#f43f5e'} 0%,${s.diag2 || '#8b5cf6'} 100%);clip-path:polygon(30% 0, 100% 0, 100% 100%, 0% 100%);"></div>
+                            <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:rgba(0,0,0,.3);clip-path:polygon(32% 0, 100% 0, 100% 100%, 2% 100%);"></div>
+                        ` : style === 'luxury' ? `
+                            <div style="position:absolute;inset:30px;border:1px solid rgba(212,168,83,.2);border-radius:0;"></div>
+                            <div style="position:absolute;inset:34px;border:1px solid rgba(212,168,83,.08);"></div>
+                            <div style="position:absolute;top:28px;left:50%;transform:translateX(-50%);width:200px;height:2px;background:linear-gradient(90deg,transparent,#d4a853,transparent);"></div>
+                            <div style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:200px;height:2px;background:linear-gradient(90deg,transparent,#d4a853,transparent);"></div>
+                        ` : style === 'ocean' ? `
+                            <div style="position:absolute;bottom:80px;left:0;right:0;height:300px;opacity:.06;">
+                                <svg viewBox="0 0 1920 300" fill="none"><path d="M0 150 Q240 50 480 150 T960 150 T1440 150 T1920 150 V300 H0Z" fill="#06b6d4"/></svg>
+                            </div>
+                            <div style="position:absolute;bottom:60px;left:0;right:0;height:250px;opacity:.04;">
+                                <svg viewBox="0 0 1920 250" fill="none"><path d="M0 120 Q300 30 600 120 T1200 120 T1920 120 V250 H0Z" fill="#0ea5e9"/></svg>
+                            </div>
+                        ` : `
+                            <div style="position:absolute;top:-150px;right:100px;width:600px;height:600px;border-radius:50%;background:rgba(255,255,255,.03);"></div>
+                            <div style="position:absolute;bottom:-200px;right:300px;width:500px;height:500px;border-radius:50%;background:rgba(255,255,255,.02);"></div>
+                        `}
+
+                        <!-- Text side (60%) -->
+                        <div style="width:60%;display:flex;flex-direction:column;justify-content:center;padding:60px 50px 20px 80px;z-index:2;overflow:hidden;">
+                            ${data.badge ? `<div style="display:inline-block;background:${s.badgeBg};color:${s.badgeText};padding:14px 32px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:3px;margin-bottom:24px;align-self:flex-start;">${data.badge}</div>` : ''}
+
+                            <div style="font-family:'Montserrat',sans-serif;font-size:${hlSize}px;font-weight:900;line-height:1.0;color:${s.heading};text-transform:uppercase;letter-spacing:-3px;${s.glow ? 'text-shadow:0 0 20px ' + s.heading + ',0 0 40px ' + s.heading + ',0 0 80px ' + (s.accent || s.heading) + ';' : style === 'luxury' ? 'text-shadow:0 2px 4px rgba(0,0,0,.5);letter-spacing:2px;' : ''}">
+                                ${headline}
+                            </div>
+
+                            <div style="width:${style === 'luxury' ? '60' : '100'}px;height:${style === 'luxury' ? '2' : '6'}px;background:${style === 'luxury' ? 'linear-gradient(90deg,transparent,' + accentBar + ',transparent)' : accentBar};margin-top:28px;border-radius:3px;${s.glow ? 'box-shadow:0 0 10px ' + accentBar + ',0 0 20px ' + accentBar + ';width:140px;' : ''}"></div>
+
+                            ${subtitle ? `<div style="margin-top:24px;font-family:'DM Sans',sans-serif;font-size:36px;font-weight:500;color:${s.sub};line-height:1.35;">${subtitle}</div>` : ''}
+
+                            ${detail ? `<div style="margin-top:24px;padding:20px 30px;background:rgba(0,0,0,.15);border-radius:14px;border-left:6px solid ${accentBar};"><div style="font-family:'DM Sans',sans-serif;font-size:30px;font-weight:600;color:${s.sub};line-height:1.3;">${detail}</div></div>` : ''}
+
+                            ${pointsHtml}
+                        </div>
+
+                        <!-- Icon side (40%) — large visible icon -->
+                        <div style="width:40%;display:flex;align-items:center;justify-content:center;position:relative;">
+                            ${icon1 ? `<div style="width:420px;height:420px;color:rgba(255,255,255,.12);filter:drop-shadow(0 0 60px rgba(255,255,255,.05));">${icon1}</div>` : ''}
+                            ${icon2 && !icon1 ? `<div style="width:420px;height:420px;color:rgba(255,255,255,.12);">${icon2}</div>` : ''}
+                            ${icon2 && icon1 ? `<div style="position:absolute;bottom:80px;right:40px;width:180px;height:180px;color:rgba(255,255,255,.07);transform:rotate(-15deg);">${icon2}</div>` : ''}
+                        </div>
+
+                        <!-- Bottom bar -->
+                        <div style="position:absolute;bottom:0;left:0;right:0;height:70px;padding:0 100px 0 80px;background:rgba(0,0,0,.2);display:flex;justify-content:space-between;align-items:center;z-index:3;">
+                            ${data.signoff ? `<div style="font-family:'Montserrat',sans-serif;font-size:22px;font-weight:700;color:${accentBar};letter-spacing:1px;text-transform:uppercase;">${data.signoff}</div>` : '<div></div>'}
+                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:600;color:${s.dim || 'rgba(255,255,255,.4)'};letter-spacing:3px;text-transform:uppercase;">${data.tag}</div>` : ''}
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // ═══ POSTER IMAGE MANAGEMENT ═══
+        window.setPosterImage = (mode) => {
+            posterImageMode = mode;
+            document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
+            if (mode === 'none') {
+                document.getElementById('btnNoImage').classList.add('active');
+                posterImageUrl = null;
+                document.getElementById('posterImagePreview').style.display = 'none';
+                document.getElementById('aiImageResults').style.display = 'none';
+            } else if (mode === 'icons') {
+                document.getElementById('btnIconsOnly').classList.add('active');
+                posterImageUrl = null;
+                document.getElementById('posterImagePreview').style.display = 'none';
+                document.getElementById('aiImageResults').style.display = 'none';
+            }
+            renderCurrentPoster();
+        };
+
+        window.handlePosterImageUpload = (file) => {
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            posterImageUrl = url;
+            posterImageMode = 'photo';
+            document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('posterImagePreview').style.display = '';
+            document.getElementById('posterImgThumb').src = url;
+            document.getElementById('posterImgLabel').textContent = file.name;
+            document.getElementById('aiImageResults').style.display = 'none';
+            renderCurrentPoster();
+        };
+
+        window.removePosterImage = () => {
+            posterImageUrl = null;
+            posterImageMode = 'icons';
+            document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btnIconsOnly').classList.add('active');
+            document.getElementById('posterImagePreview').style.display = 'none';
+            document.getElementById('posterImageUpload').value = '';
+            renderCurrentPoster();
+        };
+
+        window.selectAiImage = (url, el) => {
+            posterImageUrl = url;
+            posterImageMode = 'photo';
+            document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.ai-img-item').forEach(i => i.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('posterImagePreview').style.display = '';
+            document.getElementById('posterImgThumb').src = url;
+            document.getElementById('posterImgLabel').textContent = 'Stock photo';
+            renderCurrentPoster();
+        };
+
+        // ═══ ILLUSTRATION LIBRARY ═══
+        const ILLUSTRATIONS = {
+            garage: { label: '🚗 Garage/Parking', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e3a5f"/><rect x="30" y="50" width="140" height="90" rx="8" fill="#2a4a6f" stroke="#60a5fa" stroke-width="2"/><rect x="50" y="60" width="100" height="20" rx="4" fill="#60a5fa" opacity=".3"/><rect x="50" y="60" width="60" height="20" rx="4" fill="#60a5fa" opacity=".6"/><rect x="45" y="95" width="40" height="30" rx="6" fill="#3b82f6"/><rect x="115" y="95" width="40" height="30" rx="6" fill="#3b82f6" opacity=".5"/><path d="M55 105h20M125 105h20" stroke="#fff" stroke-width="2"/><rect x="85" y="145" width="30" height="10" rx="3" fill="#60a5fa" opacity=".4"/><text x="100" y="175" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="sans-serif">PARKING</text></svg>` },
+            fire: { label: '🔥 Fire Alarm', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#7f1d1d"/><circle cx="100" cy="90" r="45" fill="#dc2626" opacity=".3"/><circle cx="100" cy="90" r="30" fill="#dc2626" opacity=".5"/><circle cx="100" cy="90" r="15" fill="#ef4444"/><path d="M90 65c0 0 5 15 10 15s10-15 10-15" fill="#fbbf24"/><path d="M85 145h30" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><path d="M80 155h40" stroke="#ef4444" stroke-width="2" stroke-linecap="round" opacity=".5"/><text x="100" y="180" text-anchor="middle" fill="#fca5a5" font-size="11" font-family="sans-serif">FIRE ALARM</text></svg>` },
+            generator: { label: '⚡ Power/Generator', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1a1a2e"/><rect x="50" y="55" width="100" height="70" rx="8" fill="#2d2d44" stroke="#fbbf24" stroke-width="2"/><rect x="60" y="65" width="30" height="20" rx="3" fill="#fbbf24" opacity=".2"/><rect x="60" y="65" width="18" height="20" rx="3" fill="#fbbf24" opacity=".4"/><circle cx="130" cy="90" r="12" fill="#fbbf24" opacity=".3" stroke="#fbbf24" stroke-width="1.5"/><path d="M127 85l6 10h-6l6 10" stroke="#fbbf24" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M90 140l10-18 8 12 10-18" stroke="#fbbf24" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="100" y="180" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="sans-serif">GENERATOR</text></svg>` },
+            elevator: { label: '🛗 Elevator', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e293b"/><rect x="60" y="35" width="80" height="120" rx="6" fill="#334155" stroke="#60a5fa" stroke-width="2"/><rect x="65" y="40" width="35" height="110" rx="3" fill="#1e3a5f"/><rect x="102" y="40" width="35" height="110" rx="3" fill="#1e3a5f"/><circle cx="100" cy="50" r="4" fill="#60a5fa"/><path d="M80 75l-5 8h10z" fill="#60a5fa" opacity=".7"/><path d="M120 105l-5-8h10z" fill="#60a5fa" opacity=".7"/><text x="100" y="178" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="sans-serif">ELEVATOR</text></svg>` },
+            water: { label: '💧 Plumbing/Water', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#0c2d48"/><path d="M100 45l25 35a30 30 0 11-50 0z" fill="#2563eb" opacity=".6"/><path d="M100 55l18 25a22 22 0 11-36 0z" fill="#3b82f6" opacity=".8"/><path d="M90 130v25M110 130v25" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/><path d="M80 155h40" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/><circle cx="100" cy="85" r="5" fill="#93c5fd" opacity=".6"/><text x="100" y="185" text-anchor="middle" fill="#93c5fd" font-size="11" font-family="sans-serif">PLUMBING</text></svg>` },
+            pool: { label: '🏊 Pool/Amenity', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#0e4166"/><path d="M30 110c15-10 25 10 40 0s25 10 40 0 25 10 40 0 25 10 40 0" stroke="#38bdf8" stroke-width="3" fill="none"/><path d="M30 125c15-10 25 10 40 0s25 10 40 0 25 10 40 0 25 10 40 0" stroke="#38bdf8" stroke-width="2" fill="none" opacity=".5"/><circle cx="100" cy="70" r="12" fill="#0ea5e9" opacity=".5"/><path d="M100 58v-15" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round"/><path d="M90 82l10 15 10-15" stroke="#38bdf8" stroke-width="2" fill="none"/><text x="100" y="170" text-anchor="middle" fill="#7dd3fc" font-size="11" font-family="sans-serif">POOL</text></svg>` },
+            window_clean: { label: '🪟 Window Cleaning', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e293b"/><rect x="55" y="40" width="90" height="100" rx="4" fill="#334155" stroke="#60a5fa" stroke-width="2"/><line x1="100" y1="40" x2="100" y2="140" stroke="#60a5fa" stroke-width="1.5" opacity=".4"/><line x1="55" y1="90" x2="145" y2="90" stroke="#60a5fa" stroke-width="1.5" opacity=".4"/><path d="M75 60l50 30" stroke="#38bdf8" stroke-width="2" opacity=".3"/><path d="M75 70l50 30" stroke="#38bdf8" stroke-width="2" opacity=".2"/><circle cx="130" cy="55" r="8" fill="#fbbf24" opacity=".4"/><text x="100" y="170" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="sans-serif">WINDOW CLEANING</text></svg>` },
+            moving: { label: '📦 Moving/Delivery', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#27272a"/><rect x="40" y="70" width="60" height="55" rx="4" fill="#78716c" stroke="#a8a29e" stroke-width="1.5"/><rect x="55" y="80" width="30" height="20" rx="2" fill="#a8a29e" opacity=".3"/><path d="M55 90h30M70 80v20" stroke="#a8a29e" stroke-width="1" opacity=".5"/><rect x="110" y="85" width="45" height="40" rx="4" fill="#78716c" stroke="#a8a29e" stroke-width="1.5"/><rect x="120" y="55" width="30" height="30" rx="4" fill="#78716c" stroke="#a8a29e" stroke-width="1.5"/><text x="100" y="165" text-anchor="middle" fill="#a8a29e" font-size="11" font-family="sans-serif">MOVING</text></svg>` },
+            pest: { label: '🐛 Pest Control', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1a1a2e"/><circle cx="100" cy="85" r="35" fill="none" stroke="#ef4444" stroke-width="3"/><line x1="75" y1="60" x2="125" y2="110" stroke="#ef4444" stroke-width="3"/><circle cx="100" cy="85" r="10" fill="#6b7280" opacity=".5"/><path d="M93 78q7-5 14 0" stroke="#6b7280" stroke-width="1.5" fill="none"/><circle cx="96" cy="82" r="2" fill="#9ca3af"/><circle cx="104" cy="82" r="2" fill="#9ca3af"/><text x="100" y="155" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="sans-serif">PEST CONTROL</text></svg>` },
+            recycling: { label: '♻️ Recycling/Waste', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#14532d"/><path d="M100 55l-20 30h15v25h10v-25h15z" fill="#22c55e" opacity=".7"/><path d="M70 100l20 30-15 0 5 20h-10l-5-20-15 0z" fill="#16a34a" opacity=".7" transform="rotate(-120 100 100)"/><path d="M130 100l-20 30 15 0-5 20h10l5-20 15 0z" fill="#15803d" opacity=".7" transform="rotate(120 100 100)"/><text x="100" y="175" text-anchor="middle" fill="#86efac" font-size="11" font-family="sans-serif">RECYCLING</text></svg>` },
+            snow: { label: '❄️ Snow/Winter', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e3a5f"/><line x1="100" y1="40" x2="100" y2="140" stroke="#e0f2fe" stroke-width="3"/><line x1="50" y1="90" x2="150" y2="90" stroke="#e0f2fe" stroke-width="3"/><line x1="65" y1="55" x2="135" y2="125" stroke="#e0f2fe" stroke-width="3"/><line x1="135" y1="55" x2="65" y2="125" stroke="#e0f2fe" stroke-width="3"/><circle cx="100" cy="90" r="6" fill="#bae6fd"/><path d="M95 45l5 10 5-10M95 135l5-10 5 10" stroke="#bae6fd" stroke-width="2" fill="none"/><path d="M55 85l10 5-10 5M145 85l-10 5 10 5" stroke="#bae6fd" stroke-width="2" fill="none"/><text x="100" y="175" text-anchor="middle" fill="#bae6fd" font-size="11" font-family="sans-serif">WINTER</text></svg>` },
+            security: { label: '🔒 Security', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1a1a2e"/><path d="M100 45l40 18v32c0 28-40 50-40 50s-40-22-40-50V63z" fill="#3b82f6" opacity=".2" stroke="#60a5fa" stroke-width="2"/><path d="M100 60l28 12v22c0 20-28 35-28 35s-28-15-28-35V72z" fill="#3b82f6" opacity=".3"/><path d="M90 95l8 8 15-18" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="100" y="175" text-anchor="middle" fill="#93c5fd" font-size="11" font-family="sans-serif">SECURITY</text></svg>` },
+            construction: { label: '🏗️ Construction', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#292524"/><path d="M60 140h80" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/><rect x="75" y="70" width="50" height="70" fill="#78716c" opacity=".5"/><rect x="85" y="80" width="12" height="15" rx="2" fill="#fbbf24" opacity=".4"/><rect x="103" y="80" width="12" height="15" rx="2" fill="#fbbf24" opacity=".4"/><path d="M100 50l-35 20h70z" fill="#fbbf24" opacity=".6"/><rect x="95" y="115" width="10" height="25" rx="2" fill="#57534e"/><text x="100" y="175" text-anchor="middle" fill="#a8a29e" font-size="10" font-family="sans-serif">CONSTRUCTION</text></svg>` },
+            meeting: { label: '🤝 Meeting/AGM', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e293b"/><rect x="45" y="75" width="110" height="60" rx="6" fill="#334155" stroke="#60a5fa" stroke-width="1.5"/><circle cx="70" cy="60" r="10" fill="#60a5fa" opacity=".4"/><circle cx="100" cy="55" r="10" fill="#60a5fa" opacity=".5"/><circle cx="130" cy="60" r="10" fill="#60a5fa" opacity=".4"/><rect x="60" y="90" width="20" height="3" rx="1.5" fill="#60a5fa" opacity=".4"/><rect x="90" y="90" width="20" height="3" rx="1.5" fill="#60a5fa" opacity=".4"/><rect x="60" y="100" width="30" height="3" rx="1.5" fill="#60a5fa" opacity=".3"/><text x="100" y="170" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="sans-serif">MEETING</text></svg>` },
+            cleaning: { label: '🧹 Cleaning', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e293b"/><rect x="95" y="40" width="10" height="80" rx="3" fill="#a78bfa"/><path d="M80 120l20-5 20 5v25c0 5-10 10-20 10s-20-5-20-10z" fill="#7c3aed" opacity=".5"/><path d="M85 125h30M85 135h30" stroke="#a78bfa" stroke-width="1.5" opacity=".5"/><circle cx="65" cy="85" r="3" fill="#60a5fa" opacity=".4"/><circle cx="140" cy="70" r="2" fill="#60a5fa" opacity=".3"/><circle cx="55" cy="105" r="2" fill="#60a5fa" opacity=".3"/><text x="100" y="180" text-anchor="middle" fill="#c4b5fd" font-size="11" font-family="sans-serif">CLEANING</text></svg>` },
+            hvac: { label: '🌡️ HVAC/Heating', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1a1a2e"/><rect x="65" y="50" width="70" height="85" rx="8" fill="#2d2d44" stroke="#f97316" stroke-width="2"/><circle cx="100" cy="80" r="18" fill="#f97316" opacity=".2" stroke="#f97316" stroke-width="1.5"/><path d="M100 68v24M94 80h12" stroke="#f97316" stroke-width="2" stroke-linecap="round"/><rect x="80" y="110" width="40" height="8" rx="4" fill="#f97316" opacity=".3"/><path d="M85 145l5-8 5 8 5-8 5 8 5-8 5 8" stroke="#f97316" stroke-width="2" fill="none" stroke-linecap="round"/><text x="100" y="180" text-anchor="middle" fill="#fdba74" font-size="11" font-family="sans-serif">HVAC</text></svg>` },
+            notice: { label: '📋 General Notice', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e293b"/><rect x="55" y="40" width="90" height="110" rx="6" fill="#334155" stroke="#60a5fa" stroke-width="2"/><rect x="70" y="58" width="60" height="5" rx="2.5" fill="#60a5fa" opacity=".5"/><rect x="70" y="72" width="45" height="4" rx="2" fill="#60a5fa" opacity=".3"/><rect x="70" y="84" width="55" height="4" rx="2" fill="#60a5fa" opacity=".3"/><rect x="70" y="96" width="35" height="4" rx="2" fill="#60a5fa" opacity=".3"/><rect x="70" y="112" width="50" height="4" rx="2" fill="#60a5fa" opacity=".2"/><rect x="70" y="124" width="40" height="4" rx="2" fill="#60a5fa" opacity=".2"/><circle cx="130" cy="48" r="6" fill="#fbbf24" opacity=".6"/><text x="100" y="178" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="sans-serif">NOTICE</text></svg>` },
+            package: { label: '📦 Packages', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#27272a"/><rect x="55" y="60" width="90" height="70" rx="4" fill="#78716c" stroke="#d6d3d1" stroke-width="1.5"/><line x1="100" y1="60" x2="100" y2="130" stroke="#d6d3d1" stroke-width="1.5" opacity=".5"/><line x1="55" y1="95" x2="145" y2="95" stroke="#d6d3d1" stroke-width="1.5" opacity=".5"/><path d="M80 55h40l10 10H70z" fill="#a8a29e" opacity=".4"/><rect x="90" y="82" width="20" height="10" rx="3" fill="#fbbf24" opacity=".5"/><text x="100" y="165" text-anchor="middle" fill="#a8a29e" font-size="11" font-family="sans-serif">PACKAGES</text></svg>` },
+            event: { label: '🎉 Event/Holiday', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#2e1065"/><circle cx="70" cy="70" r="5" fill="#f472b6"/><circle cx="130" cy="55" r="4" fill="#fbbf24"/><circle cx="50" cy="100" r="3" fill="#60a5fa"/><circle cx="150" cy="90" r="4" fill="#34d399"/><circle cx="100" cy="50" r="3" fill="#c084fc"/><path d="M80 75l20-25 20 25" stroke="#f472b6" stroke-width="2" fill="#f472b6" opacity=".3"/><path d="M85 130h30v-25l-15-15-15 15z" fill="#8b5cf6" opacity=".4" stroke="#a78bfa" stroke-width="1.5"/><path d="M100 105v-15" stroke="#fbbf24" stroke-width="2"/><circle cx="100" cy="88" r="3" fill="#fbbf24"/><text x="100" y="175" text-anchor="middle" fill="#c4b5fd" font-size="11" font-family="sans-serif">EVENT</text></svg>` },
+            noise: { label: '🔇 Noise/Quiet', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="#1e293b"/><rect x="85" y="60" width="30" height="50" rx="15" fill="#60a5fa" opacity=".4" stroke="#60a5fa" stroke-width="2"/><path d="M85 95v10a15 15 0 0030 0v-10" stroke="#60a5fa" stroke-width="2" fill="none"/><line x1="100" y1="115" x2="100" y2="130" stroke="#60a5fa" stroke-width="2"/><line x1="88" y1="130" x2="112" y2="130" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/><line x1="65" y1="75" x2="45" y2="60" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><line x1="65" y1="60" x2="45" y2="75" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><text x="100" y="170" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="sans-serif">QUIET HOURS</text></svg>` },
+        };
+
+        window.generateAiPosterImage = async () => {
+            if (!aiConfig.gemini) {
+                alert('Add a Gemini API key in Admin → Settings → AI Integration.\n\nThe same key works for both text and image generation.');
+                return;
+            }
+            if (!posterData) {
+                alert('Please click "Design Poster" first to generate poster content, then click "AI Generate" to create the image.');
+                return;
+            }
+
+            // If a photo is selected (uploaded or stock), attach it so Gemini builds the poster around it
+            let photoPart = null;
+            if (posterImageMode === 'photo' && posterImageUrl) {
+                try {
+                    const blob = await fetch(posterImageUrl).then(r => r.blob());
+                    const b64 = await new Promise((resolve, reject) => {
+                        const fr = new FileReader();
+                        fr.onload = () => resolve(fr.result.split(',')[1]);
+                        fr.onerror = reject;
+                        fr.readAsDataURL(blob);
+                    });
+                    photoPart = { inlineData: { mimeType: blob.type || 'image/jpeg', data: b64 } };
+                } catch (e) { console.warn('Could not attach selected photo, generating without it:', e); }
+            }
+
+            const btn = document.getElementById('btnAiGenerate');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="ai-spinner"></span>
+                <span style="flex:1;">
+                    <span style="display:block;font-size:14px;font-weight:700;">Generating your poster…</span>
+                    <span style="display:block;font-size:11px;opacity:.85;margin-top:1px;">${photoPart ? 'Designing around your photo' : 'Gemini is designing it'} — this takes about 20 seconds</span>
+                </span>`;
+
+            const title = posterData.visual_headline || posterData.headline || '';
+            const subtitle = posterData.visual_subtitle || posterData.subtitle || '';
+            const details = posterData.visual_detail || '';
+            const signoff = posterData.signoff || '';
+            const tag = posterData.tag || '';
+            const category = document.getElementById('category')?.value || 'general';
+
+            // Collect poster text, skipping lines that duplicate info already shown
+            const seenLines = new Set();
+            const addLine = (arr, text) => {
+                const norm = (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                if (!norm || seenLines.has(norm)) return;
+                seenLines.add(norm);
+                arr.push(text.trim());
+            };
+            const textLines = [];
+            addLine(textLines, title);
+            addLine(textLines, subtitle);
+            addLine(textLines, details);
+            (posterData.sections || []).forEach(s => {
+                if (s.type === 'bullets') (s.items || []).forEach(i => addLine(textLines, i));
+                else addLine(textLines, s.text);
+            });
+
+            const prompt = `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
+
+The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Do not add any words of your own, do not print any field labels or headings that are not listed, and do not show the same information twice.
+
+===POSTER TEXT START===
+${tag ? `${tag} (small badge, top corner)` : ''}
+${textLines[0] ? `${textLines[0]} (main headline, largest text)` : ''}
+${textLines.slice(1).map(l => `${l}`).join('\n')}
+${signoff ? `${signoff} (small, at the bottom)` : ''}
+===POSTER TEXT END===
+
+The notes in parentheses describe placement only — NEVER print the parenthetical notes, the === markers, or any label on the poster.
+${photoPart ? `
+A REAL PHOTOGRAPH IS ATTACHED. It shows the actual location or subject of this notice, so residents must be able to recognize it in real life. PHOTO RULES:
+- Feature the attached photograph prominently, covering roughly 40-50% of the poster (for example as a full-height panel on one side, or a large framed region)
+- Keep the photograph exactly as it is — do NOT redraw, repaint, alter, or replace its content. Only mild color grading to blend with the design is allowed
+- Design the poster's colors and layout to complement the photo
+` : ''}
+DESIGN RULES:
+- MUST be WIDE LANDSCAPE layout (16:9 ratio, like a widescreen TV)
+- Professional, modern graphic design for a building lobby TV
+- Bold colors, eye-catching layout with relevant imagery for "${category}" category
+- ALL listed text must be included exactly once and perfectly legible
+- Include relevant visual elements (icons, shapes${photoPart ? '' : ', photos'}) matching the topic — imagery only, no extra words
+- Text must be perfectly spelled with no errors
+- Use visual hierarchy: headline largest, details medium, fine print smaller
+- Fill the entire wide landscape canvas — no blank space or borders`;
+
+            try {
+                // Best text rendering first, then fall back if quota/deprecation hits
+                const imageModels = ['gemini-3-pro-image', 'gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
+                let data = null, lastError = null;
+                for (const model of imageModels) {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiConfig.gemini}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: photoPart ? [{ text: prompt }, photoPart] : [{ text: prompt }] }],
+                            generationConfig: {
+                                responseModalities: ['TEXT', 'IMAGE'],
+                                imageConfig: {
+                                    aspectRatio: '16:9'
+                                }
+                            }
+                        })
+                    });
+                    data = await res.json();
+                    if (!data.error) break;
+                    lastError = data.error.message || 'API error';
+                }
+                if (data.error) throw new Error(lastError);
+
+                const parts = data.candidates?.[0]?.content?.parts || [];
+                let imageData = null;
+                for (const part of parts) {
+                    if (part.inlineData && part.inlineData.mimeType?.startsWith('image/')) {
+                        imageData = part.inlineData;
+                        break;
+                    }
+                }
+
+                if (!imageData) throw new Error('No image was generated. The model may have refused the prompt. Try regenerating.');
+
+                // Convert base64 to blob URL
+                const byteChars = atob(imageData.data);
+                const byteArray = new Uint8Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+                const blob = new Blob([byteArray], { type: imageData.mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+
+                // Display directly in the poster canvas as a full poster image
+                const canvas = document.getElementById('posterCanvas');
+                canvas.innerHTML = `<div style="width:1920px;height:1080px;position:relative;overflow:hidden;">
+                    <img src="${blobUrl}" style="width:100%;height:100%;object-fit:cover;" />
+                </div>`;
+
+                // Update UI
+                document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('posterImagePreview').style.display = '';
+                document.getElementById('posterImgThumb').src = blobUrl;
+                document.getElementById('posterImgLabel').textContent = 'AI Generated poster';
+
+                // Store for "Use This Poster"
+                posterImageUrl = blobUrl;
+                posterImageMode = 'ai_full';
+
+            } catch (e) {
+                alert(`AI image generation failed: ${e.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
+        };
+
+        window.searchPixabayPhotos = async () => {
+            if (!aiConfig.pixabay) {
+                alert('Add a Pixabay API key in Admin → Settings → AI Integration.\n\nGet a free key at pixabay.com/api/docs (instant, no credit card).');
+                return;
+            }
+            const searchTerms = posterImageSearchTerms || document.getElementById('title').value.trim() || 'building';
+            const btn = document.getElementById('btnStockSearch');
+            const grid = document.getElementById('aiImageGrid');
+            const results = document.getElementById('aiImageResults');
+            btn.disabled = true;
+            btn.textContent = '⏳ Searching...';
+            try {
+                const res = await fetch(`https://pixabay.com/api/?key=${aiConfig.pixabay}&q=${encodeURIComponent(searchTerms)}&image_type=photo&per_page=12&orientation=horizontal&safesearch=true&min_width=1280`);
+                const data = await res.json();
+                if (!data.hits || data.hits.length === 0) {
+                    alert('No photos found. Try regenerating the poster for different search terms.');
+                    return;
+                }
+                grid.innerHTML = '';
+                data.hits.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'ai-img-item';
+                    div.style.cursor = 'pointer';
+                    div.innerHTML = `<img src="${p.previewURL}" style="width:100%;height:100%;object-fit:cover;">`;
+
+                    // Set immediate fallback onclick with direct URL
+                    div.onclick = () => selectAiImage(p.webformatURL, div);
+
+                    // Pre-fetch full image as blob in background, upgrade onclick when ready
+                    fetch(p.webformatURL).then(r => r.blob()).then(blob => {
+                        const blobUrl = URL.createObjectURL(blob);
+                        div.onclick = () => selectAiImage(blobUrl, div);
+                    }).catch(() => {});
+
+                    grid.appendChild(div);
+                });
+                const credit = document.createElement('div');
+                credit.style.cssText = 'grid-column:1/-1;font-size:9px;color:var(--text-dim);opacity:.5;text-align:center;padding:4px;';
+                credit.textContent = 'Images by Pixabay — free for commercial use';
+                grid.appendChild(credit);
+                results.style.display = '';
+            } catch (e) {
+                alert('Photo search failed: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📷 Stock Photos';
+            }
+        };
+
+        window.generateAiIllustration = () => {
+            const grid = document.getElementById('aiImageGrid');
+            grid.innerHTML = '';
+            document.getElementById('aiImageResults').style.display = '';
+            document.getElementById('aiImageStatus').style.display = 'none';
+
+            Object.entries(ILLUSTRATIONS).forEach(([key, ill]) => {
+                const div = document.createElement('div');
+                div.className = 'ai-img-item';
+                div.style.background = '#0f172a';
+                div.style.display = 'flex';
+                div.style.flexDirection = 'column';
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'center';
+                div.style.minHeight = '100px';
+                div.style.padding = '6px';
+                div.style.cursor = 'pointer';
+                div.innerHTML = `<div style="width:100%;height:80px;display:flex;align-items:center;justify-content:center;">${ill.svg}</div><div style="font-size:9px;color:#94a3b8;margin-top:4px;text-align:center;">${ill.label}</div>`;
+
+                div.onclick = () => {
+                    // Convert SVG to data URL for poster use
+                    const svgStr = ill.svg;
+                    const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+                    selectAiImage(encoded, div);
+                };
+                grid.appendChild(div);
+            });
+        };
+
+        window.closePosterModal = () => {
+            document.getElementById('posterModal').classList.remove('active');
+        };
+
+        window.regeneratePoster = async () => {
+            await designPoster();
+        };
+
+        window.usePoster = async () => {
+            const btn = document.querySelector('.poster-actions .btn-primary');
+            btn.textContent = '⏳ Converting...';
+            btn.disabled = true;
+            try {
+                const canvas = document.getElementById('posterCanvas');
+                // Temporarily remove scale transform for accurate capture
+                const origTransform = canvas.style.transform;
+                const origMarginB = canvas.style.marginBottom;
+                const origMarginR = canvas.style.marginRight;
+                canvas.style.transform = 'none';
+                canvas.style.marginBottom = '0';
+                canvas.style.marginRight = '0';
+
+                const c = await html2canvas(canvas, { scale: 1, useCORS: true, allowTaint: false, backgroundColor: null, width: 1920, height: 1080 });
+
+                // Restore transform
+                canvas.style.transform = origTransform;
+                canvas.style.marginBottom = origMarginB;
+                canvas.style.marginRight = origMarginR;
+                c.toBlob((blob) => {
+                    const file = new File([blob], 'ai-poster-' + Date.now() + '.png', { type: 'image/png' });
+                    selectedFile = file;
+
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('imagePreview').src = url;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    document.getElementById('videoPreview').style.display = 'none';
+                    document.getElementById('pdfPreview').style.display = 'none';
+                    document.getElementById('mediaPreviewContainer').style.display = '';
+                    document.getElementById('displayModeGroup').style.display = '';
+                    document.getElementById('uploadIcon').textContent = '✅';
+                    document.getElementById('uploadText').textContent = file.name;
+
+                    document.getElementById('displayMode').value = 'media_only';
+                    document.querySelectorAll('.display-mode').forEach(el => {
+                        el.classList.toggle('selected', el.dataset.value === 'media_only');
+                    });
+
+                    closePosterModal();
+                }, 'image/png');
+            } catch (e) {
+                alert('Error converting poster: ' + e.message);
+            } finally {
+                btn.textContent = '✅ Use This Poster';
+                btn.disabled = false;
+            }
+        };
+
+        window.designPoster = async function() {
+            const provider = aiConfig.provider;
+            const apiKey = aiConfig[provider];
+            if (!apiKey) {
+                alert(`No API key set for ${providerNames[provider]}.\n\nGo to Admin → Settings → AI Integration to add your key.`);
+                return;
+            }
+
+            const title = document.getElementById('title').value.trim();
+            const body = document.getElementById('body').value.trim();
+            const category = document.getElementById('category').value;
+
+            if (!title && !body) {
+                alert('Please enter at least a title or brief description for the poster.');
+                return;
+            }
+
+            const statusEl = document.getElementById('aiStatus');
+            const btn = document.getElementById('aiPosterBtn');
+            statusEl.style.display = '';
+            statusEl.innerHTML = `<span class="ai-spinner"></span> Designing poster with ${providerNames[provider]}...`;
+            btn.disabled = true;
+            const origPosterHtml = btn.innerHTML;
+            btn.innerHTML = `<span class="ai-spinner"></span>
+                <span class="ai-text">
+                    <span class="ai-title">Designing your poster…</span>
+                    <span class="ai-sub">Laying out headlines, dates and sections</span>
+                </span>`;
+
+            const prompt = `You are a graphic designer formatting a notice for a condominium building's digital display board.
+
+Title: ${title || '(none)'}
+Full notice text:
+${body || '(none)'}
+Category: ${category}
+
+IMPORTANT: Include ALL information from the notice. Do not summarize or remove content. Structure it visually.
+
+CRITICAL — BE FAITHFUL TO THE ORIGINAL TEXT:
+- Use ONLY words and facts that appear in the notice above. NEVER invent or add words, dates, or descriptions that are not in the original (e.g. do not add "Annual", "Testing", "Mandatory" or similar unless the original says so).
+- Do NOT repeat the same date, time, or fact in more than one field. Each piece of information should appear exactly once across headline, subtitle, detail, and sections.
+
+Available icons for decoration (pick 1-2 that best match the topic):
+wrench, car, water, flame, elevator, pool, building, shield, clock, alert, trash, leaf, mail, calendar, megaphone, key, window, power, wifi, party, dog, snowflake, sun, paint
+
+Return ONLY valid JSON (no markdown, no backticks, no extra text):
+{
+  "headline": "MAIN TITLE IN CAPS (2-5 words taken from the original title/text — do not add words that are not in the original)",
+  "tag": "Category label like MAINTENANCE NOTICE, PARKING NOTICE, etc.",
+  "subtitle": "Optional 1-line intro if the notice has a greeting or opening line, or empty string",
+  "badge": "IMPORTANT or URGENT or REMINDER or empty string — only if warranted",
+  "icons": ["icon_name", "icon_name"],
+  "image_search_terms": "2-3 word search query for a stock photo that matches this notice (e.g. garage door, swimming pool, apartment building)",
+  "visual_headline": "SHORT PUNCHY VERSION OF THE MESSAGE for a big bold visual poster (5-12 words max, like a billboard, e.g. PLEASE DRIVE WITH CARE IN THE PARKING AREA)",
+  "visual_subtitle": "One short sentence with key details (date, time, or action needed), or empty string",
+  "visual_detail": "Optional: one critical detail like a date or time that must be shown, or empty string",
+  "sections": [
+    {"type": "highlight", "heading": "SECTION HEADING", "text": "Key info like dates, times, critical details"},
+    {"type": "text", "heading": "OPTIONAL HEADING", "text": "Regular paragraph text"},
+    {"type": "bullets", "heading": "OPTIONAL HEADING", "items": ["Bullet point 1", "Bullet point 2"]}
+  ],
+  "footer": "Safety reminder or thank you note if present in original (italic text at bottom)",
+  "signoff": "Who signed it, e.g. CPO Management, or empty string"
+}
+
+Rules:
+- icons: Pick exactly 2 icons from the available list that relate to the notice topic
+- visual_headline: Write this like a BILLBOARD — short, bold, direct, action-oriented. Like "NO PARKING FRIDAY" or "ELEVATOR CLOSED MONDAY" — but built ONLY from words/facts in the original notice
+- Use "highlight" for critical info (dates, closures, deadlines) — these get a colored left border
+- Use "text" for regular paragraphs
+- Use "bullets" for lists of items or expectations
+- Include ALL dates, times, details from the original text in sections
+- Keep the original tone and wording as much as possible
+- Return ONLY the JSON`;
+
+            try {
+                let text = '';
+                if (provider === 'gemini') text = await callGemini(prompt, apiKey);
+                else if (provider === 'groq') text = await callGroq(prompt, apiKey);
+                else if (provider === 'openai') text = await callOpenAI(prompt, apiKey);
+                else if (provider === 'deepseek') text = await callDeepSeek(prompt, apiKey);
+
+                if (!text) throw new Error('No response from AI');
+
+                text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+                posterData = JSON.parse(text);
+                posterImageSearchTerms = posterData.image_search_terms || '';
+
+                if (!document.getElementById('title').value.trim() && posterData.headline) {
+                    document.getElementById('title').value = posterData.headline.charAt(0) + posterData.headline.slice(1).toLowerCase();
+                }
+                if (!document.getElementById('body').value.trim() && posterData.subtitle) {
+                    document.getElementById('body').value = posterData.subtitle;
+                }
+
+                // AUTO-FETCH stock photo for graphic poster look
+                if (aiConfig.pixabay && posterImageSearchTerms) {
+                    statusEl.innerHTML = `<span class="ai-spinner"></span> Finding photos for "${posterImageSearchTerms}"...`;
+                    try {
+                        const pRes = await fetch(`https://pixabay.com/api/?key=${aiConfig.pixabay}&q=${encodeURIComponent(posterImageSearchTerms)}&image_type=photo&per_page=6&orientation=horizontal&safesearch=true&min_width=1280`);
+                        const pData = await pRes.json();
+                        if (pData.hits && pData.hits.length > 0) {
+                            // Pre-fetch best photo as blob
+                            const bestPhoto = pData.hits[0];
+                            const blob = await fetch(bestPhoto.webformatURL).then(r => r.blob());
+                            posterImageUrl = URL.createObjectURL(blob);
+                            posterImageMode = 'photo';
+                            // Also populate the stock photo grid for alternatives
+                            const grid = document.getElementById('aiImageGrid');
+                            const results = document.getElementById('aiImageResults');
+                            if (grid) {
+                                grid.innerHTML = '';
+                                pData.hits.forEach((p, i) => {
+                                    const div = document.createElement('div');
+                                    div.className = 'ai-img-item' + (i === 0 ? ' selected' : '');
+                                    div.style.cursor = 'pointer';
+                                    div.innerHTML = `<img src="${p.previewURL}" style="width:100%;height:100%;object-fit:cover;">`;
+                                    div.onclick = () => selectAiImage(p.webformatURL, div);
+                                    fetch(p.webformatURL).then(r => r.blob()).then(b => {
+                                        const bUrl = URL.createObjectURL(b);
+                                        div.onclick = () => selectAiImage(bUrl, div);
+                                    }).catch(() => {});
+                                    grid.appendChild(div);
+                                });
+                                if (results) results.style.display = '';
+                            }
+                            // Auto-switch to Visual/Bold layout + Stock Photos mode
+                            const visualBtn = document.querySelector('[data-layout="visual"]');
+                            if (visualBtn && currentPosterLayout !== 'visual') switchPosterLayout(visualBtn);
+                            document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
+                            const stockBtn = document.getElementById('btnStockSearch');
+                            if (stockBtn) stockBtn.classList.add('active');
+                        }
+                    } catch (e) { console.warn('Auto photo fetch failed:', e); }
+                }
+
+                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+                else renderPoster(posterData, currentPosterStyle);
+                document.getElementById('posterModal').classList.add('active');
+            } catch (e) {
+                alert(`Poster design failed (${providerNames[provider]}): ${e.message}`);
+            } finally {
+                statusEl.style.display = 'none';
+                btn.disabled = false;
+                btn.innerHTML = origPosterHtml;
+            }
+        };
+        onAuthChange(user => {
+            if (!user) { window.location.href = '/login.html'; return; }
+            document.getElementById('loadingOverlay').style.display = 'none';
+            loadAISettings();
+            checkEdit();
+        });
+
+        async function checkEdit() {
+            const params = new URLSearchParams(window.location.search);
+            editId = params.get('id');
+            if (!editId) return;
+
+            document.getElementById('pageTitle').textContent = 'Edit Notice';
+            document.getElementById('saveBtn').textContent = '💾 Update Notice';
+
+            try {
+                const snap = await getDoc(doc(db, 'notices', editId));
+                if (!snap.exists()) { showFlash('Notice not found', 'error'); return; }
+                const n = snap.data();
+                document.getElementById('title').value = n.title || '';
+                document.getElementById('category').value = n.category || 'general';
+                document.getElementById('body').value = n.body || '';
+                document.getElementById('startDate').value = n.start_date || '';
+                document.getElementById('endDate').value = n.end_date || '';
+
+                // Priority
+                document.getElementById('priority').value = n.priority || 0;
+                document.querySelectorAll('.priority-option').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.value == (n.priority || 0));
+                });
+
+                // Media
+                if (n.media_url) {
+                    existingMediaUrl = n.media_url;
+                    existingMediaPath = n.media_path || '';
+                    existingFileType = n.file_type || '';
+                    document.getElementById('displayModeGroup').style.display = '';
+                    document.getElementById('mediaPreviewContainer').style.display = '';
+                    if (existingFileType === 'video') {
+                        document.getElementById('videoPreview').src = n.media_url;
+                        document.getElementById('videoPreview').style.display = 'block';
+                    } else if (existingFileType === 'pdf') {
+                        document.getElementById('pdfFileName').textContent = (n.media_path || 'document.pdf').split('/').pop();
+                        document.getElementById('pdfPreview').style.display = 'flex';
+                    } else {
+                        document.getElementById('imagePreview').src = n.media_url;
+                        document.getElementById('imagePreview').style.display = 'block';
+                    }
+                }
+
+                // Display mode
+                if (n.display_mode) {
+                    document.getElementById('displayMode').value = n.display_mode;
+                    document.querySelectorAll('.display-mode').forEach(el => {
+                        el.classList.toggle('selected', el.dataset.value === n.display_mode);
+                    });
+                }
+            } catch (e) { showFlash('Error loading notice', 'error'); }
+        }
+
+        // Priority
+        window.selectPriority = (el) => {
+            document.querySelectorAll('.priority-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('priority').value = el.dataset.value;
+        };
+
+        // Display mode
+        window.selectDisplayMode = (el) => {
+            document.querySelectorAll('.display-mode').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('displayMode').value = el.dataset.value;
+        };
+
+        // Media preview
+        window.handleMediaPreview = (file) => {
+            if (!file) return;
+            selectedFile = file;
+            const ft = getFileType(file.name);
+            document.getElementById('displayModeGroup').style.display = '';
+            document.getElementById('mediaPreviewContainer').style.display = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('pdfPreview').style.display = 'none';
+
+            const url = URL.createObjectURL(file);
+            if (ft === 'video') {
+                document.getElementById('videoPreview').src = url;
+                document.getElementById('videoPreview').style.display = 'block';
+            } else if (ft === 'pdf') {
+                document.getElementById('pdfFileName').textContent = file.name;
+                document.getElementById('pdfPreview').style.display = 'flex';
+                // Auto-set to media only for PDFs
+                document.getElementById('displayMode').value = 'media_only';
+                document.querySelectorAll('.display-mode').forEach(el => el.classList.toggle('selected', el.dataset.value === 'media_only'));
+            } else {
+                document.getElementById('imagePreview').src = url;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            document.getElementById('uploadIcon').textContent = '✅';
+            document.getElementById('uploadText').textContent = file.name;
+        };
+
+        window.clearMedia = () => {
+            selectedFile = null;
+            existingMediaUrl = '';
+            existingMediaPath = '';
+            existingFileType = '';
+            document.getElementById('mediaFile').value = '';
+            document.getElementById('mediaPreviewContainer').style.display = 'none';
+            document.getElementById('displayModeGroup').style.display = 'none';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('pdfPreview').style.display = 'none';
+            document.getElementById('uploadIcon').textContent = '📎';
+            document.getElementById('uploadText').textContent = 'Click to upload an image, video, or PDF';
+        };
+
+        // Save
+        window.handleSave = async () => {
+            const title = document.getElementById('title').value.trim();
+            if (!title) { showFlash('Please enter a title', 'error'); return; }
+
+            const btn = document.getElementById('saveBtn');
+            btn.textContent = '⏳ Saving...';
+            btn.disabled = true;
+
+            try {
+                let mediaUrl = existingMediaUrl;
+                let mediaPath = existingMediaPath;
+                let fileType = existingFileType;
+
+                if (selectedFile) {
+                    const result = await uploadMedia(selectedFile);
+                    mediaUrl = result.url;
+                    mediaPath = result.path;
+                    fileType = result.type;
+                }
+
+                const data = {
+                    title,
+                    category: document.getElementById('category').value,
+                    priority: parseInt(document.getElementById('priority').value),
+                    body: document.getElementById('body').value,
+                    media_url: mediaUrl,
+                    media_path: mediaPath,
+                    file_type: fileType,
+                    display_mode: document.getElementById('displayMode').value,
+                    start_date: document.getElementById('startDate').value || '',
+                    end_date: document.getElementById('endDate').value || '',
+                };
+
+                if (editId) {
+                    await updateNotice(editId, data);
+                } else {
+                    await createNotice(data);
+                }
+                window.location.href = '/admin.html';
+            } catch (e) {
+                showFlash('Error saving: ' + e.message, 'error');
+                btn.textContent = editId ? '💾 Update Notice' : '💾 Publish Notice';
+                btn.disabled = false;
+            }
+        };
+
+        function showFlash(msg, type) {
+            const el = document.getElementById(type === 'error' ? 'errorFlash' : 'successFlash');
+            el.textContent = msg; el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+    </script>
+</body>
+</html>

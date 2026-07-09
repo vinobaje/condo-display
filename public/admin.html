@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Condo Notice Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+        .theme-option{cursor:pointer;text-align:center;border:2px solid var(--border);border-radius:10px;padding:8px;transition:all .2s;}
+        .theme-option:hover{border-color:var(--border-light);background:var(--bg-card-hover);}
+        .theme-option.selected{border-color:var(--accent);background:var(--accent-subtle, rgba(59,130,246,.08));}
+        .theme-preview{height:56px;border-radius:6px;border:1px solid transparent;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding-bottom:6px;}
+        .theme-name{font-size:11px;font-weight:600;margin-top:6px;color:var(--text-dim);}
+        @media(min-width:769px){.theme-grid{grid-template-columns:repeat(6,1fr);}}
+
+        /* Admin Tabs */
+        .admin-tabs{display:flex;gap:2px;padding:0 28px;background:var(--bg-card);border-bottom:1px solid var(--border)}
+        .admin-tab{padding:14px 24px;font-size:13px;font-weight:600;color:var(--text-dim);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;font-family:inherit;display:flex;align-items:center;gap:8px;border-radius:0}
+        .admin-tab:hover{color:var(--text);background:rgba(255,255,255,.02)}
+        .admin-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+        .admin-tab .tab-count{background:var(--accent-subtle, var(--bg));padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;color:var(--accent)}
+        .tab-panel{display:none}
+        .tab-panel.active{display:block}
+
+        /* Layout Editor */
+        .layout-editor{position:relative;width:100%;aspect-ratio:16/9;background:var(--bg-dark);border:2px solid var(--border);border-radius:12px;overflow:hidden;user-select:none}
+        .layout-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr);gap:2px;padding:4px}
+        .layout-cell{border:1px dashed rgba(255,255,255,.04);border-radius:4px}
+        .layout-widget{position:absolute;border-radius:8px;cursor:grab;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;border:2px solid transparent;transition:box-shadow .15s;z-index:5;overflow:hidden}
+        .layout-widget:hover{box-shadow:0 0 0 1px rgba(255,255,255,.2)}
+        .layout-widget.dragging{opacity:.7;cursor:grabbing;z-index:20;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+        .layout-widget .lw-icon{font-size:20px}
+        .layout-widget .lw-label{font-size:10px;opacity:.8;text-align:center;padding:0 4px}
+        .layout-widget .lw-remove{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(239,68,68,.8);color:#fff;border:none;cursor:pointer;font-size:11px;display:none;align-items:center;justify-content:center;line-height:1}
+        .layout-widget:hover .lw-remove{display:flex}
+        .layout-widget .lw-resize{position:absolute;bottom:0;right:0;width:14px;height:14px;cursor:nwse-resize;opacity:0}
+        .layout-widget:hover .lw-resize{opacity:1}
+        .layout-widget .lw-resize::after{content:'';position:absolute;bottom:3px;right:3px;width:8px;height:8px;border-right:2px solid rgba(255,255,255,.5);border-bottom:2px solid rgba(255,255,255,.5)}
+        .widget-palette{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+        .widget-palette-item{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;transition:all .15s}
+        .widget-palette-item:hover{border-color:var(--accent);background:rgba(59,130,246,.08)}
+        .widget-palette-item .wpi-icon{font-size:16px}
+        .layout-hint{font-size:11px;color:var(--text-dim);opacity:.6;margin-top:8px}
+        .layout-actions{display:flex;gap:8px;margin-top:10px}
+
+        /* Layout Templates */
+        .layout-templates{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+        .layout-tpl{cursor:pointer;border:2px solid var(--border);border-radius:10px;padding:12px;transition:all .2s;background:var(--bg-dark)}
+        .layout-tpl:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.03)}
+        .layout-tpl.selected{border-color:var(--accent);background:rgba(59,130,246,.08)}
+        .layout-tpl-preview{width:100%;aspect-ratio:16/9;border-radius:6px;overflow:hidden;margin-bottom:8px;position:relative;background:var(--bg-dark)}
+        .layout-tpl-preview .zone{position:absolute;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:rgba(255,255,255,.7)}
+        .layout-tpl-name{font-size:12px;font-weight:600;color:var(--text-dim)}
+        .layout-tpl-desc{font-size:10px;color:var(--text-dim);opacity:.6;margin-top:2px}
+        .sa-only{display:none!important}
+        body.super-admin .sa-only{display:initial!important}
+        body.super-admin .sa-only.settings-card{display:block!important}
+        body.super-admin .sa-only.admin-tab{display:inline-flex!important}
+        body.super-admin div.sa-only{display:block!important}
+        body.super-admin .sa-only.form-row{display:flex!important}
+        body.super-admin .sa-only.form-group{display:block!important}
+    </style>
+</head>
+<body>
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading admin panel...</div>
+    </div>
+
+    <!-- Top Nav -->
+    <div class="topnav">
+        <div class="topnav-left">
+            <span style="font-size:24px;">🏢</span>
+            <div>
+                <div class="topnav-title" id="navTitle">Notice Board Admin</div>
+                <div style="font-size:12px;color:var(--text-dim);" id="navSubtitle"></div>
+            </div>
+        </div>
+        <div class="topnav-actions">
+            <button class="btn btn-outline btn-sm" id="adminThemeToggle" onclick="toggleAdminTheme()" title="Toggle light/dark mode">🌙</button>
+            <a href="/" target="_blank" class="btn btn-outline btn-sm">📺 View Display</a>
+            <button class="btn btn-danger btn-sm" id="emergencyBtn" onclick="toggleEmergency()">🚨 Emergency</button>
+            <button class="btn btn-outline btn-sm" onclick="handleLogout()">Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab active" data-tab="notices" onclick="switchTab('notices')">📋 Notices <span class="tab-count" id="tabNoticeCount">0</span></button>
+        <button class="admin-tab" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
+        <button class="admin-tab" data-tab="layout" onclick="switchTab('layout')">🧩 Layout</button>
+        <div style="margin-left:auto;">
+            <span class="btn btn-outline btn-sm" id="saToggleBtn" style="font-size:11px;padding:4px 12px;opacity:.6;cursor:default;">👤 Admin</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        <div class="flash flash-success" id="successFlash"></div>
+        <div class="flash flash-error" id="errorFlash"></div>
+
+        <!-- Emergency Banner -->
+        <div class="emergency-banner" id="emergencyBanner" style="display:none;">
+            <div class="emergency-banner-icon">🚨</div>
+            <div class="emergency-banner-text">
+                <div class="emergency-banner-title">EMERGENCY MODE ACTIVE</div>
+                <div style="font-size:13px;color:var(--text-dim);margin-top:4px;" id="emergencyBannerMsg"></div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="toggleEmergency()">Deactivate</button>
+        </div>
+
+        <!-- TAB: Notices -->
+        <div class="tab-panel active" id="panel-notices">
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-card"><div class="stat-label">Total Notices</div><div class="stat-value accent" id="statTotal">0</div></div>
+                <div class="stat-card"><div class="stat-label">Active Now</div><div class="stat-value success" id="statActive">0</div></div>
+                <div class="stat-card"><div class="stat-label">Urgent</div><div class="stat-value urgent" id="statUrgent">0</div></div>
+                <div class="stat-card"><div class="stat-label">With Media</div><div class="stat-value" style="color:var(--important);" id="statMedia">0</div></div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">All Notices</div>
+                    <a href="/notice.html" class="btn btn-primary btn-sm">+ New Notice</a>
+                </div>
+                <div class="notice-list" id="noticeList">
+                    <div style="text-align:center;padding:40px;color:var(--text-dim);">Loading notices...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Settings -->
+        <div class="tab-panel" id="panel-settings">
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">Display Settings</div>
+                    <button class="btn btn-primary btn-sm" onclick="saveAllSettings()">💾 Save Settings</button>
+                </div>
+            <div class="settings-grid" id="settingsGrid">
+                <!-- Building -->
+                <div class="settings-card">
+                    <div class="settings-card-title">🏢 Building Info</div>
+                    <div class="form-group">
+                        <label>Building Name</label>
+                        <input type="text" id="sBuildingName" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Management Company</label>
+                        <input type="text" id="sManagementCompany" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Logo</label>
+                        <div class="file-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
+                            <input type="file" id="logoFile" accept="image/*" onchange="handleLogoUpload(this.files[0])">
+                            <div class="file-upload-icon">🖼️</div>
+                            <div class="file-upload-text">Click to upload logo</div>
+                            <img id="logoPreview" class="preview-media" style="display:none;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Logo Size <span id="logoSizeVal" style="font-weight:400;color:var(--accent);">100%</span></label>
+                        <input type="range" id="sLogoSize" min="60" max="200" value="100" step="2" class="form-control" oninput="document.getElementById('logoSizeVal').textContent=this.value+'%'">
+                        <div class="help-text">60% = small, 100% = default, 200% = very large</div>
+                    </div>
+                </div>
+
+                <!-- Display -->
+                <div class="settings-card">
+                    <div class="settings-card-title">📺 Display Options</div>
+                    <div class="form-group">
+                        <label>Display Theme</label>
+                        <div class="theme-grid" id="themeGrid">
+                            <div class="theme-option selected" data-theme="dark-modern" onclick="selectTheme(this)">
+                                <div class="theme-preview" style="background:#0a0e1a;border-color:#3b82f6;">
+                                    <div style="background:#111827;height:60%;border-radius:4px;margin:4px;"></div>
+                                    <div style="background:#3b82f6;height:3px;margin:0 4px;border-radius:2px;"></div>
+                                </div>
+                                <div class="theme-name">Dark Modern</div>
+                            </div>
+                            <div class="theme-option" data-theme="light-classic" onclick="selectTheme(this)">
+                                <div class="theme-preview" style="background:#f0f2f5;border-color:#2563eb;">
+                                    <div style="background:#ffffff;height:60%;border-radius:4px;margin:4px;"></div>
+                                    <div style="background:#2563eb;height:3px;margin:0 4px;border-radius:2px;"></div>
+                                </div>
+                                <div class="theme-name">Light Classic</div>
+                            </div>
+                            <div class="theme-option" data-theme="warm-luxury" onclick="selectTheme(this)">
+                                <div class="theme-preview" style="background:#1a1410;border-color:#d4a553;">
+                                    <div style="background:#241e17;height:60%;border-radius:4px;margin:4px;"></div>
+                                    <div style="background:#d4a553;height:3px;margin:0 4px;border-radius:2px;"></div>
+                                </div>
+                                <div class="theme-name">Warm Luxury</div>
+                            </div>
+                            <div class="theme-option" data-theme="corporate-navy" onclick="selectTheme(this)">
+                                <div class="theme-preview" style="background:#0c1829;border-color:#4da6ff;">
+                                    <div style="background:#132035;height:60%;border-radius:4px;margin:4px;"></div>
+                                    <div style="background:#4da6ff;height:3px;margin:0 4px;border-radius:2px;"></div>
+                                </div>
+                                <div class="theme-name">Corporate Navy</div>
+                            </div>
+                            <div class="theme-option" data-theme="nature-green" onclick="selectTheme(this)">
+                                <div class="theme-preview" style="background:#0a1a12;border-color:#34d399;">
+                                    <div style="background:#112118;height:60%;border-radius:4px;margin:4px;"></div>
+                                    <div style="background:#34d399;height:3px;margin:0 4px;border-radius:2px;"></div>
+                                </div>
+                                <div class="theme-name">Nature Green</div>
+                            </div>
+                            <div class="theme-option" data-theme="waterview-classic" onclick="selectTheme(this)">
+                                <div class="theme-preview" style="background:linear-gradient(135deg,#0a3d6b,#0891b2);border-color:#2196F3;">
+                                    <div style="background:rgba(255,255,255,.1);height:55%;border-radius:4px;margin:4px;"></div>
+                                    <div style="background:#0d1f3c;height:8px;margin:0;border-radius:0 0 4px 4px;display:flex;align-items:center;padding:0 4px;"><div style="background:rgba(255,255,255,.4);height:2px;flex:1;border-radius:1px;"></div></div>
+                                </div>
+                                <div class="theme-name">Waterview Classic</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="sDisplayTheme" value="dark-modern">
+                    </div>
+                    <div class="toggle-row"><span class="toggle-label">Show Clock</span><label class="toggle"><input type="checkbox" id="sShowClock"><span class="toggle-slider"></span></label></div>
+                    <div class="toggle-row"><span class="toggle-label">Show Weather</span><label class="toggle"><input type="checkbox" id="sShowWeather"><span class="toggle-slider"></span></label></div>
+                    <div class="toggle-row"><span class="toggle-label">Show News Sidebar</span><label class="toggle"><input type="checkbox" id="sShowNews"><span class="toggle-slider"></span></label></div>
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:10px;">Bottom Ticker</div>
+                        <div class="toggle-row"><span class="toggle-label">Show Bottom Ticker</span><label class="toggle"><input type="checkbox" id="sShowTicker"><span class="toggle-slider"></span></label></div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>Ticker Content</label>
+                            <select id="sTickerMode" class="form-control" onchange="toggleTickerCustom()">
+                                <option value="news">📰 News Headlines (from RSS)</option>
+                                <option value="custom">✏️ Custom Message</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="tickerCustomGroup" style="display:none;">
+                            <label>Custom Ticker Messages</label>
+                            <div id="tickerMessageList"></div>
+                            <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addTickerMessage()">+ Add Message</button>
+                            <div class="help-text">Messages scroll continuously across the bottom of the display, separated by a ◆ dot</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:10px;">Sidebar Widgets</div>
+                        <div class="toggle-row"><span class="toggle-label">📋 Notice List</span><label class="toggle"><input type="checkbox" id="sShowNoticeList"><span class="toggle-slider"></span></label></div>
+                        <div class="toggle-row"><span class="toggle-label">📰 News Slideshow</span><label class="toggle"><input type="checkbox" id="sShowNewsSidebar"><span class="toggle-slider"></span></label></div>
+                        <div class="toggle-row"><span class="toggle-label">📞 Contacts</span><label class="toggle"><input type="checkbox" id="sShowContacts"><span class="toggle-slider"></span></label></div>
+                    </div>
+                    <div class="form-row" style="margin-top:16px;">
+                        <div class="form-group">
+                            <label>Slide Duration (sec)</label>
+                            <input type="number" id="sSlideDuration" class="form-control" min="3" max="120">
+                        </div>
+                        <div class="form-group">
+                            <label>Video Duration (0=full)</label>
+                            <input type="number" id="sVideoDuration" class="form-control" min="0" max="300">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Transition Speed (sec)</label>
+                        <input type="number" id="sTransition" class="form-control" step="0.1" min="0.3" max="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Display Zoom <span style="font-weight:400;color:var(--text-dim);font-size:11px;">(increase for larger TVs or far viewing distance)</span></label>
+                        <select id="sDisplayZoom" class="form-control">
+                            <option value="1">100% — Default (32"-43" TV)</option>
+                            <option value="1.15">115% — Medium (50"-55" TV)</option>
+                            <option value="1.25">125% — Large (55"-65" TV)</option>
+                            <option value="1.4">140% — Extra Large (65"-75" TV)</option>
+                            <option value="1.5">150% — Max (75"+ or far viewing)</option>
+                        </select>
+                    </div>
+                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:12px;">🔤 Widget Font Sizes (pixels)</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Header (Building Name) <span id="fsHeaderVal" style="font-weight:400;color:var(--accent);">Auto</span></label>
+                                <input type="range" id="sFsHeaderPx" min="0" max="72" value="0" step="2" class="form-control" oninput="document.getElementById('fsHeaderVal').textContent=this.value==0?'Auto':this.value+'px'">
+                                <div class="help-text">0 = auto (responsive). Set 30-72px for manual control.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Notice Body Text <span id="fsNoticeVal" style="font-weight:400;color:var(--accent);">Auto</span></label>
+                                <input type="range" id="sFsNoticePx" min="0" max="40" value="0" step="1" class="form-control" oninput="document.getElementById('fsNoticeVal').textContent=this.value==0?'Auto':this.value+'px'">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>News Widget <span id="fsNewsVal" style="font-weight:400;color:var(--accent);">Auto</span></label>
+                                <input type="range" id="sFsNewsPx" min="0" max="30" value="0" step="1" class="form-control" oninput="document.getElementById('fsNewsVal').textContent=this.value==0?'Auto':this.value+'px'">
+                            </div>
+                            <div class="form-group">
+                                <label>Contacts Widget <span id="fsContactsVal" style="font-weight:400;color:var(--accent);">Auto</span></label>
+                                <input type="range" id="sFsContactsPx" min="0" max="26" value="0" step="1" class="form-control" oninput="document.getElementById('fsContactsVal').textContent=this.value==0?'Auto':this.value+'px'">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Footer / Ticker <span id="fsTickerVal" style="font-weight:400;color:var(--accent);">Auto</span></label>
+                                <input type="range" id="sFsTickerPx" min="0" max="30" value="0" step="1" class="form-control" oninput="document.getElementById('fsTickerVal').textContent=this.value==0?'Auto':this.value+'px'">
+                            </div>
+                            <div class="form-group"></div>
+                        </div>
+                        <div class="help-text">Set to 0 for auto-sizing (responsive). Use Display Zoom above for overall scaling.</div>
+                    </div>
+                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;">🗑️ Display Media Cache</div>
+                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Force all displays to re-download images, videos & PDFs</div>
+                            </div>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="clearDisplayCache()">Clear Cache</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather -->
+                <div class="settings-card">
+                    <div class="settings-card-title">🌤️ Weather Widget</div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="sWeatherLocation" class="form-control" placeholder="e.g., Toronto, M5V 3L9, Mississauga ON">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="testGeocode()" style="white-space:nowrap;">🔍 Test</button>
+                        </div>
+                        <div id="geoResult" style="margin-top:6px;font-size:12px;display:none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Manual Coordinates <span style="font-weight:400;color:var(--text-dim);font-size:11px;">(use if location search fails)</span></label>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="sWeatherLat" class="form-control" placeholder="Latitude (e.g. 43.194)">
+                            <input type="text" id="sWeatherLon" class="form-control" placeholder="Longitude (e.g. -79.561)">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="applyManualCoords()" style="white-space:nowrap;">📍 Apply</button>
+                        </div>
+                        <div class="help-text">Find coordinates at <a href="https://www.latlong.net/" target="_blank" style="color:var(--accent);">latlong.net</a></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Units</label>
+                        <select id="sWeatherUnits" class="form-control">
+                            <option value="metric">Metric (°C, km/h)</option>
+                            <option value="imperial">Imperial (°F, mph)</option>
+                        </select>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-dim);opacity:.6;" id="coordsDisplay">Current coords: --</div>
+                </div>
+
+                <!-- News -->
+                <div class="settings-card">
+                    <div class="settings-card-title">📰 News (RSS)</div>
+                    <div style="margin-top:4px;">
+                        <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:8px;">RSS Feeds</label>
+                        <div id="feedList"></div>
+                        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addFeedRow()">+ Add Feed</button>
+                    </div>
+                    <div class="form-group" style="margin-top:12px;">
+                        <label>Max News Items</label>
+                        <input type="number" id="sNewsMaxItems" class="form-control" min="3" max="20">
+                    </div>
+                    <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="sSmartNews" checked>
+                            <span>✨ Smart News Features</span>
+                        </label>
+                        <div class="help-text" style="margin-top:4px;">Breaking news badges, headline cleanup, QR codes for articles, and priority sorting</div>
+                    </div>
+                </div>
+
+                <!-- Contacts -->
+                <div class="settings-card" style="grid-column:1/-1;">
+                    <div class="settings-card-title">📞 Contacts</div>
+                    <div style="margin-top:4px;">
+                        <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:8px;">Contacts</label>
+                        <div id="contactList"></div>
+                        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addContactRow()">+ Add Contact</button>
+                        <div class="help-text" style="margin-top:6px;">These are displayed on the TV screen for all residents to see.</div>
+                    </div>
+                </div>
+
+                <!-- AI Integration -->
+                <!-- Super Admin Emails -->
+                <div class="settings-card sa-only" style="grid-column:1/-1;">
+                    <div class="settings-card-title">🔐 Super Admin Access</div>
+                    <div class="form-group">
+                        <label>Super Admin Emails</label>
+                        <input type="text" id="sSuperAdminEmails" class="form-control" placeholder="email1@example.com, email2@example.com">
+                        <div class="help-text">Comma-separated list of email addresses that get full admin access. Others see a simplified view.</div>
+                    </div>
+                </div>
+
+                <!-- AI Integration -->
+                <div class="settings-card sa-only" style="grid-column:1/-1;">
+                    <div class="settings-card-title">✨ AI Notice Writer</div>
+                    <div class="form-group">
+                        <label>AI Provider</label>
+                        <select id="sAiProvider" class="form-control" onchange="toggleAiKeyFields()">
+                            <option value="gemini">Google Gemini (Free — 15 req/min)</option>
+                            <option value="groq">Groq (Free — runs Llama 3)</option>
+                            <option value="openai">OpenAI (Paid — GPT-4o)</option>
+                            <option value="deepseek">DeepSeek (Paid — very cheap)</option>
+                        </select>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyGemini">
+                        <label>Gemini API Key</label>
+                        <input type="password" id="sGeminiApiKey" class="form-control" placeholder="Paste your Gemini API key">
+                        <div class="help-text">Free — get key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com/apikey</a></div>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyGroq" style="display:none;">
+                        <label>Groq API Key</label>
+                        <input type="password" id="sGroqApiKey" class="form-control" placeholder="Paste your Groq API key">
+                        <div class="help-text">Free — get key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent);">console.groq.com/keys</a></div>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyOpenai" style="display:none;">
+                        <label>OpenAI API Key</label>
+                        <input type="password" id="sOpenaiApiKey" class="form-control" placeholder="Paste your OpenAI API key (sk-...)">
+                        <div class="help-text">Paid — get key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent);">platform.openai.com/api-keys</a></div>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyDeepseek" style="display:none;">
+                        <label>DeepSeek API Key</label>
+                        <input type="password" id="sDeepseekApiKey" class="form-control" placeholder="Paste your DeepSeek API key">
+                        <div class="help-text">Paid (very cheap) — get key at <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--accent);">platform.deepseek.com/api_keys</a></div>
+                    </div>
+                    <div class="form-group" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                        <label>Pixabay API Key (for Stock Photos in Posters)</label>
+                        <input type="password" id="sPixabayApiKey" class="form-control" placeholder="Paste your Pixabay API key">
+                        <div class="help-text">Free — get key at <a href="https://pixabay.com/api/docs/" target="_blank" style="color:var(--accent);">pixabay.com/api/docs</a> (100 requests/minute, no credit card)</div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div style="margin-top:16px;">
+                <button class="btn btn-primary" onclick="saveAllSettings()">💾 Save Settings</button>
+            </div>
+        </div>
+
+        <!-- TAB: Layout -->
+        <div class="tab-panel" id="panel-layout">
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-title">Display Layout</div>
+                    <button class="btn btn-primary btn-sm" onclick="saveAllSettings()">💾 Save Layout</button>
+                </div>
+
+                <!-- Preset Templates -->
+                <div class="settings-card" style="margin-bottom:18px;">
+                    <div class="settings-card-title">📐 Layout Templates</div>
+                    <div class="layout-templates" id="layoutTemplates"></div>
+                </div>
+
+                <!-- Custom Editor -->
+                <div class="settings-card">
+                    <div class="settings-card-title">🧩 Customize Layout</div>
+                    <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">Drag widgets to move. Drag bottom-right corner to resize. Click palette to add widgets.</p>
+                    <div class="layout-editor" id="layoutEditor">
+                        <div class="layout-grid" id="layoutGrid"></div>
+                        <div id="layoutWidgets"></div>
+                    </div>
+                    <div class="widget-palette" id="widgetPalette">
+                        <div class="widget-palette-item" onclick="addLayoutWidget('notices')"><span class="wpi-icon">📺</span>Notices</div>
+                        <div class="widget-palette-item" onclick="addLayoutWidget('notice_list')"><span class="wpi-icon">📋</span>Notice List</div>
+                        <div class="widget-palette-item" onclick="addLayoutWidget('news')"><span class="wpi-icon">📰</span>News Feed</div>
+                        <div class="widget-palette-item" onclick="addLayoutWidget('emergency_contacts')"><span class="wpi-icon">🚨</span>Contacts</div>
+                        <div class="widget-palette-item" onclick="addLayoutWidget('weather')"><span class="wpi-icon">🌤️</span>Weather</div>
+                        <div class="widget-palette-item" onclick="addLayoutWidget('clock')"><span class="wpi-icon">🕐</span>Clock</div>
+                    </div>
+                    <div class="layout-actions" style="margin-top:12px;">
+                        <button class="btn btn-outline btn-sm" onclick="resetLayout()">↩ Reset to Default</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Modal -->
+    <div class="modal-overlay" id="emergencyModal">
+        <div class="modal">
+            <h3>🚨 Emergency Mode</h3>
+            <p style="color:var(--text-dim);font-size:14px;margin-bottom:16px;">This replaces the entire display with an emergency message visible to all residents.</p>
+            <div class="form-group">
+                <label>Emergency Message</label>
+                <textarea id="emergencyMsg" class="form-control" placeholder="e.g., Fire alarm activated. Please evacuate immediately."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button class="btn btn-outline" onclick="document.getElementById('emergencyModal').classList.remove('active')">Cancel</button>
+                <button class="btn btn-danger" onclick="activateEmergency()">🚨 Activate Emergency</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script type="module">
+        import {
+            onAuthChange, logout, getSettings, saveSettings, onNoticesChange,
+            deleteNotice, toggleNotice, uploadLogo, geocodeLocation,
+            escapeHtml, formatDate, getFileType, CATEGORIES, db
+        } from '/js/app.js';
+        import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        let settings = {};
+        let allNotices = [];
+        let currentLayout = [];
+
+        const DEFAULT_LAYOUT = [
+            { id:'notices', x:0, y:0, w:8, h:8 },
+            { id:'notice_list', x:8, y:0, w:4, h:3 },
+            { id:'news_0', x:8, y:3, w:4, h:3 },
+            { id:'emergency_contacts', x:8, y:6, w:4, h:2 },
+        ];
+
+        const WIDGET_DEFS = {
+            notices:    { icon:'📺', label:'Notice Slideshow', color:'#3b82f6', minW:3, minH:2 },
+            notice_list:{ icon:'📋', label:'Notice List',      color:'#8b5cf6', minW:2, minH:2 },
+            news:       { icon:'📰', label:'News Feed',        color:'#f59e0b', minW:2, minH:2 },
+            emergency_contacts:{ icon:'🚨', label:'Contacts', color:'#ef4444', minW:2, minH:1 },
+            weather:    { icon:'🌤️', label:'Weather',           color:'#10b981', minW:2, minH:2 },
+            clock:      { icon:'🕐', label:'Clock',             color:'#06b6d4', minW:2, minH:2 },
+        };
+
+        const LAYOUT_TEMPLATES = [
+            {
+                name: '1: Full Screen',
+                desc: 'Notices only, maximum impact',
+                zones: [
+                    { id:'notices', x:0, y:0, w:12, h:8, color:'#3b82f6', label:'📺 Notices' }
+                ]
+            },
+            {
+                name: '2a: Sidebar Right',
+                desc: 'Main + sidebar with news & contacts',
+                zones: [
+                    { id:'notices', x:0, y:0, w:8, h:8, color:'#3b82f6', label:'📺' },
+                    { id:'notice_list', x:8, y:0, w:4, h:3, color:'#8b5cf6', label:'📋' },
+                    { id:'news_0', x:8, y:3, w:4, h:3, color:'#f59e0b', label:'📰' },
+                    { id:'emergency_contacts', x:8, y:6, w:4, h:2, color:'#ef4444', label:'🚨' },
+                ]
+            },
+            {
+                name: '2b: Sidebar Left',
+                desc: 'Sidebar on the left side',
+                zones: [
+                    { id:'notices', x:4, y:0, w:8, h:8, color:'#3b82f6', label:'📺' },
+                    { id:'notice_list', x:0, y:0, w:4, h:3, color:'#8b5cf6', label:'📋' },
+                    { id:'news_0', x:0, y:3, w:4, h:3, color:'#f59e0b', label:'📰' },
+                    { id:'emergency_contacts', x:0, y:6, w:4, h:2, color:'#ef4444', label:'🚨' },
+                ]
+            },
+            {
+                name: '3a: Two News Feeds',
+                desc: 'Sidebar with 2 separate news feeds',
+                zones: [
+                    { id:'notices', x:0, y:0, w:8, h:8, color:'#3b82f6', label:'📺' },
+                    { id:'news_0', x:8, y:0, w:4, h:4, color:'#f59e0b', label:'📰 Feed 1' },
+                    { id:'news_1', x:8, y:4, w:4, h:3, color:'#f97316', label:'📰 Feed 2' },
+                    { id:'emergency_contacts', x:8, y:7, w:4, h:1, color:'#ef4444', label:'🚨' },
+                ]
+            },
+            {
+                name: '3b: Bottom Bar',
+                desc: 'Main + sidebar + bottom weather/clock',
+                zones: [
+                    { id:'notices', x:0, y:0, w:8, h:6, color:'#3b82f6', label:'📺' },
+                    { id:'notice_list', x:8, y:0, w:4, h:4, color:'#8b5cf6', label:'📋' },
+                    { id:'news_0', x:8, y:4, w:4, h:4, color:'#f59e0b', label:'📰' },
+                    { id:'weather', x:0, y:6, w:4, h:2, color:'#10b981', label:'🌤️' },
+                    { id:'clock', x:4, y:6, w:4, h:2, color:'#06b6d4', label:'🕐' },
+                ]
+            },
+            {
+                name: '4a: Equal Split',
+                desc: 'Two equal columns',
+                zones: [
+                    { id:'notices', x:0, y:0, w:6, h:8, color:'#3b82f6', label:'📺' },
+                    { id:'notice_list', x:6, y:0, w:6, h:3, color:'#8b5cf6', label:'📋' },
+                    { id:'news_0', x:6, y:3, w:6, h:3, color:'#f59e0b', label:'📰' },
+                    { id:'emergency_contacts', x:6, y:6, w:6, h:2, color:'#ef4444', label:'🚨' },
+                ]
+            },
+            {
+                name: '4b: Three Column',
+                desc: 'Notices + list + news side by side',
+                zones: [
+                    { id:'notices', x:0, y:0, w:6, h:8, color:'#3b82f6', label:'📺' },
+                    { id:'notice_list', x:6, y:0, w:3, h:8, color:'#8b5cf6', label:'📋' },
+                    { id:'news_0', x:9, y:0, w:3, h:6, color:'#f59e0b', label:'📰' },
+                    { id:'emergency_contacts', x:9, y:6, w:3, h:2, color:'#ef4444', label:'🚨' },
+                ]
+            },
+            {
+                name: '5: Info Dashboard',
+                desc: 'Weather, clock, news & contacts grid',
+                zones: [
+                    { id:'notices', x:0, y:0, w:8, h:5, color:'#3b82f6', label:'📺' },
+                    { id:'weather', x:0, y:5, w:4, h:3, color:'#10b981', label:'🌤️' },
+                    { id:'clock', x:4, y:5, w:4, h:3, color:'#06b6d4', label:'🕐' },
+                    { id:'news_0', x:8, y:0, w:4, h:4, color:'#f59e0b', label:'📰' },
+                    { id:'emergency_contacts', x:8, y:4, w:4, h:4, color:'#ef4444', label:'🚨' },
+                ]
+            },
+        ];
+
+        function renderTemplates() {
+            const container = document.getElementById('layoutTemplates');
+            container.innerHTML = LAYOUT_TEMPLATES.map((tpl, i) => {
+                const zones = tpl.zones.map(z => {
+                    const left = (z.x / 12 * 100).toFixed(1);
+                    const top = (z.y / 8 * 100).toFixed(1);
+                    const width = (z.w / 12 * 100).toFixed(1);
+                    const height = (z.h / 8 * 100).toFixed(1);
+                    return `<div class="zone" style="left:${left}%;top:${top}%;width:calc(${width}% - 3px);height:calc(${height}% - 3px);background:${z.color}33;border:1px solid ${z.color}88;">${z.label}</div>`;
+                }).join('');
+                return `<div class="layout-tpl" data-tpl="${i}" onclick="applyTemplate(${i})">
+                    <div class="layout-tpl-preview">${zones}</div>
+                    <div class="layout-tpl-name">${tpl.name}</div>
+                    <div class="layout-tpl-desc">${tpl.desc}</div>
+                </div>`;
+            }).join('');
+            highlightActiveTemplate();
+        }
+
+        function highlightActiveTemplate() {
+            document.querySelectorAll('.layout-tpl').forEach(el => el.classList.remove('selected'));
+            // Check if current layout matches a template
+            LAYOUT_TEMPLATES.forEach((tpl, i) => {
+                if (tpl.zones.length !== currentLayout.length) return;
+                const match = tpl.zones.every((z, j) => {
+                    const c = currentLayout[j];
+                    return c && c.id === z.id && c.x === z.x && c.y === z.y && c.w === z.w && c.h === z.h;
+                });
+                if (match) {
+                    const el = document.querySelector(`[data-tpl="${i}"]`);
+                    if (el) el.classList.add('selected');
+                }
+            });
+        }
+
+        window.applyTemplate = (idx) => {
+            const tpl = LAYOUT_TEMPLATES[idx];
+            currentLayout = tpl.zones.map(z => ({ id: z.id, x: z.x, y: z.y, w: z.w, h: z.h }));
+            renderLayoutEditor();
+            highlightActiveTemplate();
+            showFlash(`Applied layout: ${tpl.name}`, 'success');
+        };
+
+        // ═══ Auth Guard ═══
+        onAuthChange(user => {
+            if (!user) {
+                window.location.href = '/login.html';
+                return;
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
+            init().catch(e => {
+                console.error('Init failed:', e);
+                alert('Error loading admin panel: ' + e.message);
+            });
+            // Check super admin role after settings load
+            getSettings().then(s => {
+                const saEmailsRaw = s.super_admin_emails || '';
+                const saEmails = saEmailsRaw.toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
+                const userEmail = (user.email || '').toLowerCase();
+                // Bootstrap: if no super admins set yet, first user becomes super admin
+                if (saEmails.length === 0) {
+                    isSuperAdmin = true;
+                    saveSettings({ super_admin_emails: user.email });
+                } else {
+                    isSuperAdmin = saEmails.includes(userEmail);
+                }
+                applySuperAdmin();
+                const btn = document.getElementById('saToggleBtn');
+                btn.textContent = isSuperAdmin ? '🔓 Super Admin' : '👤 Admin';
+                btn.title = user.email;
+            });
+        });
+
+        window.handleLogout = async () => { await logout(); window.location.href = '/login.html'; };
+
+        // ═══ Tab Switching ═══
+        window.switchTab = (tab) => {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+        };
+
+        // ═══ Super Admin Mode (auto-detected from login) ═══
+        let isSuperAdmin = false;
+
+        function applySuperAdmin() {
+            const btn = document.getElementById('saToggleBtn');
+            if (isSuperAdmin) {
+                document.body.classList.add('super-admin');
+                btn.textContent = '🔓 Super Admin';
+                btn.style.opacity = '1';
+                btn.style.background = 'rgba(16,185,129,.15)';
+                btn.style.borderColor = '#10b981';
+                btn.style.color = '#10b981';
+            } else {
+                document.body.classList.remove('super-admin');
+                btn.textContent = '👤 Admin';
+                btn.style.opacity = '.6';
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+                if (document.querySelector('.admin-tab[data-tab="layout"]')?.classList.contains('active')) {
+                    switchTab('notices');
+                }
+            }
+        }
+
+        // ═══ Admin Theme Toggle ═══
+        function initAdminTheme() {
+            const saved = localStorage.getItem('adminTheme') || 'dark';
+            document.documentElement.setAttribute('data-admin-theme', saved);
+            updateThemeIcon(saved);
+        }
+        function updateThemeIcon(theme) {
+            const btn = document.getElementById('adminThemeToggle');
+            if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+        }
+        window.toggleAdminTheme = () => {
+            const current = document.documentElement.getAttribute('data-admin-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-admin-theme', next);
+            localStorage.setItem('adminTheme', next);
+            updateThemeIcon(next);
+        };
+        initAdminTheme();
+
+        // ═══ Init ═══
+        async function init() {
+            settings = await getSettings();
+            populateSettings(settings);
+
+            onNoticesChange((notices) => {
+                allNotices = notices;
+                renderNoticeList();
+                updateStats();
+            });
+        }
+
+        // ═══ Populate Settings ═══
+        function populateSettings(s) {
+            document.getElementById('navSubtitle').textContent = s.building_name;
+            document.getElementById('sBuildingName').value = s.building_name || '';
+            document.getElementById('sManagementCompany').value = s.management_company || '';
+            document.getElementById('sShowClock').checked = s.show_clock;
+            document.getElementById('sShowWeather').checked = s.show_weather;
+            document.getElementById('sShowNews').checked = s.show_news;
+            document.getElementById('sShowTicker').checked = s.show_ticker !== false;
+            document.getElementById('sTickerMode').value = s.ticker_mode || 'news';
+            populateTickerMessages(s.ticker_messages || (s.ticker_custom_text ? [s.ticker_custom_text] : []));
+            window.toggleTickerCustom();
+            document.getElementById('sSlideDuration').value = s.slide_duration || 12;
+            document.getElementById('sVideoDuration').value = s.video_slide_duration || 0;
+            document.getElementById('sDisplayZoom').value = s.display_zoom || '1';
+            // Populate pixel font sliders
+            const hpx = s.fs_header_px || 0; document.getElementById('sFsHeaderPx').value = hpx; document.getElementById('fsHeaderVal').textContent = hpx ? hpx+'px' : 'Auto';
+            const npx = s.fs_notice_px || 0; document.getElementById('sFsNoticePx').value = npx; document.getElementById('fsNoticeVal').textContent = npx ? npx+'px' : 'Auto';
+            const nwpx = s.fs_news_px || 0; document.getElementById('sFsNewsPx').value = nwpx; document.getElementById('fsNewsVal').textContent = nwpx ? nwpx+'px' : 'Auto';
+            const cpx = s.fs_contacts_px || 0; document.getElementById('sFsContactsPx').value = cpx; document.getElementById('fsContactsVal').textContent = cpx ? cpx+'px' : 'Auto';
+            const tpx = s.fs_ticker_px || 0; document.getElementById('sFsTickerPx').value = tpx; document.getElementById('fsTickerVal').textContent = tpx ? tpx+'px' : 'Auto';
+            document.getElementById('sTransition').value = s.transition_speed || 1.5;
+            document.getElementById('sWeatherLocation').value = s.weather_location || '';
+            document.getElementById('sWeatherLat').value = s.weather_lat || '';
+            document.getElementById('sWeatherLon').value = s.weather_lon || '';
+            document.getElementById('sWeatherUnits').value = s.weather_units || 'metric';
+            document.getElementById('coordsDisplay').textContent = `Current coords: ${s.weather_lat}, ${s.weather_lon}`;
+            document.getElementById('sNewsMaxItems').value = s.news_max_items || 8;
+            document.getElementById('sSmartNews').checked = s.smart_news !== false;
+            document.getElementById('sShowContacts').checked = s.show_emergency_contacts !== false;
+            document.getElementById('sShowNoticeList').checked = s.show_notice_list !== false;
+            document.getElementById('sShowNewsSidebar').checked = s.show_news_sidebar !== false;
+
+            // AI
+            document.getElementById('sAiProvider').value = s.ai_provider || 'gemini';
+            document.getElementById('sGeminiApiKey').value = s.gemini_api_key || '';
+            document.getElementById('sGroqApiKey').value = s.groq_api_key || '';
+            document.getElementById('sOpenaiApiKey').value = s.openai_api_key || '';
+            document.getElementById('sDeepseekApiKey').value = s.deepseek_api_key || '';
+            document.getElementById('sPixabayApiKey').value = s.pixabay_api_key || '';
+            document.getElementById('sSuperAdminEmails').value = s.super_admin_emails || '';
+            window.toggleAiKeyFields();
+
+            // Theme
+            document.getElementById('sDisplayTheme').value = s.display_theme || 'dark-modern';
+            document.querySelectorAll('.theme-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.theme === (s.display_theme || 'dark-modern'));
+            });
+
+            if (s.logo_url) {
+                const p = document.getElementById('logoPreview');
+                p.src = s.logo_url; p.style.display = 'block';
+            }
+            document.getElementById('sLogoSize').value = s.logo_size || 100;
+            document.getElementById('logoSizeVal').textContent = (s.logo_size || 100) + '%';
+
+            // Feeds
+            const fl = document.getElementById('feedList');
+            fl.innerHTML = '';
+            (s.news_feeds || []).forEach(f => addFeedRow(f.name, f.url));
+
+            // Contacts
+            const cl = document.getElementById('contactList');
+            cl.innerHTML = '';
+            (s.emergency_contacts || []).forEach(c => addContactRow(c.label, c.number));
+
+            // Layout
+            currentLayout = JSON.parse(JSON.stringify(s.layout || DEFAULT_LAYOUT));
+            renderLayoutEditor();
+            renderTemplates();
+
+            // Emergency
+            if (s.emergency_mode) {
+                document.getElementById('emergencyBanner').style.display = 'flex';
+                document.getElementById('emergencyBannerMsg').textContent = s.emergency_message;
+                document.getElementById('emergencyBtn').textContent = '🚨 Deactivate';
+            }
+        }
+
+        // ═══ Notice List ═══
+        function renderNoticeList() {
+            const list = document.getElementById('noticeList');
+            if (allNotices.length === 0) {
+                list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-dim);">No notices yet. <a href="/notice.html" style="color:var(--accent);">Create your first notice →</a></div>`;
+                return;
+            }
+            list.innerHTML = allNotices.map(n => {
+                const cat = CATEGORIES[n.category] || CATEGORIES.general;
+                const ft = n.file_type || getFileType(n.media_url || '');
+                const priorityBadge = n.priority >= 2 ? '<span class="badge badge-urgent">Urgent</span>'
+                    : n.priority >= 1 ? '<span class="badge badge-important">Important</span>'
+                    : '<span class="badge badge-normal">Normal</span>';
+                const typeBadge = ft === 'video' ? '<span class="badge badge-video">Video</span>'
+                    : ft === 'image' ? '<span class="badge badge-image">Image</span>'
+                    : ft === 'pdf' ? '<span class="badge badge-image">PDF</span>' : '';
+                let thumb = cat.icon;
+                if (n.media_url) thumb = ft === 'video'
+                    ? `<video src="${n.media_url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
+                    : ft === 'pdf' ? '📄'
+                    : `<img src="${n.media_url}" style="width:100%;height:100%;object-fit:cover">`;
+                return `
+                <div class="notice-item ${n.active ? '' : 'inactive'}">
+                    <div class="notice-thumb">${thumb}</div>
+                    <div class="notice-info">
+                        <div class="notice-info-title">${escapeHtml(n.title)}</div>
+                        <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${!n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
+                    </div>
+                    <div class="notice-actions">
+                        <button class="btn btn-outline btn-sm" onclick="window.handleToggle('${n.id}')">${n.active ? '⏸ Pause' : '▶ Activate'}</button>
+                        <a href="/notice.html?id=${n.id}" class="btn btn-outline btn-sm">✏️ Edit</a>
+                        <button class="btn btn-danger btn-sm" onclick="window.handleDelete('${n.id}')">🗑</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function updateStats() {
+            const now = new Date().toISOString();
+            const active = allNotices.filter(n => {
+                if (!n.active) return false;
+                if (n.start_date && n.start_date > now) return false;
+                if (n.end_date && n.end_date < now) return false;
+                return true;
+            });
+            document.getElementById('statTotal').textContent = allNotices.length;
+            document.getElementById('statActive').textContent = active.length;
+            document.getElementById('statUrgent').textContent = allNotices.filter(n => n.priority >= 2).length;
+            document.getElementById('statMedia').textContent = allNotices.filter(n => n.media_url).length;
+        }
+
+        // ═══ Notice Actions ═══
+        window.handleDelete = async (id) => {
+            if (!confirm('Delete this notice permanently?')) return;
+            try { await deleteNotice(id); showFlash('Notice deleted', 'success'); }
+            catch (e) { showFlash('Error deleting notice', 'error'); }
+        };
+
+        window.handleToggle = async (id) => {
+            try { await toggleNotice(id); }
+            catch (e) { showFlash('Error toggling notice', 'error'); }
+        };
+
+        // ═══ Save Settings ═══
+        window.saveAllSettings = async () => {
+            const feeds = [];
+            document.querySelectorAll('#feedList .feed-row').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const name = inputs[0].value.trim(), url = inputs[1].value.trim();
+                if (name && url) feeds.push({ name, url });
+            });
+            const contacts = [];
+            document.querySelectorAll('#contactList .feed-row').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const label = inputs[0].value.trim(), number = inputs[1].value.trim();
+                if (label && number) contacts.push({ label, number });
+            });
+
+            // Geocode if location changed
+            const newLoc = document.getElementById('sWeatherLocation').value.trim();
+            if (newLoc && newLoc !== settings.weather_location) {
+                const geo = await geocodeLocation(newLoc);
+                if (geo) {
+                    settings.weather_lat = geo.lat;
+                    settings.weather_lon = geo.lon;
+                    settings.weather_location = `${geo.name}, ${geo.admin1 || ''}`.replace(/, $/, '');
+                    document.getElementById('sWeatherLocation').value = settings.weather_location;
+                    document.getElementById('coordsDisplay').textContent = `Current coords: ${geo.lat}, ${geo.lon}`;
+                } else {
+                    showFlash(`Could not find location "${newLoc}". Weather location unchanged.`, 'error');
+                }
+            }
+
+            const updated = {
+                building_name: document.getElementById('sBuildingName').value.trim(),
+                management_company: document.getElementById('sManagementCompany').value.trim(),
+                logo_size: parseInt(document.getElementById('sLogoSize').value) || 100,
+                show_clock: document.getElementById('sShowClock').checked,
+                show_weather: document.getElementById('sShowWeather').checked,
+                show_news: document.getElementById('sShowNews').checked,
+                show_ticker: document.getElementById('sShowTicker').checked,
+                ticker_mode: document.getElementById('sTickerMode').value,
+                ticker_messages: getTickerMessages(),
+                slide_duration: parseInt(document.getElementById('sSlideDuration').value) || 12,
+                video_slide_duration: parseInt(document.getElementById('sVideoDuration').value) || 0,
+                display_zoom: document.getElementById('sDisplayZoom').value || '1',
+                fs_header_px: parseInt(document.getElementById('sFsHeaderPx').value) || 0,
+                fs_notice_px: parseInt(document.getElementById('sFsNoticePx').value) || 0,
+                fs_news_px: parseInt(document.getElementById('sFsNewsPx').value) || 0,
+                fs_contacts_px: parseInt(document.getElementById('sFsContactsPx').value) || 0,
+                fs_ticker_px: parseInt(document.getElementById('sFsTickerPx').value) || 0,
+                transition_speed: parseFloat(document.getElementById('sTransition').value) || 1.5,
+                weather_location: document.getElementById('sWeatherLocation').value.trim() || settings.weather_location,
+                weather_lat: settings.weather_lat,
+                weather_lon: settings.weather_lon,
+                weather_units: document.getElementById('sWeatherUnits').value,
+                news_max_items: parseInt(document.getElementById('sNewsMaxItems').value) || 8,
+                smart_news: document.getElementById('sSmartNews').checked,
+                news_feeds: feeds,
+                show_emergency_contacts: document.getElementById('sShowContacts').checked,
+                show_notice_list: document.getElementById('sShowNoticeList').checked,
+                show_news_sidebar: document.getElementById('sShowNewsSidebar').checked,
+                display_theme: document.getElementById('sDisplayTheme').value,
+                gemini_api_key: document.getElementById('sGeminiApiKey').value.trim(),
+                groq_api_key: document.getElementById('sGroqApiKey').value.trim(),
+                openai_api_key: document.getElementById('sOpenaiApiKey').value.trim(),
+                deepseek_api_key: document.getElementById('sDeepseekApiKey').value.trim(),
+                pixabay_api_key: document.getElementById('sPixabayApiKey').value.trim(),
+                ai_provider: document.getElementById('sAiProvider').value,
+                super_admin_emails: document.getElementById('sSuperAdminEmails').value.trim(),
+                emergency_contacts: contacts,
+                layout: currentLayout,
+            };
+            try {
+                await saveSettings(updated);
+                settings = { ...settings, ...updated };
+                showFlash('Settings saved!', 'success');
+            } catch (e) { showFlash('Error saving settings: ' + e.message, 'error'); }
+        };
+
+        // ═══ Logo Upload ═══
+        window.handleLogoUpload = async (file) => {
+            if (!file) return;
+            try {
+                const result = await uploadLogo(file);
+                settings.logo_url = result.url;
+                await saveSettings({ logo_url: result.url, logo_path: result.path });
+                const p = document.getElementById('logoPreview');
+                p.src = result.url; p.style.display = 'block';
+                showFlash('Logo uploaded!', 'success');
+            } catch (e) { showFlash('Error uploading logo', 'error'); }
+        };
+
+        // ═══ Geocode Test ═══
+        window.toggleTickerCustom = () => {
+            document.getElementById('tickerCustomGroup').style.display = document.getElementById('sTickerMode').value === 'custom' ? '' : 'none';
+        };
+
+        window.toggleAiKeyFields = () => {
+            const provider = document.getElementById('sAiProvider').value;
+            document.getElementById('aiKeyGemini').style.display = provider === 'gemini' ? '' : 'none';
+            document.getElementById('aiKeyGroq').style.display = provider === 'groq' ? '' : 'none';
+            document.getElementById('aiKeyOpenai').style.display = provider === 'openai' ? '' : 'none';
+            document.getElementById('aiKeyDeepseek').style.display = provider === 'deepseek' ? '' : 'none';
+        };
+
+        window.clearDisplayCache = async () => {
+            try {
+                await updateDoc(doc(db, 'settings', 'main'), { cache_version: Date.now() });
+                showFlash('Display cache clear triggered — all displays will re-download media.', 'success');
+            } catch (e) {
+                showFlash('Error: ' + e.message, 'error');
+            }
+        };
+
+        window.addTickerMessage = (text = '') => {
+            const list = document.getElementById('tickerMessageList');
+            const row = document.createElement('div');
+            row.className = 'feed-row';
+            row.innerHTML = `<input type="text" class="form-control ticker-msg-input" value="${text.replace(/"/g, '&quot;')}" placeholder="e.g. Visit www.NNSCC292.com for updates">
+                <button type="button" class="feed-remove" onclick="this.parentElement.remove()">✕</button>`;
+            list.appendChild(row);
+        };
+
+        function getTickerMessages() {
+            return Array.from(document.querySelectorAll('.ticker-msg-input')).map(el => el.value.trim()).filter(Boolean);
+        }
+
+        function populateTickerMessages(messages) {
+            document.getElementById('tickerMessageList').innerHTML = '';
+            if (!messages || messages.length === 0) {
+                addTickerMessage('');
+                return;
+            }
+            messages.forEach(m => addTickerMessage(m));
+        }
+
+        window.testGeocode = async () => {
+            const q = document.getElementById('sWeatherLocation').value.trim();
+            const result = document.getElementById('geoResult');
+            if (!q) { result.style.display = 'none'; return; }
+            result.style.display = 'block';
+            result.style.color = 'var(--text-dim)';
+            result.textContent = 'Looking up...';
+            const geo = await geocodeLocation(q);
+            if (geo) {
+                settings.weather_lat = geo.lat;
+                settings.weather_lon = geo.lon;
+                const loc = geo.admin1 ? `${geo.name}, ${geo.admin1}` : geo.name;
+                document.getElementById('sWeatherLocation').value = loc;
+                document.getElementById('coordsDisplay').textContent = `Current coords: ${geo.lat}, ${geo.lon}`;
+                result.style.color = 'var(--success)';
+                result.textContent = `✅ Found: ${loc}, ${geo.country} (${geo.lat}, ${geo.lon})`;
+            } else {
+                result.style.color = 'var(--urgent)';
+                result.textContent = '❌ Location not found. Try a different city name or postal code.';
+            }
+        };
+
+        window.applyManualCoords = () => {
+            const lat = document.getElementById('sWeatherLat').value.trim();
+            const lon = document.getElementById('sWeatherLon').value.trim();
+            if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
+                alert('Please enter valid latitude and longitude numbers.');
+                return;
+            }
+            settings.weather_lat = lat;
+            settings.weather_lon = lon;
+            const locName = document.getElementById('sWeatherLocation').value.trim() || `${lat}, ${lon}`;
+            settings.weather_location = locName;
+            document.getElementById('coordsDisplay').textContent = `Current coords: ${lat}, ${lon}`;
+            document.getElementById('geoResult').style.display = 'block';
+            document.getElementById('geoResult').style.color = 'var(--success)';
+            document.getElementById('geoResult').textContent = `✅ Manual coords set: ${lat}, ${lon} — click Save Settings to apply.`;
+        };
+
+        // ═══ Emergency ═══
+        window.toggleEmergency = () => {
+            if (settings.emergency_mode) {
+                saveSettings({ emergency_mode: false, emergency_message: '' });
+                settings.emergency_mode = false;
+                document.getElementById('emergencyBanner').style.display = 'none';
+                document.getElementById('emergencyBtn').textContent = '🚨 Emergency';
+                showFlash('Emergency mode deactivated', 'success');
+            } else {
+                document.getElementById('emergencyModal').classList.add('active');
+            }
+        };
+
+        window.activateEmergency = async () => {
+            const msg = document.getElementById('emergencyMsg').value.trim() || 'Please follow building emergency procedures.';
+            await saveSettings({ emergency_mode: true, emergency_message: msg });
+            settings.emergency_mode = true;
+            settings.emergency_message = msg;
+            document.getElementById('emergencyBanner').style.display = 'flex';
+            document.getElementById('emergencyBannerMsg').textContent = msg;
+            document.getElementById('emergencyBtn').textContent = '🚨 Deactivate';
+            document.getElementById('emergencyModal').classList.remove('active');
+            showFlash('EMERGENCY MODE ACTIVATED', 'error');
+        };
+
+        // ═══ Theme Selector ═══
+        window.selectTheme = (el) => {
+            document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('sDisplayTheme').value = el.dataset.theme;
+        };
+
+        // ═══ Feed/Contact Rows ═══
+        window.addFeedRow = (name = '', url = '') => {
+            const list = document.getElementById('feedList');
+            const row = document.createElement('div');
+            row.className = 'feed-row';
+            row.innerHTML = `<input type="text" class="form-control" value="${escapeHtml(name)}" placeholder="Source name">
+                <input type="text" class="form-control" value="${escapeHtml(url)}" placeholder="RSS URL">
+                <button type="button" class="feed-remove" onclick="this.parentElement.remove()">✕</button>`;
+            list.appendChild(row);
+        };
+
+        window.addContactRow = (label = '', number = '') => {
+            const list = document.getElementById('contactList');
+            const row = document.createElement('div');
+            row.className = 'feed-row';
+            row.innerHTML = `<input type="text" class="form-control" value="${escapeHtml(label)}" placeholder="Label (e.g., Building Manager)">
+                <input type="text" class="form-control" value="${escapeHtml(number)}" placeholder="Phone number">
+                <button type="button" class="feed-remove" onclick="this.parentElement.remove()">✕</button>`;
+            list.appendChild(row);
+        };
+
+        // ═══ Layout Editor ═══
+        function renderLayoutEditor() {
+            const container = document.getElementById('layoutWidgets');
+            const editor = document.getElementById('layoutEditor');
+            container.innerHTML = '';
+
+            // Draw grid cells
+            const grid = document.getElementById('layoutGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 96; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'layout-cell';
+                grid.appendChild(cell);
+            }
+
+            currentLayout.forEach((w, idx) => {
+                const def = WIDGET_DEFS[w.id.replace(/_\d+$/, '')] || WIDGET_DEFS.notices;
+                const el = document.createElement('div');
+                el.className = 'layout-widget';
+                el.dataset.idx = idx;
+                el.style.background = def.color + '22';
+                el.style.borderColor = def.color + '66';
+                el.style.color = '#fff';
+                // Position as percentage
+                updateWidgetPosition(el, w);
+                el.innerHTML = `<span class="lw-icon">${def.icon}</span><span class="lw-label">${def.label}${w.id.startsWith('news_') ? ' #' + (parseInt(w.id.split('_')[1]) + 1) : ''}</span><button class="lw-remove" onclick="removeLayoutWidget(${idx})" title="Remove">✕</button><div class="lw-resize"></div>`;
+
+                // Drag
+                el.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('lw-remove')) return;
+                    if (e.target.classList.contains('lw-resize')) { startResize(e, idx); return; }
+                    startDrag(e, idx);
+                });
+                container.appendChild(el);
+            });
+            highlightActiveTemplate();
+        }
+
+        function updateWidgetPosition(el, w) {
+            el.style.left = (w.x / 12 * 100) + '%';
+            el.style.top = (w.y / 8 * 100) + '%';
+            el.style.width = (w.w / 12 * 100) + '%';
+            el.style.height = (w.h / 8 * 100) + '%';
+        }
+
+        function getGridCoords(e) {
+            const editor = document.getElementById('layoutEditor');
+            const rect = editor.getBoundingClientRect();
+            const x = Math.max(0, Math.min(11, Math.round((e.clientX - rect.left) / rect.width * 12)));
+            const y = Math.max(0, Math.min(7, Math.round((e.clientY - rect.top) / rect.height * 8)));
+            return { x, y };
+        }
+
+        function startDrag(e, idx) {
+            e.preventDefault();
+            const w = currentLayout[idx];
+            const editor = document.getElementById('layoutEditor');
+            const rect = editor.getBoundingClientRect();
+            const startGrid = {
+                gx: (e.clientX - rect.left) / rect.width * 12,
+                gy: (e.clientY - rect.top) / rect.height * 8
+            };
+            const offsetX = startGrid.gx - w.x;
+            const offsetY = startGrid.gy - w.y;
+            const el = document.querySelector(`[data-idx="${idx}"]`);
+            el.classList.add('dragging');
+
+            function onMove(e2) {
+                const gx = (e2.clientX - rect.left) / rect.width * 12;
+                const gy = (e2.clientY - rect.top) / rect.height * 8;
+                let nx = Math.round(gx - offsetX);
+                let ny = Math.round(gy - offsetY);
+                nx = Math.max(0, Math.min(12 - w.w, nx));
+                ny = Math.max(0, Math.min(8 - w.h, ny));
+                w.x = nx; w.y = ny;
+                updateWidgetPosition(el, w);
+            }
+
+            function onUp() {
+                el.classList.remove('dragging');
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                snapToGrid(idx);
+                renderLayoutEditor();
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        }
+
+        function startResize(e, idx) {
+            e.preventDefault();
+            e.stopPropagation();
+            const w = currentLayout[idx];
+            const def = WIDGET_DEFS[w.id.replace(/_\d+$/, '')] || { minW: 1, minH: 1 };
+            const editor = document.getElementById('layoutEditor');
+            const rect = editor.getBoundingClientRect();
+            const el = document.querySelector(`[data-idx="${idx}"]`);
+            el.classList.add('dragging');
+
+            function onMove(e2) {
+                const gx = (e2.clientX - rect.left) / rect.width * 12;
+                const gy = (e2.clientY - rect.top) / rect.height * 8;
+                let nw = Math.round(gx - w.x);
+                let nh = Math.round(gy - w.y);
+                nw = Math.max(def.minW, Math.min(12 - w.x, nw));
+                nh = Math.max(def.minH, Math.min(8 - w.y, nh));
+                w.w = nw; w.h = nh;
+                updateWidgetPosition(el, w);
+            }
+
+            function onUp() {
+                el.classList.remove('dragging');
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                renderLayoutEditor();
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        }
+
+        function snapToGrid(idx) {
+            const w = currentLayout[idx];
+            w.x = Math.round(w.x);
+            w.y = Math.round(w.y);
+            w.w = Math.round(w.w);
+            w.h = Math.round(w.h);
+            w.x = Math.max(0, Math.min(12 - w.w, w.x));
+            w.y = Math.max(0, Math.min(8 - w.h, w.y));
+        }
+
+        window.addLayoutWidget = (type) => {
+            // For news, auto-increment ID
+            let id = type;
+            if (type === 'news') {
+                let max = -1;
+                currentLayout.forEach(w => {
+                    if (w.id.startsWith('news_')) {
+                        const n = parseInt(w.id.split('_')[1]);
+                        if (n > max) max = n;
+                    }
+                });
+                id = `news_${max + 1}`;
+            }
+            // Check if unique widget already exists (except news)
+            if (type !== 'news' && currentLayout.some(w => w.id === type)) {
+                showFlash(`${type} widget already exists. Remove it first to re-add.`, 'error');
+                return;
+            }
+            // Find an empty spot
+            const def = WIDGET_DEFS[type] || { minW: 2, minH: 2 };
+            let placed = false;
+            for (let y = 0; y <= 8 - def.minH && !placed; y++) {
+                for (let x = 0; x <= 12 - def.minW && !placed; x++) {
+                    if (!currentLayout.some(w => !(x + def.minW <= w.x || x >= w.x + w.w || y + def.minH <= w.y || y >= w.y + w.h))) continue;
+                    currentLayout.push({ id, x, y, w: def.minW, h: def.minH });
+                    placed = true;
+                }
+            }
+            if (!placed) {
+                // Just place at 0,0
+                currentLayout.push({ id, x: 0, y: 0, w: def.minW, h: def.minH });
+            }
+            renderLayoutEditor();
+        };
+
+        window.removeLayoutWidget = (idx) => {
+            currentLayout.splice(idx, 1);
+            renderLayoutEditor();
+        };
+
+        window.resetLayout = () => {
+            currentLayout = JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+            renderLayoutEditor();
+            showFlash('Layout reset to default', 'success');
+        };
+
+        // ═══ Flash ═══
+        function showFlash(msg, type) {
+            const el = document.getElementById(type === 'error' ? 'errorFlash' : 'successFlash');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+    </script>
+</body>
+</html>

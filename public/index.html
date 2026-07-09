@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Libre+Baskerville:wght@400;700&family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root,[data-theme="dark-modern"]{--bg-primary:#0a0e1a;--bg-card:#111827;--bg-card-hover:#1a2332;--text-primary:#f0f2f5;--text-secondary:#94a3b8;--accent:#3b82f6;--accent-glow:rgba(59,130,246,0.25);--urgent:#ef4444;--urgent-glow:rgba(239,68,68,0.3);--important:#f59e0b;--success:#10b981;--border:rgba(255,255,255,0.06);--border-light:rgba(255,255,255,0.1);--header-bg:rgba(10,14,26,.85);--header-border:var(--border);--ticker-bg:rgba(10,14,26,.9);--orb1:#3b82f6;--orb2:#8b5cf6;--orb3:#06b6d4;--orb-opacity:.12;--font-heading:'Playfair Display',serif;--font-body:'DM Sans',sans-serif;--transition-speed:1.2s}
+        [data-theme="light-classic"]{--bg-primary:#f0f2f5;--bg-card:#ffffff;--bg-card-hover:#f8f9fb;--text-primary:#1a1a2e;--text-secondary:#64748b;--accent:#2563eb;--accent-glow:rgba(37,99,235,0.15);--urgent:#dc2626;--urgent-glow:rgba(220,38,38,0.15);--important:#d97706;--success:#059669;--border:rgba(0,0,0,0.08);--border-light:rgba(0,0,0,0.12);--header-bg:rgba(255,255,255,.92);--header-border:rgba(0,0,0,0.06);--ticker-bg:rgba(255,255,255,.95);--orb1:#93c5fd;--orb2:#c4b5fd;--orb3:#a5f3fc;--orb-opacity:.25;--font-heading:'Libre Baskerville',serif;--font-body:'Source Sans 3',sans-serif}
+        [data-theme="warm-luxury"]{--bg-primary:#1a1410;--bg-card:#241e17;--bg-card-hover:#2e2620;--text-primary:#f5efe6;--text-secondary:#a89880;--accent:#d4a553;--accent-glow:rgba(212,165,83,0.2);--urgent:#e85d4a;--urgent-glow:rgba(232,93,74,0.25);--important:#d4a553;--success:#7ab648;--border:rgba(212,165,83,0.08);--border-light:rgba(212,165,83,0.15);--header-bg:rgba(26,20,16,.9);--header-border:rgba(212,165,83,0.08);--ticker-bg:rgba(26,20,16,.92);--orb1:#d4a553;--orb2:#8b5e3c;--orb3:#c07040;--orb-opacity:.08;--font-heading:'Crimson Pro',serif;--font-body:'DM Sans',sans-serif}
+        [data-theme="corporate-navy"]{--bg-primary:#0c1829;--bg-card:#132035;--bg-card-hover:#1a2d4a;--text-primary:#e8edf5;--text-secondary:#8899b0;--accent:#4da6ff;--accent-glow:rgba(77,166,255,0.2);--urgent:#ff6b6b;--urgent-glow:rgba(255,107,107,0.25);--important:#ffc857;--success:#47d185;--border:rgba(77,166,255,0.06);--border-light:rgba(77,166,255,0.12);--header-bg:rgba(12,24,41,.9);--header-border:rgba(77,166,255,0.08);--ticker-bg:rgba(12,24,41,.92);--orb1:#4da6ff;--orb2:#2563eb;--orb3:#0891b2;--orb-opacity:.1;--font-heading:'Outfit',sans-serif;--font-body:'Outfit',sans-serif}
+        [data-theme="nature-green"]{--bg-primary:#0a1a12;--bg-card:#112118;--bg-card-hover:#193022;--text-primary:#e6f0ea;--text-secondary:#7fa890;--accent:#34d399;--accent-glow:rgba(52,211,153,0.2);--urgent:#f87171;--urgent-glow:rgba(248,113,113,0.25);--important:#fbbf24;--success:#34d399;--border:rgba(52,211,153,0.06);--border-light:rgba(52,211,153,0.12);--header-bg:rgba(10,26,18,.9);--header-border:rgba(52,211,153,0.08);--ticker-bg:rgba(10,26,18,.92);--orb1:#34d399;--orb2:#059669;--orb3:#0d9488;--orb-opacity:.1;--font-heading:'Playfair Display',serif;--font-body:'DM Sans',sans-serif}
+        [data-theme="waterview-classic"]{--bg-primary:#0a2540;--bg-card:rgba(255,255,255,.06);--bg-card-hover:rgba(255,255,255,.1);--text-primary:#ffffff;--text-secondary:#b0c4de;--accent:#2196F3;--accent-glow:rgba(33,150,243,0.25);--urgent:#ef4444;--urgent-glow:rgba(239,68,68,0.3);--important:#ffc107;--success:#4caf50;--border:rgba(255,255,255,0.1);--border-light:rgba(255,255,255,0.15);--header-bg:rgba(10,37,64,.95);--header-border:rgba(255,255,255,0.08);--ticker-bg:#0d1f3c;--orb1:#1565c0;--orb2:#0277bd;--orb3:#00838f;--orb-opacity:.15;--font-heading:'DM Sans',sans-serif;--font-body:'DM Sans',sans-serif}
+
+        /* Waterview Classic — hide top header, show combined bottom bar */
+        [data-theme="waterview-classic"] .header{display:none}
+        [data-theme="waterview-classic"] .ambient-bg{background:linear-gradient(135deg,#0a3d6b 0%,#0d5a8e 30%,#0e7490 60%,#0891b2 100%)}
+        [data-theme="waterview-classic"] .orb{display:none}
+        [data-theme="waterview-classic"] .widget-grid{padding:12px}
+        [data-theme="waterview-classic"] .widget{border-radius:8px}
+        [data-theme="waterview-classic"] .w-notices{border:none;border-radius:8px}
+        [data-theme="waterview-classic"] .w-notices .slide-area{border-radius:8px}
+        [data-theme="waterview-classic"] .news-ticker{height:clamp(48px,7vh,72px);background:#0d1f3c;border-top:none}
+        [data-theme="waterview-classic"] .news-ticker-label{display:none}
+        [data-theme="waterview-classic"] .news-item{font-size:clamp(14px,2.5vh,24px);font-weight:600;color:#ffffff;padding:0 clamp(24px,4vw,56px)}
+        [data-theme="waterview-classic"] .news-item-dot{color:rgba(255,255,255,.3)}
+        [data-theme="waterview-classic"] .bottom-bar-info{display:flex}
+        [data-theme="waterview-classic"] .news-card{background:rgba(0,0,0,.2)}
+        [data-theme="waterview-classic"] .w-news{border:none;background:rgba(255,255,255,.06)}
+        [data-theme="waterview-classic"] .w-notice-list{border:none;background:rgba(255,255,255,.06)}
+        [data-theme="waterview-classic"] .w-contacts{border:none;background:rgba(255,255,255,.06)}
+
+        /* Waterview Classic — weather widget blue gradient + hourly */
+        [data-theme="waterview-classic"] .w-weather{background:linear-gradient(180deg,#1565c0 0%,#1976d2 40%,#2196f3 100%);border:none;padding:0;overflow:hidden}
+        [data-theme="waterview-classic"] .w-weather .wloc{font-size:clamp(16px,2.5vh,28px);font-weight:700;opacity:1;color:#fff;letter-spacing:1px;margin-top:0;padding:clamp(8px,1.2vmin,18px) clamp(10px,1.5vmin,20px) 0}
+        [data-theme="waterview-classic"] .w-weather .wi{font-size:clamp(28px,4.5vh,52px);margin:0}
+        [data-theme="waterview-classic"] .w-weather .wtemp{font-size:clamp(28px,4.5vh,52px)}
+        [data-theme="waterview-classic"] .w-weather .wdesc{font-size:clamp(12px,1.6vh,18px);color:rgba(255,255,255,.85);margin:0;text-transform:uppercase;letter-spacing:.5px}
+        [data-theme="waterview-classic"] .w-weather .wfc{display:none}
+        [data-theme="waterview-classic"] .w-weather .wfc-hourly{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.12);margin-top:auto}
+        [data-theme="waterview-classic"] .w-weather .wfc-h{text-align:center;padding:clamp(4px,.6vmin,10px) clamp(2px,.4vmin,6px);background:rgba(25,118,210,.85);display:flex;flex-direction:column;align-items:center;gap:clamp(1px,.2vmin,3px)}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .ht{font-size:clamp(9px,1vh,13px);color:rgba(255,255,255,.7);font-weight:600}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .hi{font-size:clamp(16px,2.5vh,28px)}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .htemp{font-size:clamp(12px,1.6vh,20px);font-weight:700;color:#fff}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .hdesc{font-size:clamp(7px,.8vh,10px);color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.3px}
+        [data-theme="light-classic"] .media-overlay-text{background:linear-gradient(transparent,rgba(0,0,0,.75))}
+        [data-theme="light-classic"] .media-overlay-text .notice-title{color:#fff}
+        [data-theme="light-classic"] .news-ticker-label{background:var(--accent)}
+
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);overflow:hidden;height:100vh;height:100dvh;width:100vw;margin:0;cursor:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+        .ambient-bg{position:fixed;inset:0;z-index:0;overflow:hidden}
+        .orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:var(--orb-opacity);animation:orb-float 25s ease-in-out infinite}
+        .orb-1{width:600px;height:600px;background:var(--orb1);top:-10%;left:-5%}
+        .orb-2{width:500px;height:500px;background:var(--orb2);bottom:-10%;right:-5%;animation-delay:-8s}
+        .orb-3{width:400px;height:400px;background:var(--orb3);top:40%;left:40%;animation-delay:-16s}
+        @keyframes orb-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
+
+        .header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:clamp(12px,2vh,28px) clamp(20px,3vw,48px);background:var(--header-bg);backdrop-filter:blur(24px);border-bottom:1px solid var(--header-border);flex-shrink:0}
+        .header-left{display:flex;align-items:center;gap:clamp(12px,1.5vw,24px);flex:1;min-width:0;overflow:hidden}
+        .header-logo{width:clamp(72px,13vh,140px);height:auto;max-height:clamp(72px,13vh,140px);border-radius:0;object-fit:contain;background:none}
+        .header-logo-placeholder{width:clamp(72px,13vh,140px);height:clamp(72px,13vh,140px);border-radius:14px;background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent),#8b5cf6));display:flex;align-items:center;justify-content:center;font-size:clamp(28px,5.5vh,52px);font-weight:700;color:#fff}
+        .building-name{font-family:var(--font-heading);font-size:clamp(24px,4.5vh,48px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .building-subtitle{font-size:clamp(13px,1.8vh,20px);color:var(--text-secondary);margin-top:2px}
+        .header-center{display:flex;align-items:center;gap:clamp(12px,2vw,28px);flex-shrink:1;min-width:0}
+        .weather-widget{display:flex;align-items:center;gap:clamp(8px,1.2vw,20px);padding:clamp(6px,1vh,14px) clamp(10px,1.5vw,28px);background:transparent;border:none;border-radius:14px;overflow:hidden;min-width:0}
+        .weather-icon{font-size:clamp(28px,5vh,56px);line-height:1}
+        .weather-temp{font-size:clamp(32px,6vh,60px);font-weight:800;font-variant-numeric:tabular-nums}
+        .weather-details{font-size:clamp(13px,1.8vh,20px);color:var(--text-secondary);line-height:1.4;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .weather-label{font-size:clamp(10px,1.2vh,14px);color:var(--text-secondary);opacity:.6;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+        .forecast-mini{display:flex;gap:clamp(8px,1vw,16px)}
+        .forecast-day{text-align:center;padding:clamp(4px,.8vh,10px) clamp(8px,1vw,14px);background:rgba(255,255,255,.03);border-radius:8px;font-size:clamp(10px,1.3vh,14px);color:var(--text-secondary);font-weight:500}
+        .forecast-day-icon{font-size:clamp(16px,2.5vh,26px);margin:clamp(2px,.4vh,6px) 0}
+        .forecast-day-temp{font-size:clamp(10px,1.3vh,15px);font-weight:700;color:var(--text-primary)}
+        .header-right{display:flex;align-items:center;gap:24px;flex-shrink:0}
+        .datetime-block{text-align:right}
+        .clock{font-size:clamp(32px,6vh,60px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+        .date-display{font-size:clamp(13px,1.8vh,20px);color:var(--text-secondary);margin-top:2px;font-weight:500}
+
+        /* Widget Grid */
+        .widget-grid{position:relative;z-index:5;flex:1;min-height:0;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr);padding:clamp(8px,1.2vmin,20px) clamp(12px,2vmin,28px);gap:clamp(6px,1vmin,14px);overflow:hidden}
+        .widget{position:relative;overflow:hidden;border-radius:clamp(10px,1.2vmin,18px);min-width:0;min-height:0}
+
+        /* Notice Slideshow */
+        .w-notices{background:var(--bg-card);border:1px solid var(--border)}
+        .w-notices .slide-area{position:absolute;inset:0;overflow:hidden;border-radius:clamp(10px,1.2vmin,18px)}
+        .slide{position:absolute;inset:0;opacity:0;transform:scale(.97);transition:opacity var(--transition-speed) ease,transform var(--transition-speed) ease;pointer-events:none}
+        .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+        .notice-card{height:100%;display:flex;flex-direction:column;overflow:hidden}
+        .notice-card.has-media-side{flex-direction:row}
+        .notice-card.media-only{position:relative}
+        .media-fullscreen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+        .media-fullscreen:has(.pdf-embed){background:#fff}
+        .media-fullscreen img,.media-fullscreen video,.media-fullscreen iframe{width:100%;height:100%;object-fit:contain}
+        .media-fullscreen iframe.pdf-embed{background:#fff}
+        .media-overlay-text{position:absolute;bottom:0;left:0;right:0;padding:clamp(16px,3vh,40px) clamp(20px,3vw,48px);background:linear-gradient(transparent,rgba(0,0,0,.85))}
+        .media-overlay-text .notice-title{font-size:clamp(20px,4vh,42px);text-shadow:0 2px 8px rgba(0,0,0,.5)}
+        .media-side{flex:0 0 48%;position:relative;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
+        .media-side img,.media-side video,.media-side iframe{width:100%;height:100%;object-fit:contain}
+        .media-side iframe.pdf-embed{background:#fff}
+        .pdf-embed{width:100%;height:100%;border:none;background:#fff}
+        .notice-content{flex:1;padding:clamp(20px,4vh,56px) clamp(20px,3vw,56px);display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+        .notice-category{display:inline-flex;align-items:center;gap:clamp(4px,.6vmin,8px);font-size:clamp(9px,1.3vh,14px);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:clamp(8px,2vh,20px)}
+        .notice-category .dot{width:clamp(5px,.8vh,9px);height:clamp(5px,.8vh,9px);border-radius:50%;background:var(--accent)}
+        .priority-urgent .notice-category{color:var(--urgent)}
+        .priority-urgent .notice-category .dot{background:var(--urgent);box-shadow:0 0 10px var(--urgent-glow)}
+        .priority-important .notice-category{color:var(--important)}
+        .priority-important .notice-category .dot{background:var(--important)}
+        .notice-title{font-family:var(--font-heading);font-size:clamp(22px,4.5vh,52px);font-weight:700;line-height:1.15;margin-bottom:clamp(10px,2.5vh,24px);letter-spacing:-.5px}
+        .notice-body{font-size:clamp(14px,2.5vh,28px);line-height:1.65;color:var(--text-secondary);overflow:hidden}
+        .notice-meta{margin-top:auto;padding-top:clamp(10px,2vh,24px);border-top:1px solid var(--border);display:flex;gap:clamp(8px,1vw,16px);font-size:clamp(10px,1.3vh,14px);color:var(--text-secondary)}
+        .progress-bar{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),#8b5cf6);border-radius:2px;z-index:20;transition:width linear}
+
+        /* Notice List */
+        .w-notice-list{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;padding:clamp(8px,1.2vmin,16px)}
+        .w-notice-list .wt{font-size:clamp(9px,1.1vh,13px);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:clamp(6px,1vh,12px);padding:0 4px}
+        .w-notice-list .list{flex:1;display:flex;flex-direction:column;gap:clamp(4px,.7vmin,10px);overflow:hidden}
+        .sidebar-card{background:var(--bg-card-hover);border:1px solid var(--border);border-radius:clamp(8px,1vmin,14px);padding:clamp(8px,1.2vmin,14px);transition:all .3s;display:flex;align-items:center;gap:clamp(6px,1vmin,12px)}
+        .sidebar-card.current{border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+        .sidebar-card-thumb{width:clamp(28px,4vh,48px);height:clamp(28px,4vh,48px);border-radius:clamp(6px,.8vmin,10px);background:rgba(255,255,255,.04);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,2vh,22px)}
+        .sidebar-card-thumb img,.sidebar-card-thumb video{width:100%;height:100%;object-fit:cover}
+        .sidebar-card-info{flex:1;min-width:0}
+        .sidebar-card-cat{font-size:clamp(9px,1.2vh,14px);font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:2px}
+        .sidebar-card-title{font-size:clamp(13px,1.8vh,20px);font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+        /* News Widget */
+        .w-news{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;padding:clamp(6px,1vmin,12px) clamp(6px,1vmin,12px) clamp(4px,.6vmin,8px)}
+        .w-news .wt{font-size:clamp(8px,1vh,12px);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:clamp(4px,.6vmin,8px);padding:0 4px}
+        .w-news .carousel{position:relative;flex:1;overflow:hidden;border-radius:clamp(6px,.8vmin,12px)}
+        .news-card{position:absolute;inset:0;opacity:0;transform:translateY(8px);transition:opacity .6s ease,transform .6s ease;display:flex;flex-direction:column;overflow:hidden}
+        .news-card.active{opacity:1;transform:translateY(0)}
+        .news-card-primary{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
+        .news-card-img{width:35%;height:100%;object-fit:cover;background:rgba(255,255,255,.03);flex-shrink:0}
+        .news-card-body{flex:1;padding:clamp(8px,1.2vmin,16px);display:flex;flex-direction:column;overflow:hidden}
+        .news-card-source{font-size:clamp(9px,1.2vh,14px);font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:clamp(3px,.5vmin,8px);display:flex;align-items:center;gap:5px}
+        .news-card-source .live-dot{width:5px;height:5px;border-radius:50%;background:var(--urgent);animation:pulse-dot 2s ease infinite}
+        .news-card-title{font-size:clamp(15px,2.2vh,26px);font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(3px,.5vmin,8px)}
+        .news-card-desc{font-size:clamp(12px,1.6vh,18px);line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .news-card-time{margin-top:auto;font-size:clamp(9px,1.2vh,14px);color:var(--text-secondary);opacity:.7;padding-top:4px}
+        .news-card-footer{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding-top:4px}
+        .news-card-footer .news-card-time{margin-top:0;padding-top:0}
+        .news-card-qr{width:clamp(36px,5vmin,60px);height:clamp(36px,5vmin,60px);border-radius:clamp(3px,.4vmin,6px);background:#fff;padding:clamp(2px,.3vmin,4px);flex-shrink:0;opacity:.8;transition:opacity .3s}
+        .news-card-qr img{width:100%;height:100%;image-rendering:pixelated}
+        .news-card-qr-label{font-size:clamp(5px,.7vh,8px);text-align:center;color:var(--text-secondary);opacity:.5;margin-top:1px}
+        .news-card-secondary{border-top:1px solid var(--border);flex:1;display:flex;align-items:stretch;gap:0;min-height:0;overflow:hidden}
+        .news-card-secondary .sec-img{width:35%;height:100%;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.03)}
+        .news-card-secondary .sec-body{flex:1;padding:clamp(8px,1.2vmin,16px);display:flex;flex-direction:column;overflow:hidden;min-width:0}
+        .news-card-secondary .sec-source{font-size:clamp(8px,1vh,12px);font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-bottom:clamp(3px,.5vmin,8px);display:flex;align-items:center;gap:4px}
+        .news-card-secondary .sec-title{font-size:clamp(15px,2.2vh,26px);font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(3px,.5vmin,8px)}
+        .news-card-secondary .sec-desc{font-size:clamp(10px,1.3vh,15px);line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .news-card-secondary .sec-time{margin-top:auto;font-size:clamp(8px,1vh,12px);color:var(--text-secondary);opacity:.6;padding-top:4px}
+        .news-card-secondary .sec-qr{width:clamp(36px,5vmin,60px);align-self:flex-end;padding:clamp(2px,.3vmin,4px);flex-shrink:0;opacity:.7;margin:clamp(8px,1.2vmin,16px)}
+        .news-card-secondary .sec-qr img{width:100%;image-rendering:pixelated;background:#fff;border-radius:4px;padding:2px}
+        .news-badge{display:inline-flex;align-items:center;gap:4px;font-size:clamp(7px,.9vh,10px);font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:clamp(1px,.2vmin,3px) clamp(4px,.6vmin,8px);border-radius:3px;margin-left:6px;animation:badge-pulse 2s ease infinite}
+        .news-badge.breaking{background:var(--urgent);color:#fff}
+        .news-badge.trending{background:var(--important);color:#1a1a1a}
+        .news-badge.local{background:var(--success);color:#fff}
+        @keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.7}}
+        .news-card.breaking-card{border-left:3px solid var(--urgent)}
+        .ticker-breaking{color:var(--urgent)!important;font-weight:700}
+        .ticker-breaking .news-item-source{background:rgba(239,68,68,.2)!important;color:var(--urgent)!important}
+        .news-dots{display:flex;justify-content:center;gap:clamp(3px,.4vmin,6px);padding:clamp(2px,.4vmin,6px) 0;flex-shrink:0}
+        .news-dot{width:clamp(4px,.6vmin,8px);height:clamp(4px,.6vmin,8px);border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s}
+        .news-dot.active{background:var(--accent);width:clamp(10px,1.5vmin,20px);border-radius:3px}
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+        /* Contacts */
+        .w-contacts{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column}
+        .ec-header{display:flex;align-items:center;gap:clamp(4px,.6vmin,10px);padding:clamp(6px,1vmin,12px) clamp(8px,1.2vmin,16px);background:rgba(239,68,68,.08);border-bottom:1px solid var(--border);flex-shrink:0}
+        .ec-icon{font-size:clamp(11px,1.4vh,16px)}.ec-title{font-size:clamp(10px,1.3vh,15px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--urgent)}
+        .ec-list{flex:1;padding:clamp(2px,.3vmin,6px) 0;overflow:hidden}.ec-item{display:flex;justify-content:space-between;align-items:center;padding:clamp(3px,.5vmin,7px) clamp(8px,1.2vmin,16px)}
+        .ec-label{font-size:clamp(12px,1.6vh,18px);color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ec-number{font-size:clamp(13px,1.8vh,20px);font-weight:600;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:clamp(8px,1vmin,14px)}
+
+        /* Weather Widget (standalone) */
+        .w-weather{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(12px,2vmin,24px);text-align:center}
+        .w-weather .wi{font-size:clamp(32px,5.5vh,64px);margin-bottom:clamp(4px,.6vmin,10px)}
+        .w-weather .wtemp{font-size:clamp(36px,6vh,68px);font-weight:700}
+        .w-weather .wdesc{font-size:clamp(11px,1.4vh,16px);color:var(--text-secondary);margin-top:4px}
+        .w-weather .wloc{font-size:clamp(10px,1.2vh,14px);color:var(--text-secondary);opacity:.7;margin-top:clamp(4px,.8vmin,10px);text-transform:uppercase;letter-spacing:.5px}
+        .w-weather .wfc{display:flex;gap:clamp(8px,1.2vmin,18px);margin-top:clamp(8px,1.5vmin,20px)}
+        .w-weather .wfc-d{text-align:center;padding:clamp(4px,.6vmin,10px);background:rgba(255,255,255,.03);border-radius:8px}
+        .w-weather .wfc-d .fn{font-size:clamp(9px,1vh,13px);color:var(--text-secondary)}
+        .w-weather .wfc-d .fi{font-size:clamp(16px,2.5vh,28px);margin:clamp(2px,.3vmin,6px) 0}
+        .w-weather .wfc-d .ft{font-size:clamp(10px,1.2vh,14px);font-weight:600}
+
+        /* Clock Widget (standalone) */
+        .w-clock{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(12px,2vmin,24px)}
+        .w-clock .wc-time{font-size:clamp(40px,8vh,84px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+        .w-clock .wc-date{font-size:clamp(12px,2vh,20px);color:var(--text-secondary);margin-top:clamp(4px,.8vmin,10px)}
+
+        /* Ticker */
+        .news-ticker{position:relative;z-index:10;height:clamp(40px,6vh,64px);background:var(--ticker-bg);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:center;overflow:hidden;flex-shrink:0}
+        .news-ticker.hidden{display:none}
+        .bottom-bar-info{display:none;align-items:center;gap:clamp(10px,1.2vw,20px);padding:0 clamp(12px,2vw,28px);flex-shrink:0;height:100%;border-right:1px solid rgba(255,255,255,.12)}
+        .bottom-bar-clock{font-size:clamp(18px,3vh,32px);font-weight:700;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+        .bottom-bar-divider{width:1px;height:clamp(20px,3vh,32px);background:rgba(255,255,255,.2)}
+        .bottom-bar-brand{display:flex;align-items:center;gap:clamp(6px,1vw,12px)}
+        .bottom-bar-logo{width:clamp(24px,3.5vh,40px);height:clamp(24px,3.5vh,40px);border-radius:6px;object-fit:cover}
+        .bottom-bar-logo-placeholder{width:clamp(24px,3.5vh,40px);height:clamp(24px,3.5vh,40px);border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:clamp(10px,1.5vh,16px);font-weight:700;color:#fff}
+        .bottom-bar-name{font-size:clamp(13px,2vh,22px);font-weight:600;color:#fff;white-space:nowrap}
+        .wfc-hourly{display:none}
+        .weather-top{display:flex;flex-direction:column;align-items:center}
+        [data-theme="waterview-classic"] .w-weather .weather-top{flex-direction:row;gap:clamp(8px,1vmin,16px);padding:clamp(2px,.5vh,8px) clamp(8px,1.5vw,20px) clamp(4px,1vh,12px)}
+        .news-ticker-label{flex-shrink:0;padding:0 clamp(12px,1.5vw,24px);height:100%;display:flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-size:clamp(11px,1.5vh,16px);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+        .news-ticker-label .pulse-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse-dot 2s ease infinite}
+        .news-ticker-track{flex:1;overflow:hidden;position:relative;height:100%;display:flex;align-items:center}
+        .news-ticker-content{display:flex;white-space:nowrap;animation:ticker-scroll linear infinite}
+        .news-item{display:inline-flex;align-items:center;gap:8px;padding:0 clamp(16px,2.5vw,40px);font-size:clamp(14px,2vh,22px);color:var(--text-secondary)}
+        .news-item-source{font-size:clamp(9px,1.2vh,14px);font-weight:700;text-transform:uppercase;color:var(--accent);letter-spacing:.5px;padding:2px 8px;background:rgba(59,130,246,.1);border-radius:4px}
+        .news-item-dot{color:var(--border-light)}
+        @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+        .emergency-overlay{position:fixed;inset:0;z-index:1000;background:#1a0000;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(32px,6vh,80px)}
+        .emergency-overlay.active{display:flex}
+        .emergency-icon-big{font-size:clamp(48px,10vh,100px);margin-bottom:clamp(16px,4vh,40px);animation:em-pulse 1.5s ease-in-out infinite}
+        @keyframes em-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.1)}}
+        .emergency-title{font-family:var(--font-heading);font-size:clamp(36px,8vh,80px);font-weight:700;color:var(--urgent);margin-bottom:clamp(12px,3vh,28px)}
+        .emergency-text{font-size:clamp(18px,3.5vh,36px);color:var(--text-secondary);max-width:800px;line-height:1.6}
+        .no-notices{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;opacity:.5}
+        .no-notices-icon{font-size:clamp(36px,7vh,72px);margin-bottom:clamp(10px,2.5vh,24px);opacity:.4}
+        .no-notices-text{font-size:clamp(16px,2.8vh,28px);color:var(--text-secondary)}
+    </style>
+</head>
+<body>
+    <div id="displayRoot" style="display:flex;flex-direction:column;height:100vh;height:100dvh;width:100vw;overflow:hidden;">
+    <div class="ambient-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="emergency-overlay" id="emergencyOverlay"><div class="emergency-icon-big">⚠️</div><div class="emergency-title">EMERGENCY NOTICE</div><div class="emergency-text" id="emergencyText"></div></div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo-placeholder" id="logoContainer">W</div>
+            <div style="min-width:0;overflow:hidden;"><div class="building-name" id="buildingName">Loading...</div><div class="building-subtitle" id="managementCompany"></div></div>
+        </div>
+        <div class="header-center">
+            <div class="weather-widget" id="weatherWidget" style="display:none;">
+                <div class="weather-icon" id="weatherIcon">--</div>
+                <div><div class="weather-temp"><span id="weatherTemp">--</span>°</div><div class="weather-details" id="weatherDetails">Loading...</div></div>
+                <div style="border-left:1px solid var(--border);padding-left:12px;"><div class="weather-label" id="weatherLocation"></div><div class="forecast-mini" id="forecastMini"></div></div>
+            </div>
+        </div>
+        <div class="header-right"><div class="datetime-block"><div class="date-display" id="dateDisplay"></div><div class="clock" id="clockDisplay"></div></div></div>
+    </div>
+
+    <div class="widget-grid" id="widgetGrid"></div>
+
+    <div class="news-ticker hidden" id="newsTicker">
+        <div class="bottom-bar-info" id="bottomBarInfo">
+            <div class="bottom-bar-clock" id="bottomBarClock"></div>
+            <div class="bottom-bar-divider"></div>
+            <div class="bottom-bar-brand">
+                <div class="bottom-bar-logo-placeholder" id="bottomBarLogo">W</div>
+                <div class="bottom-bar-name" id="bottomBarName"></div>
+            </div>
+        </div>
+        <div class="news-ticker-label" id="newsTickerLabel"><div class="pulse-dot"></div>NEWS</div>
+        <div class="news-ticker-track"><div class="news-ticker-content" id="newsTickerContent"><span class="news-item">Loading news...</span></div></div>
+    </div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script type="module">
+        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
+
+        let settings = {}, notices = [], currentIndex = 0, slideTimer = null, currentVideoEl = null;
+        let newsItems = [], feedGroups = [], newsTimers = [];
+        let lastCacheVersion = null;
+
+        const DEFAULT_LAYOUT = [
+            { id:'notices', x:0, y:0, w:8, h:8 },
+            { id:'notice_list', x:8, y:0, w:4, h:3 },
+            { id:'news_0', x:8, y:3, w:4, h:3 },
+            { id:'emergency_contacts', x:8, y:6, w:4, h:2 },
+        ];
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+            document.querySelectorAll('.w-clock').forEach(el => {
+                el.querySelector('.wc-time').textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                el.querySelector('.wc-date').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+            });
+            // Bottom bar clock (Waterview Classic)
+            const bbc = document.getElementById('bottomBarClock');
+            if (bbc) bbc.textContent = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:false});
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function buildWidgetGrid(layout) {
+            const grid = document.getElementById('widgetGrid');
+            grid.innerHTML = '';
+            layout.forEach(w => {
+                const el = document.createElement('div');
+                el.className = 'widget';
+                el.style.gridColumn = `${w.x+1} / ${w.x+w.w+1}`;
+                el.style.gridRow = `${w.y+1} / ${w.y+w.h+1}`;
+                el.id = `widget-${w.id}`;
+                if (w.id === 'notices') {
+                    el.classList.add('w-notices');
+                    el.innerHTML = '<div class="slide-area" id="slideArea"><div class="progress-bar" id="progressBar"></div></div>';
+                } else if (w.id === 'notice_list') {
+                    el.classList.add('w-notice-list');
+                    el.innerHTML = '<div class="wt">📋 All Notices</div><div class="list" id="sidebarList"></div>';
+                } else if (w.id.startsWith('news_')) {
+                    el.classList.add('w-news');
+                    el.innerHTML = `<div class="wt" id="newsTitle-${w.id}">📰 News</div><div class="carousel" id="newsCarousel-${w.id}"></div><div class="news-dots" id="newsDots-${w.id}"></div>`;
+                } else if (w.id === 'emergency_contacts') {
+                    el.classList.add('w-contacts');
+                    el.innerHTML = '<div class="ec-header"><span class="ec-icon">🚨</span><span class="ec-title">Contacts</span></div><div class="ec-list" id="contactsList"></div>';
+                } else if (w.id === 'weather') {
+                    el.classList.add('w-weather');
+                    el.innerHTML = '<div class="wloc" id="wWeatherLoc"></div><div class="weather-top"><div class="wi" id="wWeatherIcon">🌡️</div><div><div class="wtemp" id="wWeatherTemp">--°</div><div class="wdesc" id="wWeatherDesc">Loading...</div></div></div><div class="wfc" id="wWeatherForecast"></div><div class="wfc-hourly" id="wWeatherHourly"></div>';
+                } else if (w.id === 'clock') {
+                    el.classList.add('w-clock');
+                    el.innerHTML = '<div class="wc-time"></div><div class="wc-date"></div>';
+                }
+                grid.appendChild(el);
+            });
+            updateClock();
+        }
+
+        onSettingsChange(async (s) => {
+            settings = s;
+
+            // Check if admin triggered a cache clear
+            const cv = s.cache_version || 0;
+            if (lastCacheVersion !== null && cv !== lastCacheVersion) {
+                console.log('Cache clear triggered by admin');
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage('clear-cache');
+                }
+                setTimeout(() => location.reload(), 2000);
+            }
+            lastCacheVersion = cv;
+
+            document.documentElement.setAttribute('data-theme', s.display_theme || 'dark-modern');
+            document.getElementById('buildingName').textContent = s.building_name;
+            document.getElementById('managementCompany').textContent = s.management_company;
+            const logo = document.getElementById('logoContainer');
+            if (s.logo_url) { logo.outerHTML = `<img src="${s.logo_url}" class="header-logo" id="logoContainer" alt="">`; }
+            else if (logo.tagName === 'IMG') { logo.outerHTML = `<div class="header-logo-placeholder" id="logoContainer">${s.building_name[0]}</div>`; }
+            else { logo.textContent = s.building_name[0]; }
+            // Apply logo background to match page
+            const logoEl2 = document.getElementById('logoContainer');
+            if (logoEl2 && logoEl2.tagName === 'IMG') {
+                logoEl2.style.background = 'none';
+            }
+            const logoScale = (parseInt(s.logo_size) || 100) / 100;
+            const logoEl = document.getElementById('logoContainer');
+            if (logoEl && logoScale !== 1) {
+                logoEl.style.width = `clamp(72px,${(13 * logoScale).toFixed(1)}vh,${Math.round(140 * logoScale)}px)`;
+                logoEl.style.height = logoEl.tagName === 'IMG' ? 'auto' : logoEl.style.width;
+                logoEl.style.maxHeight = `clamp(72px,${(13 * logoScale).toFixed(1)}vh,${Math.round(140 * logoScale)}px)`;
+            }
+            document.documentElement.style.setProperty('--transition-speed', s.transition_speed + 's');
+
+            // Widget font size scaling via CSS custom properties (no zoom - prevents overflow)
+            // Remove old dynamic style if exists
+            const oldStyle = document.getElementById('fs-overrides');
+            if (oldStyle) oldStyle.remove();
+
+            // Display zoom
+            const globalS = parseFloat(s.display_zoom) || 1;
+
+            let css = '';
+            if (globalS !== 1) {
+                const wrapper = document.getElementById('displayRoot');
+                if (wrapper) {
+                    wrapper.style.transform = `scale(${globalS})`;
+                    wrapper.style.transformOrigin = 'top left';
+                    wrapper.style.width = `${100 / globalS}vw`;
+                    wrapper.style.height = `${100 / globalS}vh`;
+                }
+            }
+
+            // Simple pixel-based font overrides — what you set is what you get
+            const hdrPx = parseInt(s.fs_header_px) || 0;
+            const noticePx = parseInt(s.fs_notice_px) || 0;
+            const newsPx = parseInt(s.fs_news_px) || 0;
+            const contactsPx = parseInt(s.fs_contacts_px) || 0;
+            const tickerPx = parseInt(s.fs_ticker_px) || 0;
+
+            if (hdrPx) {
+                const r = (base, px) => Math.round(base * px / 48); // scale proportionally to building name
+                css += `.building-name { font-size: ${hdrPx}px !important; }
+                .building-subtitle { font-size: ${r(20, hdrPx)}px !important; }
+                .clock { font-size: ${r(60, hdrPx)}px !important; }
+                .date-display { font-size: ${r(20, hdrPx)}px !important; }
+                .weather-temp { font-size: ${r(60, hdrPx)}px !important; }
+                .weather-icon { font-size: ${r(50, hdrPx)}px !important; }
+                .weather-details { font-size: ${r(18, hdrPx)}px !important; }
+                .weather-label { font-size: ${r(14, hdrPx)}px !important; }\n`;
+            }
+            if (noticePx) {
+                const r = (base, px) => Math.round(base * px / 28);
+                css += `.notice-title { font-size: ${r(48, noticePx)}px !important; }
+                .notice-body { font-size: ${noticePx}px !important; }
+                .notice-category { font-size: ${r(14, noticePx)}px !important; }
+                .notice-meta { font-size: ${r(14, noticePx)}px !important; }\n`;
+            }
+            if (newsPx) {
+                const r = (base, px) => Math.round(base * px / 22);
+                css += `.w-news .news-card-title { font-size: ${newsPx}px !important; }
+                .w-news .news-card-desc { font-size: ${r(16, newsPx)}px !important; }
+                .w-news .news-card-source { font-size: ${r(12, newsPx)}px !important; }
+                .w-news .news-card-time { font-size: ${r(12, newsPx)}px !important; }
+                .w-news .sec-title { font-size: ${newsPx}px !important; }
+                .w-news .sec-desc { font-size: ${r(14, newsPx)}px !important; }\n`;
+            }
+            if (contactsPx) {
+                css += `.w-contacts .ec-label { font-size: ${contactsPx}px !important; }
+                .w-contacts .ec-number { font-size: ${Math.round(contactsPx * 1.1)}px !important; }
+                .w-contacts .ec-title { font-size: ${Math.round(contactsPx * 0.8)}px !important; }\n`;
+            }
+            if (tickerPx) {
+                css += `.news-ticker .news-item { font-size: ${tickerPx}px !important; }
+                .news-ticker .news-item-source { font-size: ${Math.round(tickerPx * 0.6)}px !important; }
+                .news-ticker-label { font-size: ${Math.round(tickerPx * 0.75)}px !important; }
+                .bottom-bar-name { font-size: ${tickerPx}px !important; }
+                .bottom-bar-clock { font-size: ${Math.round(tickerPx * 1.5)}px !important; }\n`;
+            }
+
+            if (css) {
+                const styleEl = document.createElement('style');
+                styleEl.id = 'fs-overrides';
+                styleEl.textContent = css;
+                document.head.appendChild(styleEl);
+            }
+
+            // Bottom bar brand (Waterview Classic)
+            document.getElementById('bottomBarName').textContent = s.building_name || '';
+            const bbLogo = document.getElementById('bottomBarLogo');
+            if (s.logo_url) { bbLogo.outerHTML = `<img src="${s.logo_url}" class="bottom-bar-logo" id="bottomBarLogo" alt="">`; }
+            else if (bbLogo.tagName === 'IMG') { bbLogo.outerHTML = `<div class="bottom-bar-logo-placeholder" id="bottomBarLogo">${(s.building_name||'W')[0]}</div>`; }
+            else { bbLogo.textContent = (s.building_name||'W')[0]; }
+
+            const overlay = document.getElementById('emergencyOverlay');
+            if (s.emergency_mode) { overlay.classList.add('active'); document.getElementById('emergencyText').textContent = s.emergency_message || 'Please follow building emergency procedures.'; }
+            else { overlay.classList.remove('active'); }
+
+            const layout = (Array.isArray(s.layout) && s.layout.length > 0) ? s.layout : DEFAULT_LAYOUT;
+            buildWidgetGrid(layout);
+
+            // Apply widget font scaling AFTER widgets are built
+            // Widget font scaling applied via CSS overrides above
+
+            const contactsList = document.getElementById('contactsList');
+            if (contactsList) {
+                const contacts = s.emergency_contacts || [];
+                contactsList.innerHTML = contacts.map(c => `<div class="ec-item"><span class="ec-label">${escapeHtml(c.label)}</span><span class="ec-number">${escapeHtml(c.number)}</span></div>`).join('');
+            }
+
+            if (s.show_weather) loadWeather();
+            if (s.show_news !== false) loadNews();
+
+            // Ticker
+            const tickerEl = document.getElementById('newsTicker');
+            const tickerLabel = document.getElementById('newsTickerLabel');
+            const isWaterview = (s.display_theme === 'waterview-classic');
+            const showTicker = isWaterview || (s.show_ticker !== false);
+            const tickerMode = s.ticker_mode || 'news';
+            tickerEl.classList.toggle('hidden', !showTicker);
+
+            if (showTicker && tickerMode === 'custom') {
+                const messages = s.ticker_messages || (s.ticker_custom_text ? [s.ticker_custom_text] : []);
+                if (messages.length > 0) {
+                    tickerLabel.innerHTML = '<div class="pulse-dot"></div>INFO';
+                    const ticker = document.getElementById('newsTickerContent');
+                    let single = messages.map(m => `<span class="news-item">${escapeHtml(m)}<span class="news-item-dot">◆</span></span>`).join('');
+                    // Repeat enough times to guarantee filling 2x screen width
+                    let half = '';
+                    for (let r = 0; r < 20; r++) half += single;
+                    ticker.innerHTML = half + half;
+                    requestAnimationFrame(() => { ticker.style.animationDuration = (ticker.scrollWidth / 2 / 60) + 's'; });
+                }
+            } else {
+                tickerLabel.innerHTML = '<div class="pulse-dot"></div>NEWS';
+            }
+
+            renderNotices();
+            startRotation();
+        });
+
+        let allNoticesRaw = [];
+        onNoticesChange((allNotices) => {
+            allNoticesRaw = allNotices;
+            filterAndRender();
+        });
+
+        function filterAndRender() {
+            const now = new Date().toISOString();
+            const today = now.slice(0, 10); // "2026-03-11"
+            notices = allNoticesRaw.filter(n => {
+                if (!n.active) return false;
+                if (n.start_date && n.start_date > today) return false;
+                if (n.end_date && n.end_date < today) return false;
+                return true;
+            }).sort((a, b) => (b.priority || 0) - (a.priority || 0));
+            renderNotices();
+            startRotation();
+        }
+
+        // Re-check expiry every 5 minutes
+        setInterval(filterAndRender, 5 * 60 * 1000);
+
+        async function loadWeather() {
+            try {
+                const data = await fetchWeather(settings);
+                if (data.error) return;
+                const c = data.current, code = c.weather_code, units = settings.weather_units || 'metric';
+                document.getElementById('weatherIcon').textContent = WMO_ICONS[code] || '🌡️';
+                document.getElementById('weatherTemp').textContent = Math.round(c.temperature_2m);
+                document.getElementById('weatherDetails').innerHTML = `${WMO_DESC[code] || 'N/A'}<br>Humidity ${c.relative_humidity_2m}% · Wind ${Math.round(c.wind_speed_10m)} ${units === 'metric' ? 'km/h' : 'mph'}`;
+                document.getElementById('weatherLocation').textContent = data.location_name || '';
+                if (data.daily) {
+                    const fg = document.getElementById('forecastMini'); fg.innerHTML = '';
+                    for (let i=1;i<Math.min(data.daily.time.length,4);i++) { const d=new Date(data.daily.time[i]); fg.innerHTML += `<div class="forecast-day"><div>${DAY_NAMES[d.getDay()]}</div><div class="forecast-day-icon">${WMO_ICONS[data.daily.weather_code[i]]||'🌡️'}</div><div class="forecast-day-temp">${Math.round(data.daily.temperature_2m_max[i])}° / ${Math.round(data.daily.temperature_2m_min[i])}°</div></div>`; }
+                }
+                document.getElementById('weatherWidget').style.display = 'flex';
+                // Standalone weather widget
+                const ww = document.getElementById('wWeatherIcon');
+                if (ww) {
+                    ww.textContent = WMO_ICONS[code] || '🌡️';
+                    document.getElementById('wWeatherTemp').textContent = Math.round(c.temperature_2m) + '°';
+                    document.getElementById('wWeatherDesc').textContent = WMO_DESC[code] || '';
+                    document.getElementById('wWeatherLoc').textContent = data.location_name || '';
+                    // Daily forecast
+                    if (data.daily) {
+                        const fc = document.getElementById('wWeatherForecast'); fc.innerHTML = '';
+                        for (let i=1;i<Math.min(data.daily.time.length,4);i++) { const d=new Date(data.daily.time[i]); fc.innerHTML += `<div class="wfc-d"><div class="fn">${DAY_NAMES[d.getDay()]}</div><div class="fi">${WMO_ICONS[data.daily.weather_code[i]]||'🌡️'}</div><div class="ft">${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div></div>`; }
+                    }
+                    // Hourly forecast (for Waterview Classic)
+                    const hourlyEl = document.getElementById('wWeatherHourly');
+                    if (hourlyEl && data.hourly) {
+                        hourlyEl.innerHTML = '';
+                        const now = new Date();
+                        const currentHour = now.getHours();
+                        let startIdx = data.hourly.time.findIndex(t => new Date(t).getHours() >= currentHour && new Date(t).getDate() === now.getDate());
+                        if (startIdx < 0) startIdx = 0;
+                        for (let i = startIdx; i < Math.min(startIdx + 6, data.hourly.time.length); i++) {
+                            const t = new Date(data.hourly.time[i]);
+                            const h = t.getHours();
+                            const ampm = h >= 12 ? 'PM' : 'AM';
+                            const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                            const hCode = data.hourly.weather_code[i];
+                            hourlyEl.innerHTML += `<div class="wfc-h"><div class="ht">${String(h12).padStart(2,'0')}:00 ${ampm}</div><div class="hi">${WMO_ICONS[hCode]||'🌡️'}</div><div class="htemp">${Math.round(data.hourly.temperature_2m[i])}°</div><div class="hdesc">${WMO_DESC[hCode]||''}</div></div>`;
+                        }
+                    }
+                }
+            } catch (e) { console.error('Weather error:', e); }
+        }
+        setInterval(() => { if (settings.show_weather) loadWeather(); }, 600000);
+
+        async function loadNews() {
+            try {
+                newsItems = await fetchNews(settings);
+                feedGroups = await fetchNewsByFeed(settings);
+                const smartNews = settings.smart_news !== false; // on by default
+                const tickerMode = settings.ticker_mode || 'news';
+
+                // Smart: sort ticker items by priority (breaking first)
+                const tickerItems = smartNews ? sortNewsByPriority(newsItems) : newsItems;
+
+                if (tickerMode === 'news' && tickerItems.length > 0) {
+                    const ticker = document.getElementById('newsTickerContent');
+                    let html = '';
+                    for (let r=0;r<10;r++) { tickerItems.forEach(item => {
+                        const badge = smartNews ? detectNewsBadge(item.title, item.description) : null;
+                        const title = smartNews ? cleanHeadline(item.title, item.source) : item.title;
+                        const cls = badge?.type === 'breaking' ? ' ticker-breaking' : '';
+                        html += `<span class="news-item${cls}"><span class="news-item-source">${escapeHtml(item.source)}</span>${badge ? `<span class="news-badge ${badge.type}">${badge.label}</span> ` : ''}${escapeHtml(title)}<span class="news-item-dot">◆</span></span>`;
+                    }); }
+                    ticker.innerHTML = html + html;
+                    requestAnimationFrame(() => { ticker.style.animationDuration = (ticker.scrollWidth / 2 / 80) + 's'; });
+                }
+                newsTimers.forEach(t => clearInterval(t));
+                newsTimers = [];
+                feedGroups.forEach((group, gi) => {
+                    const carousel = document.getElementById(`newsCarousel-news_${gi}`);
+                    const dotsEl = document.getElementById(`newsDots-news_${gi}`);
+                    const titleEl = document.getElementById(`newsTitle-news_${gi}`);
+                    if (!carousel) return;
+                    if (titleEl) titleEl.textContent = `📰 ${group.name}`;
+
+                    // Smart: sort cards by priority
+                    const items = smartNews ? sortNewsByPriority(group.items) : group.items;
+
+                    // Collect articles from OTHER feeds for secondary slot
+                    let otherItems = [];
+                    feedGroups.forEach((og, ogi) => {
+                        if (ogi !== gi) {
+                            const sorted = smartNews ? sortNewsByPriority(og.items) : og.items;
+                            sorted.forEach(item => otherItems.push(item));
+                        }
+                    });
+
+                    let ch = '', dh = '';
+                    let cardIdx = 0;
+                    for (let i = 0; i < items.length; i++) {
+                        const primary = items[i];
+                        // Secondary comes from other feeds, cycling through
+                        const secondary = otherItems.length > 0 ? otherItems[i % otherItems.length] : null;
+                        const badge = smartNews ? detectNewsBadge(primary.title, primary.description) : null;
+                        const title = smartNews ? cleanHeadline(primary.title, primary.source) : primary.title;
+                        const isBreaking = badge?.type === 'breaking';
+                        const img = primary.image ? `<img src="${primary.image}" class="news-card-img" alt="" onerror="this.style.width='0';this.style.flex='0'">` : '';
+                        const badgeHtml = badge ? `<span class="news-badge ${badge.type}">${badge.label}</span>` : '';
+                        const qrHtml = primary.link ? `<div class="news-card-qr"><img src="${generateQRUrl(primary.link, 80)}" alt="QR"><div class="news-card-qr-label">Scan</div></div>` : '';
+
+                        let secHtml = '';
+                        if (secondary) {
+                            const secBadge = smartNews ? detectNewsBadge(secondary.title, secondary.description) : null;
+                            const secTitle = smartNews ? cleanHeadline(secondary.title, secondary.source) : secondary.title;
+                            const secBadgeHtml = secBadge ? `<span class="news-badge ${secBadge.type}">${secBadge.label}</span>` : '';
+                            const secQr = secondary.link ? `<div class="sec-qr"><img src="${generateQRUrl(secondary.link, 60)}" alt="QR"></div>` : '';
+                            const secImg = secondary.image ? `<img src="${secondary.image}" class="sec-img" alt="" onerror="this.style.display='none'">` : '';
+                            secHtml = `<div class="news-card-secondary">${secImg}<div class="sec-body"><div class="sec-source">${escapeHtml(secondary.source)}${secBadgeHtml}</div><div class="sec-title">${escapeHtml(secTitle)}</div><div class="sec-desc">${escapeHtml(secondary.description||'')}</div><div class="sec-time">${formatTimeAgo(secondary.pub_date)}</div></div>${secQr}</div>`;
+                        }
+
+                        ch += `<div class="news-card nc-${gi} ${cardIdx===0?'active':''} ${isBreaking?'breaking-card':''}" data-idx="${cardIdx}"><div class="news-card-primary">${img}<div class="news-card-body"><div class="news-card-source"><span class="live-dot"></span>${escapeHtml(primary.source)}${badgeHtml}</div><div class="news-card-title">${escapeHtml(title)}</div><div class="news-card-desc">${escapeHtml(primary.description||'')}</div><div class="news-card-footer"><div class="news-card-time">${formatTimeAgo(primary.pub_date)}</div>${qrHtml}</div></div></div>${secHtml}</div>`;
+                        dh += `<div class="news-dot nd-${gi} ${cardIdx===0?'active':''}"></div>`;
+                        cardIdx++;
+                    }
+                    carousel.innerHTML = ch;
+                    if (dotsEl) dotsEl.innerHTML = dh;
+                    if (cardIdx > 1) {
+                        let idx = 0;
+                        const baseInterval = 8000 + gi * 2000;
+                        const timer = setInterval(() => {
+                            const cards = document.querySelectorAll(`.nc-${gi}`), dots = document.querySelectorAll(`.nd-${gi}`);
+                            cards.forEach(c => c.classList.remove('active')); dots.forEach(d => d.classList.remove('active'));
+                            idx = (idx+1) % cards.length; cards[idx].classList.add('active'); dots[idx].classList.add('active');
+                        }, baseInterval);
+                        newsTimers.push(timer);
+                    }
+                });
+            } catch (e) { console.error('News error:', e); }
+        }
+        setInterval(() => { if (settings.show_news) loadNews(); }, 600000);
+
+        function getPriorityClass(p) { return p >= 2 ? 'priority-urgent' : p >= 1 ? 'priority-important' : ''; }
+        function renderMedia(n) { const u=n.media_url||'';if(!u)return'';const ft=n.file_type||getFileType(u);if(ft==='video')return`<video src="${u}" muted autoplay loop playsinline></video>`;if(ft==='pdf')return`<iframe src="${u}#toolbar=0&navpanes=0&scrollbar=0&view=Fit" class="pdf-embed" frameborder="0"></iframe>`;return`<img src="${u}" alt="">`; }
+
+        function buildSlide(notice, index) {
+            const cat = CATEGORIES[notice.category] || CATEGORIES.general, pc = getPriorityClass(notice.priority), hasMedia = notice.media_url;
+            const ft = notice.file_type || getFileType(notice.media_url || '');
+            let mode = notice.display_mode || (hasMedia ? 'media_with_text' : 'text');
+            if (ft === 'pdf') mode = 'media_only';
+            let inner;
+            if (mode === 'media_only' && hasMedia) { inner = `<div class="notice-card media-only ${pc}"><div class="media-fullscreen">${renderMedia(notice)}</div></div>`; }
+            else if (hasMedia && mode !== 'text') { inner = `<div class="notice-card has-media-side ${pc}"><div class="media-side">${renderMedia(notice)}</div><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
+            else { inner = `<div class="notice-card ${pc}"><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
+            return `<div class="slide ${index===0?'active':''}" data-index="${index}">${inner}</div>`;
+        }
+
+        function buildSidebarCard(notice, index) {
+            const cat = CATEGORIES[notice.category] || CATEGORIES.general, ft = notice.file_type || getFileType(notice.media_url||'');
+            let thumb = cat.icon;
+            if (notice.media_url) { thumb = ft==='video'?`<video src="${notice.media_url}" muted></video>`:ft==='pdf'?'📄':`<img src="${notice.media_url}" alt="">`; }
+            return `<div class="sidebar-card ${index===0?'current':''}" data-index="${index}"><div class="sidebar-card-thumb">${thumb}</div><div class="sidebar-card-info"><div class="sidebar-card-cat">${cat.icon} ${cat.label}</div><div class="sidebar-card-title">${escapeHtml(notice.title)}</div></div></div>`;
+        }
+
+        function renderNotices() {
+            const area = document.getElementById('slideArea'), sidebar = document.getElementById('sidebarList');
+            if (!area) return;
+            const bar = document.getElementById('progressBar');
+            if (notices.length === 0) { area.innerHTML = '<div class="no-notices"><div class="no-notices-icon">📭</div><div class="no-notices-text">No notices at this time</div></div>'; area.appendChild(bar); if (sidebar) sidebar.innerHTML = ''; return; }
+            area.innerHTML = notices.map((n,i) => buildSlide(n,i)).join('');
+            area.appendChild(bar);
+            if (sidebar) sidebar.innerHTML = notices.map((n,i) => buildSidebarCard(n,i)).join('');
+        }
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slide'), cards = document.querySelectorAll('.sidebar-card');
+            if (!slides.length) return;
+            if (currentVideoEl) { currentVideoEl.pause(); currentVideoEl = null; }
+            if (slideTimer) { clearTimeout(slideTimer); slideTimer = null; }
+            slides.forEach(s => s.classList.remove('active')); cards.forEach(c => c.classList.remove('current'));
+            currentIndex = index % slides.length;
+            slides[currentIndex].classList.add('active');
+            if (cards[currentIndex]) cards[currentIndex].classList.add('current');
+            const vid = slides[currentIndex].querySelector('video');
+            if (vid) { vid.currentTime = 0; vid.play().catch(()=>{}); }
+            const ft = notices[currentIndex]?.file_type, vsd = (settings.video_slide_duration||0)*1000;
+            let duration;
+            if (ft==='video'&&vsd===0&&vid) { vid.loop=false;currentVideoEl=vid;vid.addEventListener('ended',()=>{setTimeout(()=>showSlide(currentIndex+1),500)},{once:true});duration=120000; }
+            else if (ft==='video'&&vsd>0) { if(vid)vid.loop=true;duration=vsd; }
+            else { duration=(settings.slide_duration||12)*1000; }
+            const bar = document.getElementById('progressBar');
+            bar.style.transition='none';bar.style.width='0%';
+            requestAnimationFrame(()=>{requestAnimationFrame(()=>{bar.style.transition=`width ${duration}ms linear`;bar.style.width='100%';});});
+            slideTimer = setTimeout(() => showSlide(currentIndex+1), duration);
+        }
+
+        function startRotation() { if(slideTimer)clearTimeout(slideTimer);if(notices.length>0)showSlide(0); }
+    </script>
+    <script>
+        // Register media cache service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+                console.log('Media cache SW registered');
+            }).catch(err => console.warn('SW registration failed:', err));
+        }
+
+        // TV auto-fit: scale page to fit viewport if content overflows
+        function fitDisplay() {
+            const b = document.body;
+            b.style.transform = '';
+            b.style.width = '100vw';
+            // Check if content overflows viewport
+            const vw = window.innerWidth, vh = window.innerHeight;
+            const cw = b.scrollWidth, ch = b.scrollHeight;
+            if (ch > vh + 2 || cw > vw + 2) {
+                const scale = Math.min(vw / cw, vh / ch, 1);
+                b.style.transform = `scale(${scale})`;
+                b.style.transformOrigin = 'top left';
+                b.style.width = (100 / scale) + 'vw';
+            }
+        }
+        window.addEventListener('load', () => setTimeout(fitDisplay, 500));
+        window.addEventListener('resize', fitDisplay);
+    </script>
+</body>
+</html>
