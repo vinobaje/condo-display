@@ -122,11 +122,11 @@
                             <span class="ai-sub">Turn your title or rough notes into a polished notice</span>
                         </span>
                     </button>
-                    <button type="button" class="ai-action-btn ai-poster-btn" id="aiPosterBtn" onclick="designPoster()">
-                        <span class="ai-icon">🎨</span>
+                    <button type="button" class="ai-action-btn ai-poster-btn" id="aiPosterBtn" onclick="designPosterAI()">
+                        <span class="ai-icon">🤖</span>
                         <span class="ai-text">
-                            <span class="ai-title">Design Poster</span>
-                            <span class="ai-sub">Create a ready-to-display poster from this notice</span>
+                            <span class="ai-title">AI Generate Poster</span>
+                            <span class="ai-sub">One click — AI designs a finished poster you can still customize</span>
                         </span>
                         <span style="font-size:16px;opacity:.7;flex-shrink:0;">→</span>
                     </button>
@@ -1320,6 +1320,17 @@ DESIGN RULES:
 
         window.regeneratePoster = async () => {
             await designPoster();
+        };
+
+        // One-click flow from the notice form: design the poster content, then
+        // immediately AI-generate the final image. The modal stays open for tweaks.
+        window.designPosterAI = async () => {
+            const prevData = posterData;
+            await designPoster();
+            const gotNewData = posterData && posterData !== prevData;
+            if (gotNewData && aiConfig.gemini) {
+                await generateAiPosterImage();
+            }
         };
 
         window.usePoster = async () => {
