@@ -857,7 +857,7 @@
                     : `<img src="${n.media_url}" style="width:100%;height:100%;object-fit:cover">`;
                 return `
                 <div class="notice-item ${n.active && !expired ? '' : 'inactive'}">
-                    <div class="notice-thumb">${thumb}</div>
+                    <div class="notice-thumb ${n.media_url ? 'clickable' : ''}" ${n.media_url ? `onclick="window.previewMedia('${n.id}')" title="Click to preview"` : ''}>${thumb}</div>
                     <div class="notice-info">
                         <div class="notice-info-title">${escapeHtml(n.title)}</div>
                         <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${expired ? `<span style="color:var(--urgent)">⏰ Expired ${formatDate(n.end_date)}</span>` : !n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
@@ -884,6 +884,23 @@
             document.getElementById('statUrgent').textContent = allNotices.filter(n => n.priority >= 2).length;
             document.getElementById('statMedia').textContent = allNotices.filter(n => n.media_url).length;
         }
+
+        // ═══ Media Preview Lightbox ═══
+        window.previewMedia = (id) => {
+            const n = allNotices.find(x => x.id === id);
+            if (!n || !n.media_url) return;
+            const ft = n.file_type || getFileType(n.media_url);
+            if (ft === 'pdf') { window.open(n.media_url, '_blank'); return; }
+            const ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:flex;align-items:center;justify-content:center;padding:32px;cursor:zoom-out;';
+            ov.innerHTML = ft === 'video'
+                ? `<video src="${n.media_url}" controls autoplay muted style="max-width:100%;max-height:100%;border-radius:12px;"></video>`
+                : `<img src="${n.media_url}" style="max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);">`;
+            ov.onclick = () => ov.remove();
+            const esc = (e) => { if (e.key === 'Escape') { ov.remove(); document.removeEventListener('keydown', esc); } };
+            document.addEventListener('keydown', esc);
+            document.body.appendChild(ov);
+        };
 
         // ═══ Notice Actions ═══
         window.handleDelete = async (id) => {
