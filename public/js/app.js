@@ -100,7 +100,7 @@ export async function getNotices() {
 
 export async function getActiveNotices() {
     const all = await getNotices();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD
     return all.filter(n => {
         if (!n.active) return false;
         if (n.start_date && n.start_date > today) return false;
@@ -372,7 +372,10 @@ export function escapeHtml(text) {
 
 export function formatDate(d) {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    // Parse date-only strings (YYYY-MM-DD) as local dates, not UTC midnight,
+    // so they don't display as the previous day in western timezones
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d + 'T00:00:00') : new Date(d);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function formatTimeAgo(dateStr) {

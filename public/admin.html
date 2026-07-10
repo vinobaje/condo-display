@@ -727,9 +727,30 @@
 
             onNoticesChange((notices) => {
                 allNotices = notices;
+                autoDeactivateExpired();
                 renderNoticeList();
                 updateStats();
             });
+            // Re-check every 5 minutes so notices expire even if the tab stays open
+            setInterval(() => { autoDeactivateExpired(); renderNoticeList(); updateStats(); }, 5 * 60 * 1000);
+        }
+
+        // ═══ Auto-deactivate expired notices ═══
+        const localToday = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+        const deactivating = new Set();
+        async function autoDeactivateExpired() {
+            const today = localToday();
+            for (const n of allNotices) {
+                if (n.active && n.end_date && n.end_date < today && !deactivating.has(n.id)) {
+                    deactivating.add(n.id);
+                    try {
+                        await updateDoc(doc(db, 'notices', n.id), { active: false, updated_at: new Date().toISOString() });
+                    } catch (e) {
+                        // Keep the id in the set — one attempt per session, no retry loop
+                        console.warn('Auto-deactivate failed for notice', n.id, e);
+                    }
+                }
+            }
         }
 
         // ═══ Populate Settings ═══
@@ -818,8 +839,10 @@
                 list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-dim);">No notices yet. <a href="/notice.html" style="color:var(--accent);">Create your first notice →</a></div>`;
                 return;
             }
+            const today = localToday();
             list.innerHTML = allNotices.map(n => {
                 const cat = CATEGORIES[n.category] || CATEGORIES.general;
+                const expired = n.end_date && n.end_date < today;
                 const ft = n.file_type || getFileType(n.media_url || '');
                 const priorityBadge = n.priority >= 2 ? '<span class="badge badge-urgent">Urgent</span>'
                     : n.priority >= 1 ? '<span class="badge badge-important">Important</span>'
@@ -833,11 +856,11 @@
                     : ft === 'pdf' ? '📄'
                     : `<img src="${n.media_url}" style="width:100%;height:100%;object-fit:cover">`;
                 return `
-                <div class="notice-item ${n.active ? '' : 'inactive'}">
+                <div class="notice-item ${n.active && !expired ? '' : 'inactive'}">
                     <div class="notice-thumb">${thumb}</div>
                     <div class="notice-info">
                         <div class="notice-info-title">${escapeHtml(n.title)}</div>
-                        <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${!n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
+                        <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${expired ? `<span style="color:var(--urgent)">⏰ Expired ${formatDate(n.end_date)}</span>` : !n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
                     </div>
                     <div class="notice-actions">
                         <button class="btn btn-outline btn-sm" onclick="window.handleToggle('${n.id}')">${n.active ? '⏸ Pause' : '▶ Activate'}</button>
@@ -849,11 +872,11 @@
         }
 
         function updateStats() {
-            const now = new Date().toISOString();
+            const today = localToday();
             const active = allNotices.filter(n => {
                 if (!n.active) return false;
-                if (n.start_date && n.start_date > now) return false;
-                if (n.end_date && n.end_date < now) return false;
+                if (n.start_date && n.start_date > today) return false;
+                if (n.end_date && n.end_date < today) return false;
                 return true;
             });
             document.getElementById('statTotal').textContent = allNotices.length;

@@ -491,8 +491,7 @@
         });
 
         function filterAndRender() {
-            const now = new Date().toISOString();
-            const today = now.slice(0, 10); // "2026-03-11"
+            const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD, so notices last until local midnight
             notices = allNoticesRaw.filter(n => {
                 if (!n.active) return false;
                 if (n.start_date && n.start_date > today) return false;
