@@ -125,7 +125,10 @@
             <div class="section">
                 <div class="section-header">
                     <div class="section-title">All Notices</div>
-                    <a href="/notice.html" class="btn btn-primary btn-sm">+ New Notice</a>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-outline btn-sm" onclick="openScheduleImport()">📅 Import Schedule</button>
+                        <a href="/notice.html" class="btn btn-primary btn-sm">+ New Notice</a>
+                    </div>
                 </div>
                 <div class="notice-list" id="noticeList">
                     <div style="text-align:center;padding:40px;color:var(--text-dim);">Loading notices...</div>
@@ -468,6 +471,35 @@
         </div>
     </div>
 
+    <!-- Schedule Import Modal -->
+    <div class="modal-overlay" id="scheduleModal">
+        <div class="modal" style="max-width:640px;max-height:88vh;overflow-y:auto;">
+            <h3>📅 Import Yearly Schedule</h3>
+            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;">Upload a schedule document (like the yearly fire alarm testing letter) and AI will create a pre-scheduled notice for every date. Each notice publishes itself before the service date and expires automatically afterwards — no monthly work needed.</p>
+            <div class="form-group">
+                <label>Schedule Document</label>
+                <input type="file" id="scheduleFile" class="form-control" accept=".docx,.pdf,.txt,image/*" onchange="scheduleFileChanged()">
+                <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Word, PDF, photo, or text file — or paste the text below instead</div>
+            </div>
+            <div class="form-group">
+                <label>Or Paste Schedule Text</label>
+                <textarea id="scheduleText" class="form-control" rows="3" placeholder="Paste the schedule here if you don't have the file…"></textarea>
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                <label style="margin:0;">Show each notice</label>
+                <input type="number" id="scheduleDaysBefore" class="form-control" value="7" min="1" max="30" style="width:70px;text-align:center;">
+                <span style="font-size:13px;color:var(--text-dim);">days before its date</span>
+            </div>
+            <div id="scheduleParseStatus" style="display:none;margin:10px 0;font-size:13px;color:var(--accent);"><span class="ai-spinner" style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;"></span> <span id="scheduleParseStatusText">Reading schedule with AI…</span></div>
+            <div id="schedulePreview" style="display:none;"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+                <button class="btn btn-outline" onclick="document.getElementById('scheduleModal').classList.remove('active')">Cancel</button>
+                <button class="btn btn-primary" id="scheduleParseBtn" onclick="parseSchedule()">✨ Read Schedule with AI</button>
+                <button class="btn btn-primary" id="scheduleCreateBtn" onclick="createScheduleNotices()" style="display:none;">📅 Create Notices</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Emergency Modal -->
     <div class="modal-overlay" id="emergencyModal">
         <div class="modal">
@@ -485,10 +517,11 @@
     </div>
 
     <script src="/js/firebase-config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
     <script type="module">
         import {
             onAuthChange, logout, getSettings, saveSettings, onNoticesChange,
-            deleteNotice, toggleNotice, uploadLogo, geocodeLocation,
+            deleteNotice, toggleNotice, createNotice, uploadLogo, geocodeLocation,
             escapeHtml, formatDate, getFileType, CATEGORIES, db
         } from '/js/app.js';
         import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -884,6 +917,167 @@
             document.getElementById('statUrgent').textContent = allNotices.filter(n => n.priority >= 2).length;
             document.getElementById('statMedia').textContent = allNotices.filter(n => n.media_url).length;
         }
+
+        // ═══ Schedule Import ═══
+        let parsedSchedule = null;
+
+        window.openScheduleImport = () => {
+            parsedSchedule = null;
+            document.getElementById('scheduleFile').value = '';
+            document.getElementById('scheduleText').value = '';
+            document.getElementById('schedulePreview').style.display = 'none';
+            document.getElementById('schedulePreview').innerHTML = '';
+            document.getElementById('scheduleCreateBtn').style.display = 'none';
+            document.getElementById('scheduleParseBtn').style.display = '';
+            document.getElementById('scheduleModal').classList.add('active');
+        };
+
+        window.scheduleFileChanged = () => {
+            // Reset any previous parse when a new file is picked
+            document.getElementById('schedulePreview').style.display = 'none';
+            document.getElementById('scheduleCreateBtn').style.display = 'none';
+            document.getElementById('scheduleParseBtn').style.display = '';
+        };
+
+        const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(fr.result.split(',')[1]);
+            fr.onerror = reject;
+            fr.readAsDataURL(file);
+        });
+
+        const scheduleLongDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        const scheduleAddDays = (d, days) => {
+            const dt = new Date(d + 'T00:00:00');
+            dt.setDate(dt.getDate() + days);
+            return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        };
+
+        window.parseSchedule = async () => {
+            const apiKey = settings.gemini_api_key;
+            if (!apiKey) { alert('Add a Gemini API key in Settings → AI Integration first.'); return; }
+
+            const file = document.getElementById('scheduleFile').files[0];
+            const pasted = document.getElementById('scheduleText').value.trim();
+            if (!file && !pasted) { alert('Choose a schedule file or paste the schedule text.'); return; }
+
+            const statusEl = document.getElementById('scheduleParseStatus');
+            const parseBtn = document.getElementById('scheduleParseBtn');
+            statusEl.style.display = '';
+            parseBtn.disabled = true;
+
+            try {
+                // Get the document content: text for docx/txt/paste, inline data for pdf/images
+                let docText = pasted;
+                let inlinePart = null;
+                if (file) {
+                    const name = file.name.toLowerCase();
+                    if (name.endsWith('.docx')) {
+                        const buf = await file.arrayBuffer();
+                        const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
+                        docText = result.value;
+                    } else if (name.endsWith('.txt')) {
+                        docText = await file.text();
+                    } else {
+                        inlinePart = { inlineData: { mimeType: file.type || 'application/pdf', data: await readFileAsBase64(file) } };
+                    }
+                }
+
+                const prompt = `You are helping a condominium property manager turn a yearly service schedule into monthly display-board notices.
+
+${inlinePart ? 'The schedule document is attached.' : `SCHEDULE DOCUMENT TEXT:\n"""\n${docText}\n"""`}
+
+Extract every scheduled service date. Return ONLY valid JSON (no markdown, no backticks):
+{
+  "schedule_name": "Short name, e.g. Monthly Fire Alarm Testing 2025",
+  "events": [{"date": "YYYY-MM-DD"}],
+  "notice_title": "Notice title containing the placeholder {DATE}, e.g. Fire Alarm Testing – {DATE}",
+  "notice_body": "Professional notice for residents, 2-3 short plain-text paragraphs, containing {DATE} where the service date belongs. Explain what will happen and what residents should expect. Use ONLY facts from the document (company, building, type of work). Do not invent details.",
+  "category": "one of: general|maintenance|safety|event|rules|financial|parking|amenities",
+  "priority": 0
+}
+Rules:
+- One event per scheduled date, in chronological order, with the correct year from the document
+- priority: 1 if residents are directly affected (alarms sounding, water shut-off), otherwise 0
+- Keep the title short; the {DATE} placeholder will be replaced with e.g. "Wednesday, July 16, 2025"`;
+
+                const parts = inlinePart ? [{ text: prompt }, inlinePart] : [{ text: prompt }];
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts }] })
+                });
+                const data = await res.json();
+                if (data.error) throw new Error(data.error.message || 'API error');
+                let text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+                text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+                parsedSchedule = JSON.parse(text);
+                if (!parsedSchedule.events?.length) throw new Error('No dates found in the document.');
+                renderSchedulePreview();
+            } catch (e) {
+                alert('Could not read the schedule: ' + e.message);
+            } finally {
+                statusEl.style.display = 'none';
+                parseBtn.disabled = false;
+            }
+        };
+
+        function renderSchedulePreview() {
+            const daysBefore = parseInt(document.getElementById('scheduleDaysBefore').value) || 7;
+            const today = localToday();
+            const rows = parsedSchedule.events.map((ev, i) => {
+                const past = ev.date < today;
+                const publishDate = scheduleAddDays(ev.date, -daysBefore);
+                return `<label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--border);cursor:pointer;${past ? 'opacity:.45;' : ''}">
+                    <input type="checkbox" class="sched-ev" data-i="${i}" ${past ? '' : 'checked'}>
+                    <span style="font-weight:600;min-width:150px;">${scheduleLongDate(ev.date)}</span>
+                    <span style="font-size:12px;color:var(--text-dim);">${past ? 'already passed' : `shows ${formatDate(publishDate)} → expires ${formatDate(ev.date)}`}</span>
+                </label>`;
+            }).join('');
+            document.getElementById('schedulePreview').innerHTML = `
+                <div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:6px;">
+                    <div style="font-weight:700;margin-bottom:4px;">${escapeHtml(parsedSchedule.schedule_name || 'Schedule')}</div>
+                    <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">Notice title: ${escapeHtml((parsedSchedule.notice_title || '').replace('{DATE}', '…'))}</div>
+                    <div style="font-size:12px;color:var(--text-dim);white-space:pre-wrap;background:var(--bg-dark);border-radius:8px;padding:10px;margin-bottom:10px;max-height:120px;overflow-y:auto;">${escapeHtml((parsedSchedule.notice_body || '').replaceAll('{DATE}', '[date]'))}</div>
+                    <div style="max-height:220px;overflow-y:auto;">${rows}</div>
+                </div>`;
+            document.getElementById('schedulePreview').style.display = '';
+            document.getElementById('scheduleParseBtn').style.display = 'none';
+            document.getElementById('scheduleCreateBtn').style.display = '';
+        }
+
+        window.createScheduleNotices = async () => {
+            const daysBefore = parseInt(document.getElementById('scheduleDaysBefore').value) || 7;
+            const checked = [...document.querySelectorAll('.sched-ev:checked')].map(cb => parsedSchedule.events[+cb.dataset.i]);
+            if (!checked.length) { alert('Select at least one date.'); return; }
+            const btn = document.getElementById('scheduleCreateBtn');
+            btn.disabled = true;
+            let created = 0;
+            try {
+                for (const ev of checked) {
+                    btn.textContent = `⏳ Creating ${created + 1} of ${checked.length}…`;
+                    const dateLong = scheduleLongDate(ev.date);
+                    await createNotice({
+                        title: (parsedSchedule.notice_title || 'Scheduled Notice – {DATE}').replaceAll('{DATE}', dateLong),
+                        body: (parsedSchedule.notice_body || '').replaceAll('{DATE}', dateLong),
+                        category: parsedSchedule.category || 'general',
+                        priority: parsedSchedule.priority === 1 ? 1 : 0,
+                        display_mode: 'text',
+                        media_url: null, media_path: null, file_type: null,
+                        start_date: scheduleAddDays(ev.date, -daysBefore),
+                        end_date: ev.date,
+                    });
+                    created++;
+                }
+                showFlash(`Created ${created} scheduled notices — they'll appear on the display automatically`, 'success');
+                document.getElementById('scheduleModal').classList.remove('active');
+            } catch (e) {
+                alert(`Created ${created} notices, then failed: ${e.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📅 Create Notices';
+            }
+        };
 
         // ═══ Media Preview Lightbox ═══
         window.previewMedia = (id) => {
