@@ -490,6 +490,14 @@
                 <input type="number" id="scheduleDaysBefore" class="form-control" value="7" min="1" max="30" style="width:70px;text-align:center;">
                 <span style="font-size:13px;color:var(--text-dim);">days before its date</span>
             </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;">
+                    <input type="checkbox" id="schedulePosters" checked>
+                    <span>🎨 AI-generate a poster image for each notice</span>
+                </label>
+                <div style="font-size:11px;color:var(--text-dim);margin-top:4px;margin-left:24px;">Each date gets its own designed poster (~30 sec each — keep this tab open while they generate). Unchecked = clean text notices.</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);background:var(--bg-dark);border-radius:8px;padding:8px 10px;margin-bottom:4px;">🧹 Imported notices clean up after themselves: once a date has passed, the notice (and its poster) is deleted automatically.</div>
             <div id="scheduleParseStatus" style="display:none;margin:10px 0;font-size:13px;color:var(--accent);"><span class="ai-spinner" style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;"></span> <span id="scheduleParseStatusText">Reading schedule with AI…</span></div>
             <div id="schedulePreview" style="display:none;"></div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
@@ -521,7 +529,7 @@
     <script type="module">
         import {
             onAuthChange, logout, getSettings, saveSettings, onNoticesChange,
-            deleteNotice, toggleNotice, createNotice, uploadLogo, geocodeLocation,
+            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation,
             escapeHtml, formatDate, getFileType, CATEGORIES, db
         } from '/js/app.js';
         import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -774,7 +782,16 @@
         async function autoDeactivateExpired() {
             const today = localToday();
             for (const n of allNotices) {
-                if (n.active && n.end_date && n.end_date < today && !deactivating.has(n.id)) {
+                if (!n.end_date || n.end_date >= today || deactivating.has(n.id)) continue;
+                if (n.auto_delete) {
+                    // Schedule-imported notices delete themselves (media included) once expired
+                    deactivating.add(n.id);
+                    try {
+                        await deleteNotice(n.id);
+                    } catch (e) {
+                        console.warn('Auto-delete failed for notice', n.id, e);
+                    }
+                } else if (n.active) {
                     deactivating.add(n.id);
                     try {
                         await updateDoc(doc(db, 'notices', n.id), { active: false, updated_at: new Date().toISOString() });
@@ -1046,30 +1063,94 @@ Rules:
             document.getElementById('scheduleCreateBtn').style.display = '';
         }
 
+        async function generateSchedulePoster(title, body, apiKey) {
+            const prompt = `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
+
+The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Do not add any words of your own, do not print any field labels, and do not show the same information twice.
+
+===POSTER TEXT START===
+${title} (main headline, largest text — make the date very prominent)
+${body}
+===POSTER TEXT END===
+
+The note in parentheses describes placement only — NEVER print it or the === markers on the poster.
+
+DESIGN RULES:
+- MUST be WIDE LANDSCAPE layout (16:9 ratio, like a widescreen TV)
+- Professional, modern graphic design for a building lobby TV
+- ALL listed text must be included exactly once and perfectly legible
+- Include relevant visual elements (icons, shapes) matching the topic — imagery only, no extra words
+- Text must be perfectly spelled with no errors
+- Use visual hierarchy: headline and date largest, details smaller
+- Fill the entire wide landscape canvas — no blank space or borders`;
+            const models = ['gemini-3-pro-image', 'gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
+            let data = null, lastError = null;
+            for (const model of models) {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { responseModalities: ['TEXT', 'IMAGE'], imageConfig: { aspectRatio: '16:9' } }
+                    })
+                });
+                data = await res.json();
+                if (!data.error) break;
+                lastError = data.error.message || 'API error';
+            }
+            if (data.error) throw new Error(lastError);
+            const part = (data.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.mimeType?.startsWith('image/'));
+            if (!part) throw new Error('No image generated');
+            const byteChars = atob(part.inlineData.data);
+            const bytes = new Uint8Array(byteChars.length);
+            for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+            const ext = part.inlineData.mimeType.includes('png') ? 'png' : 'jpg';
+            return new File([bytes], `schedule_poster.${ext}`, { type: part.inlineData.mimeType });
+        }
+
         window.createScheduleNotices = async () => {
             const daysBefore = parseInt(document.getElementById('scheduleDaysBefore').value) || 7;
+            const wantPosters = document.getElementById('schedulePosters').checked;
             const checked = [...document.querySelectorAll('.sched-ev:checked')].map(cb => parsedSchedule.events[+cb.dataset.i]);
             if (!checked.length) { alert('Select at least one date.'); return; }
             const btn = document.getElementById('scheduleCreateBtn');
             btn.disabled = true;
-            let created = 0;
+            let created = 0, postersFailed = 0;
             try {
                 for (const ev of checked) {
-                    btn.textContent = `⏳ Creating ${created + 1} of ${checked.length}…`;
                     const dateLong = scheduleLongDate(ev.date);
+                    const title = (parsedSchedule.notice_title || 'Scheduled Notice – {DATE}').replaceAll('{DATE}', dateLong);
+                    const body = (parsedSchedule.notice_body || '').replaceAll('{DATE}', dateLong);
+                    let media = { media_url: null, media_path: null, file_type: null };
+                    let displayMode = 'text';
+                    if (wantPosters) {
+                        btn.textContent = `🎨 Poster ${created + 1} of ${checked.length}…`;
+                        try {
+                            const posterFile = await generateSchedulePoster(title, body, settings.gemini_api_key);
+                            const up = await uploadMedia(posterFile);
+                            media = { media_url: up.url, media_path: up.path, file_type: 'image' };
+                            displayMode = 'media_only';
+                        } catch (e) {
+                            console.warn('Poster generation failed for', ev.date, '- creating text notice instead:', e);
+                            postersFailed++;
+                        }
+                    }
+                    btn.textContent = `⏳ Creating ${created + 1} of ${checked.length}…`;
                     await createNotice({
-                        title: (parsedSchedule.notice_title || 'Scheduled Notice – {DATE}').replaceAll('{DATE}', dateLong),
-                        body: (parsedSchedule.notice_body || '').replaceAll('{DATE}', dateLong),
+                        title, body,
                         category: parsedSchedule.category || 'general',
                         priority: parsedSchedule.priority === 1 ? 1 : 0,
-                        display_mode: 'text',
-                        media_url: null, media_path: null, file_type: null,
+                        display_mode: displayMode,
+                        ...media,
                         start_date: scheduleAddDays(ev.date, -daysBefore),
                         end_date: ev.date,
+                        auto_delete: true,
                     });
                     created++;
                 }
-                showFlash(`Created ${created} scheduled notices — they'll appear on the display automatically`, 'success');
+                let msg = `Created ${created} scheduled notices — they'll appear on the display automatically`;
+                if (postersFailed) msg += ` (${postersFailed} poster${postersFailed > 1 ? 's' : ''} failed, those are text notices)`;
+                showFlash(msg, 'success');
                 document.getElementById('scheduleModal').classList.remove('active');
             } catch (e) {
                 alert(`Created ${created} notices, then failed: ${e.message}`);
