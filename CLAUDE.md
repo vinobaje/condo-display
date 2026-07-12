@@ -85,6 +85,8 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 
 ### admin.html — Admin Dashboard
 - 3 tabs: Notices, Settings, Layout
+- **Import Schedule** (Notices tab): upload any yearly service schedule (docx via mammoth.js CDN, PDF/photo via Gemini multimodal, or pasted text) → Gemini extracts every date + writes a notice template → bulk-creates one pre-scheduled notice per date (start_date = N days before, end_date = service date, default N=7), optionally with an AI-generated poster each (media_only). Imported notices carry `auto_delete: true` and are deleted (media included) by the admin expiry sweep after their date passes; regular notices are only set inactive
+- Expired-notice sweep runs on notice load + every 5 min while admin is open
 - Super Admin system: `super_admin_emails` field in Firestore (comma-separated)
   - First user auto-becomes super admin (bootstrap)
   - Regular admins see: Notices, Layout, Building Info, Display toggles, widgets, theme, ticker
