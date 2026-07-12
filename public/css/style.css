@@ -125,6 +125,12 @@ body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans
 .notice-thumb.clickable { cursor: zoom-in; }
 .notice-thumb.clickable:hover { transform: scale(1.05); box-shadow: var(--shadow); border-color: var(--accent); }
 .notice-info { flex: 1; min-width: 0; }
+.sched-group { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.sched-group-header { display: flex; align-items: center; gap: 12px; padding: 14px 22px; cursor: pointer; user-select: none; transition: background 0.15s; }
+.sched-group-header:hover { background: var(--bg-card-hover, rgba(124,106,240,0.05)); }
+.sched-group-chevron { font-size: 13px; color: var(--text-dim); width: 14px; }
+.sched-group-body { border-top: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-dark); }
+.sched-group-body .notice-item { padding: 12px 16px; }
 .notice-info-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.2px; }
 .notice-info-meta { font-size: 12px; color: var(--text-dim); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .notice-actions { display: flex; gap: 6px; flex-shrink: 0; }

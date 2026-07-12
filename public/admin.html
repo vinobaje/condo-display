@@ -883,6 +883,39 @@
         }
 
         // ═══ Notice List ═══
+        const expandedGroups = new Set();
+
+        function noticeRowHtml(n, today) {
+            const cat = CATEGORIES[n.category] || CATEGORIES.general;
+            const expired = n.end_date && n.end_date < today;
+            const upcoming = n.active && n.start_date && n.start_date > today;
+            const ft = n.file_type || getFileType(n.media_url || '');
+            const priorityBadge = n.priority >= 2 ? '<span class="badge badge-urgent">Urgent</span>'
+                : n.priority >= 1 ? '<span class="badge badge-important">Important</span>'
+                : '<span class="badge badge-normal">Normal</span>';
+            const typeBadge = ft === 'video' ? '<span class="badge badge-video">Video</span>'
+                : ft === 'image' ? '<span class="badge badge-image">Image</span>'
+                : ft === 'pdf' ? '<span class="badge badge-image">PDF</span>' : '';
+            let thumb = cat.icon;
+            if (n.media_url) thumb = ft === 'video'
+                ? `<video src="${n.media_url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
+                : ft === 'pdf' ? '📄'
+                : `<img src="${n.media_url}" style="width:100%;height:100%;object-fit:cover">`;
+            return `
+            <div class="notice-item ${n.active && !expired ? '' : 'inactive'}">
+                <div class="notice-thumb ${n.media_url ? 'clickable' : ''}" ${n.media_url ? `onclick="window.previewMedia('${n.id}')" title="Click to preview"` : ''}>${thumb}</div>
+                <div class="notice-info">
+                    <div class="notice-info-title">${escapeHtml(n.title)}</div>
+                    <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${expired ? `<span style="color:var(--urgent)">⏰ Expired ${formatDate(n.end_date)}</span>` : upcoming ? `<span style="color:var(--accent)">📅 Shows ${formatDate(n.start_date)}</span>` : !n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
+                </div>
+                <div class="notice-actions">
+                    <button class="btn btn-outline btn-sm" onclick="window.handleToggle('${n.id}')">${n.active ? '⏸ Pause' : '▶ Activate'}</button>
+                    <a href="/notice.html?id=${n.id}" class="btn btn-outline btn-sm">✏️ Edit</a>
+                    <button class="btn btn-danger btn-sm" onclick="window.handleDelete('${n.id}')">🗑</button>
+                </div>
+            </div>`;
+        }
+
         function renderNoticeList() {
             const list = document.getElementById('noticeList');
             if (allNotices.length === 0) {
@@ -890,36 +923,53 @@
                 return;
             }
             const today = localToday();
-            list.innerHTML = allNotices.map(n => {
-                const cat = CATEGORIES[n.category] || CATEGORIES.general;
-                const expired = n.end_date && n.end_date < today;
-                const ft = n.file_type || getFileType(n.media_url || '');
-                const priorityBadge = n.priority >= 2 ? '<span class="badge badge-urgent">Urgent</span>'
-                    : n.priority >= 1 ? '<span class="badge badge-important">Important</span>'
-                    : '<span class="badge badge-normal">Normal</span>';
-                const typeBadge = ft === 'video' ? '<span class="badge badge-video">Video</span>'
-                    : ft === 'image' ? '<span class="badge badge-image">Image</span>'
-                    : ft === 'pdf' ? '<span class="badge badge-image">PDF</span>' : '';
-                let thumb = cat.icon;
-                if (n.media_url) thumb = ft === 'video'
-                    ? `<video src="${n.media_url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
-                    : ft === 'pdf' ? '📄'
-                    : `<img src="${n.media_url}" style="width:100%;height:100%;object-fit:cover">`;
-                return `
-                <div class="notice-item ${n.active && !expired ? '' : 'inactive'}">
-                    <div class="notice-thumb ${n.media_url ? 'clickable' : ''}" ${n.media_url ? `onclick="window.previewMedia('${n.id}')" title="Click to preview"` : ''}>${thumb}</div>
-                    <div class="notice-info">
-                        <div class="notice-info-title">${escapeHtml(n.title)}</div>
-                        <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${expired ? `<span style="color:var(--urgent)">⏰ Expired ${formatDate(n.end_date)}</span>` : !n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
+            const singles = [];
+            const groups = new Map();
+            for (const n of allNotices) {
+                if (n.schedule_group) {
+                    if (!groups.has(n.schedule_group)) groups.set(n.schedule_group, []);
+                    groups.get(n.schedule_group).push(n);
+                } else singles.push(n);
+            }
+            let html = singles.map(n => noticeRowHtml(n, today)).join('');
+            for (const [name, items] of groups) {
+                items.sort((a, b) => (a.end_date || '').localeCompare(b.end_date || ''));
+                const next = items.find(n => n.end_date && n.end_date >= today);
+                const open = expandedGroups.has(name);
+                const enc = encodeURIComponent(name);
+                html += `
+                <div class="sched-group">
+                    <div class="sched-group-header" onclick="window.toggleScheduleGroup('${enc}')">
+                        <span class="sched-group-chevron">${open ? '▾' : '▸'}</span>
+                        <span style="font-weight:700;">📅 ${escapeHtml(name)}</span>
+                        <span class="badge badge-normal">${items.length} notices</span>
+                        <span style="font-size:12px;color:var(--text-dim);flex:1;">${next ? `next: ${formatDate(next.end_date)}` : 'all dates passed'}</span>
+                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();window.deleteScheduleGroup('${enc}')" title="Delete every notice in this schedule">🗑 All</button>
                     </div>
-                    <div class="notice-actions">
-                        <button class="btn btn-outline btn-sm" onclick="window.handleToggle('${n.id}')">${n.active ? '⏸ Pause' : '▶ Activate'}</button>
-                        <a href="/notice.html?id=${n.id}" class="btn btn-outline btn-sm">✏️ Edit</a>
-                        <button class="btn btn-danger btn-sm" onclick="window.handleDelete('${n.id}')">🗑</button>
-                    </div>
+                    ${open ? `<div class="sched-group-body">${items.map(n => noticeRowHtml(n, today)).join('')}</div>` : ''}
                 </div>`;
-            }).join('');
+            }
+            list.innerHTML = html;
         }
+
+        window.toggleScheduleGroup = (enc) => {
+            const name = decodeURIComponent(enc);
+            if (expandedGroups.has(name)) expandedGroups.delete(name);
+            else expandedGroups.add(name);
+            renderNoticeList();
+        };
+
+        window.deleteScheduleGroup = async (enc) => {
+            const name = decodeURIComponent(enc);
+            const items = allNotices.filter(n => n.schedule_group === name);
+            if (!confirm(`Delete all ${items.length} notices in "${name}"? This also removes their posters.`)) return;
+            try {
+                for (const n of items) await deleteNotice(n.id);
+                showFlash(`Deleted ${items.length} notices from "${name}"`, 'success');
+            } catch (e) {
+                showFlash('Error deleting schedule notices', 'error');
+            }
+        };
 
         function updateStats() {
             const today = localToday();
@@ -1154,6 +1204,7 @@ DESIGN RULES:
                         start_date: scheduleAddDays(ev.date, -daysBefore),
                         end_date: ev.date,
                         auto_delete: true,
+                        schedule_group: parsedSchedule.schedule_name || 'Imported Schedule',
                     });
                     created++;
                 }
