@@ -527,3 +527,49 @@ export function generateQRUrl(url, size) {
     if (!url) return '';
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size || 80}x${size || 80}&data=${encodeURIComponent(url)}&margin=1`;
 }
+
+// ═══ Display heartbeat (status/display doc) ═══════════════════
+export async function writeHeartbeat(device) {
+    // Fields must match firestore.rules allowlist: last_seen (string), device (string)
+    await setDoc(doc(db, 'status', 'display'), {
+        last_seen: new Date().toISOString(),
+        device: (device || '').slice(0, 180)
+    });
+}
+
+export function onDisplayStatus(callback) {
+    return onSnapshot(doc(db, 'status', 'display'), (snap) => {
+        callback(snap.exists() ? snap.data() : null);
+    });
+}
+
+// ═══ Notice templates (auth-gated) ═══════════════════════════
+export async function getTemplates() {
+    const snap = await getDocs(query(collection(db, 'templates'), orderBy('created_at', 'desc')));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function saveTemplate(data) {
+    const id = generateId();
+    await setDoc(doc(db, 'templates', id), { ...data, id, created_at: new Date().toISOString() });
+    return id;
+}
+
+export async function deleteTemplate(id) {
+    await deleteDoc(doc(db, 'templates', id));
+}
+
+// ═══ Backup / export ═════════════════════════════════════════
+export async function exportBackup() {
+    const [notices, settingsSnap] = await Promise.all([
+        getNotices(),
+        getDoc(doc(db, 'settings', 'main'))
+    ]);
+    return {
+        exported_at: new Date().toISOString(),
+        version: 1,
+        settings: settingsSnap.exists() ? settingsSnap.data() : {},
+        notices,
+        // Secrets (API keys) are intentionally excluded from backups
+    };
+}

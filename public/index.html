@@ -87,6 +87,9 @@
         .w-notices .slide-area{position:absolute;inset:0;overflow:hidden;border-radius:clamp(10px,1.2vmin,18px)}
         .slide{position:absolute;inset:0;opacity:0;transform:scale(.97);transition:opacity var(--transition-speed) ease,transform var(--transition-speed) ease;pointer-events:none}
         .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+        .slide-qr{position:absolute;bottom:24px;right:24px;background:#fff;border-radius:12px;padding:10px 10px 6px;box-shadow:0 8px 24px rgba(0,0,0,.35);text-align:center;z-index:5}
+        .slide-qr img{display:block;width:130px;height:130px}
+        .slide-qr-label{font-size:12px;font-weight:700;color:#1a1a2e;margin-top:4px;letter-spacing:.3px}
         .notice-card{height:100%;display:flex;flex-direction:column;overflow:hidden}
         .notice-card.has-media-side{flex-direction:row}
         .notice-card.media-only{position:relative}
@@ -261,7 +264,20 @@
 
     <script src="/js/firebase-config.js"></script>
     <script type="module">
-        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
+        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, writeHeartbeat, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
+
+        // ═══ Display heartbeat — lets admin see the TV is alive ═══
+        // Guarded so a transiently stale cached app.js (mid-deploy) can never
+        // break the whole display module.
+        function sendHeartbeat() {
+            try {
+                if (typeof writeHeartbeat !== 'function') return;
+                const dev = `${screen.width}×${screen.height} · ${navigator.userAgent.slice(0, 120)}`;
+                Promise.resolve(writeHeartbeat(dev)).catch(() => {});
+            } catch (e) { /* never let the heartbeat break the display */ }
+        }
+        sendHeartbeat();
+        setInterval(sendHeartbeat, 2 * 60 * 1000); // every 2 minutes
 
         let settings = {}, notices = [], currentIndex = 0, slideTimer = null, currentVideoEl = null;
         let newsItems = [], feedGroups = [], newsTimers = [];
@@ -652,7 +668,12 @@
             if (mode === 'media_only' && hasMedia) { inner = `<div class="notice-card media-only ${pc}"><div class="media-fullscreen">${renderMedia(notice)}</div></div>`; }
             else if (hasMedia && mode !== 'text') { inner = `<div class="notice-card has-media-side ${pc}"><div class="media-side">${renderMedia(notice)}</div><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
             else { inner = `<div class="notice-card ${pc}"><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
-            return `<div class="slide ${index===0?'active':''}" data-index="${index}">${inner}</div>`;
+            let qr = '';
+            if (notice.show_qr && notice.id) {
+                const viewUrl = `${location.origin}/view.html?id=${notice.id}`;
+                qr = `<div class="slide-qr"><img src="${generateQRUrl(viewUrl, 130)}" alt="Scan for full notice"><div class="slide-qr-label">Scan for details</div></div>`;
+            }
+            return `<div class="slide ${index===0?'active':''}" data-index="${index}">${inner}${qr}</div>`;
         }
 
         function buildSidebarCard(notice, index) {

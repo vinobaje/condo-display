@@ -114,6 +114,12 @@
 
         <!-- TAB: Notices -->
         <div class="tab-panel active" id="panel-notices">
+            <!-- Display health -->
+            <div id="displayStatusBar" style="display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border);background:var(--bg-card);">
+                <span id="displayStatusDot" style="width:11px;height:11px;border-radius:50%;background:#9ca3af;flex-shrink:0;"></span>
+                <span id="displayStatusText" style="font-weight:600;font-size:14px;">Checking TV display…</span>
+                <span id="displayStatusMeta" style="font-size:12px;color:var(--text-dim);flex:1;"></span>
+            </div>
             <!-- Stats -->
             <div class="stats">
                 <div class="stat-card"><div class="stat-label">Total Notices</div><div class="stat-value accent" id="statTotal">0</div></div>
@@ -311,6 +317,20 @@
                                 <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Force all displays to re-download images, videos & PDFs</div>
                             </div>
                             <button type="button" class="btn btn-outline btn-sm" onclick="clearDisplayCache()">Clear Cache</button>
+                        </div>
+                    </div>
+                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;">💾 Backup &amp; Restore</div>
+                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Download all notices &amp; settings as a file (API keys excluded)</div>
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button type="button" class="btn btn-outline btn-sm" onclick="exportBackupFile()">⬇️ Export</button>
+                                <label class="btn btn-outline btn-sm" style="cursor:pointer;">⬆️ Restore
+                                    <input type="file" accept="application/json" onchange="importBackupFile(this.files[0])" style="display:none;">
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -529,8 +549,8 @@
     <script type="module">
         import {
             onAuthChange, logout, getSettings, saveSettings, getSecrets, saveSecrets, migrateSecrets, onNoticesChange,
-            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation,
-            escapeHtml, formatDate, getFileType, CATEGORIES, db
+            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation, onDisplayStatus,
+            exportBackup, escapeHtml, formatDate, formatTimeAgo, getFileType, CATEGORIES, db
         } from '/js/app.js';
         import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -782,6 +802,31 @@
             });
             // Re-check every 5 minutes so notices expire even if the tab stays open
             setInterval(() => { autoDeactivateExpired(); renderNoticeList(); updateStats(); }, 5 * 60 * 1000);
+
+            // Live display-health indicator
+            onDisplayStatus(s => { lastDisplayStatus = s; renderDisplayStatus(); });
+            setInterval(renderDisplayStatus, 30 * 1000); // refresh "last seen" text
+        }
+
+        // ═══ Display health indicator ═══
+        let lastDisplayStatus = null;
+        function renderDisplayStatus() {
+            const dot = document.getElementById('displayStatusDot');
+            const txt = document.getElementById('displayStatusText');
+            const meta = document.getElementById('displayStatusMeta');
+            if (!lastDisplayStatus || !lastDisplayStatus.last_seen) {
+                dot.style.background = '#9ca3af';
+                txt.textContent = '📺 TV display: never seen';
+                meta.textContent = 'The display hasn\'t checked in yet. Open the display URL on the TV/Pi.';
+                return;
+            }
+            const seen = new Date(lastDisplayStatus.last_seen);
+            const minsAgo = (Date.now() - seen.getTime()) / 60000;
+            const online = minsAgo < 6; // heartbeat is every 2 min; allow a couple misses
+            dot.style.background = online ? '#10b981' : '#ef4444';
+            dot.style.boxShadow = online ? '0 0 8px rgba(16,185,129,.6)' : 'none';
+            txt.textContent = online ? '📺 TV display: Online' : '📺 TV display: Offline';
+            meta.textContent = `last seen ${formatTimeAgo(lastDisplayStatus.last_seen)}` + (lastDisplayStatus.device ? ` · ${lastDisplayStatus.device.split(' · ')[0]}` : '');
         }
 
         // ═══ Auto-deactivate expired notices ═══
@@ -1371,6 +1416,45 @@ DESIGN RULES:
             } catch (e) {
                 showFlash('Error: ' + e.message, 'error');
             }
+        };
+
+        // ═══ Backup / Restore ═══
+        window.exportBackupFile = async () => {
+            try {
+                const backup = await exportBackup();
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `condo-notice-board-backup-${localToday()}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showFlash(`Exported ${backup.notices.length} notices + settings`, 'success');
+            } catch (e) { showFlash('Export failed: ' + e.message, 'error'); }
+        };
+
+        window.importBackupFile = async (file) => {
+            if (!file) return;
+            let backup;
+            try { backup = JSON.parse(await file.text()); }
+            catch { showFlash('That file is not a valid backup (JSON expected).', 'error'); return; }
+            if (!Array.isArray(backup.notices)) { showFlash('This file has no notices to restore.', 'error'); return; }
+            const n = backup.notices.length;
+            if (!confirm(`Restore this backup?\n\n• ${n} notices will be re-created (existing notices are kept, not overwritten)\n• Display settings will be applied\n\nAPI keys are never included in backups. Continue?`)) return;
+            try {
+                if (backup.settings && Object.keys(backup.settings).length) {
+                    // Never write secret fields back into the public settings doc
+                    const clean = { ...backup.settings };
+                    ['gemini_api_key','groq_api_key','openai_api_key','deepseek_api_key','pixabay_api_key','super_admin_emails'].forEach(k => delete clean[k]);
+                    await saveSettings(clean);
+                }
+                let restored = 0;
+                for (const notice of backup.notices) {
+                    const { id, created_at, updated_at, ...rest } = notice;
+                    await createNotice(rest);
+                    restored++;
+                }
+                showFlash(`Restored ${restored} notices and settings`, 'success');
+            } catch (e) { showFlash('Restore failed: ' + e.message, 'error'); }
         };
 
         window.addTickerMessage = (text = '') => {

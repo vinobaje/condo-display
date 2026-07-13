@@ -78,6 +78,15 @@
         <div class="flash flash-error" id="errorFlash"></div>
 
         <div class="card">
+            <!-- Templates toolbar -->
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);">Templates</span>
+                <select id="templatePicker" class="form-control" style="width:auto;min-width:180px;font-size:13px;padding:6px 10px;" onchange="loadTemplate(this.value)">
+                    <option value="">Start blank…</option>
+                </select>
+                <button type="button" class="btn btn-outline btn-sm" onclick="saveAsTemplate()">💾 Save as Template</button>
+                <button type="button" class="btn btn-outline btn-sm" id="delTemplateBtn" onclick="deleteCurrentTemplate()" style="display:none;color:var(--urgent);">🗑 Delete Template</button>
+            </div>
             <!-- Title -->
             <div class="form-group">
                 <label>Notice Title</label>
@@ -132,6 +141,22 @@
                     </button>
                 </div>
                 <div id="aiStatus" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);"><span class="ai-spinner"></span> Generating professional notice...</div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                    <span style="font-size:12px;color:var(--text-dim);">🌐 Add a translation:</span>
+                    <select id="translateLang" class="form-control" style="width:auto;font-size:13px;padding:6px 10px;">
+                        <option value="French">French</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="Simplified Chinese">Chinese (Simplified)</option>
+                        <option value="Punjabi">Punjabi</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Tagalog">Tagalog</option>
+                        <option value="Arabic">Arabic</option>
+                        <option value="Portuguese">Portuguese</option>
+                        <option value="Italian">Italian</option>
+                    </select>
+                    <button type="button" class="btn btn-outline btn-sm" id="translateBtn" onclick="translateNotice()">Translate &amp; append</button>
+                    <span id="translateStatus" style="font-size:12px;color:var(--accent);display:none;"><span class="ai-spinner"></span> Translating…</span>
+                </div>
             </div>
 
             <!-- Media Upload -->
@@ -171,6 +196,15 @@
                     </div>
                 </div>
                 <input type="hidden" id="displayMode" value="media_with_text">
+            </div>
+
+            <!-- QR code -->
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                    <input type="checkbox" id="showQr">
+                    <span>📱 Show a QR code on the display</span>
+                </label>
+                <div style="font-size:12px;color:var(--text-dim);margin-top:4px;margin-left:28px;">Residents can scan it to open the full notice on their phone — handy for long notices or details like dates and phone numbers.</div>
             </div>
 
             <!-- Scheduling -->
@@ -340,7 +374,8 @@
     </script>
     <script type="module">
         import {
-            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, getSecrets, db
+            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, getSecrets,
+            getTemplates, saveTemplate, deleteTemplate, db
         } from '/js/app.js';
         import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -1532,8 +1567,98 @@ Rules:
             if (!user) { window.location.href = '/login.html'; return; }
             document.getElementById('loadingOverlay').style.display = 'none';
             loadAISettings();
+            loadTemplatesList();
             checkEdit();
         });
+
+        // ═══ Notice Templates ═══
+        let templatesCache = [];
+        async function loadTemplatesList() {
+            try {
+                templatesCache = await getTemplates();
+                const picker = document.getElementById('templatePicker');
+                picker.innerHTML = '<option value="">Start blank…</option>' +
+                    templatesCache.map(t => `<option value="${t.id}">${escapeHtml(t.name || t.title || 'Untitled')}</option>`).join('');
+            } catch (e) { console.warn('Could not load templates:', e); }
+        }
+
+        window.loadTemplate = (id) => {
+            document.getElementById('delTemplateBtn').style.display = id ? '' : 'none';
+            if (!id) return;
+            const t = templatesCache.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('title').value = t.title || '';
+            document.getElementById('body').value = t.body || '';
+            document.getElementById('category').value = t.category || 'general';
+            document.getElementById('priority').value = t.priority || 0;
+            document.querySelectorAll('.priority-option').forEach(el => el.classList.toggle('selected', el.dataset.value == (t.priority || 0)));
+        };
+
+        window.saveAsTemplate = async () => {
+            const title = document.getElementById('title').value.trim();
+            const body = document.getElementById('body').value.trim();
+            if (!title && !body) { alert('Add a title or body before saving a template.'); return; }
+            const name = prompt('Name this template:', title || 'Untitled template');
+            if (name === null) return;
+            try {
+                await saveTemplate({
+                    name: name.trim() || title || 'Untitled',
+                    title, body,
+                    category: document.getElementById('category').value,
+                    priority: parseInt(document.getElementById('priority').value) || 0,
+                });
+                await loadTemplatesList();
+                showFlash('Template saved', 'success');
+            } catch (e) { showFlash('Could not save template: ' + e.message, 'error'); }
+        };
+
+        window.deleteCurrentTemplate = async () => {
+            const id = document.getElementById('templatePicker').value;
+            if (!id) return;
+            const t = templatesCache.find(x => x.id === id);
+            if (!confirm(`Delete template "${t?.name || 'this template'}"?`)) return;
+            try {
+                await deleteTemplate(id);
+                await loadTemplatesList();
+                document.getElementById('templatePicker').value = '';
+                document.getElementById('delTemplateBtn').style.display = 'none';
+                showFlash('Template deleted', 'success');
+            } catch (e) { showFlash('Could not delete template', 'error'); }
+        };
+
+        // ═══ AI Translation ═══
+        window.translateNotice = async () => {
+            const body = document.getElementById('body').value.trim();
+            const title = document.getElementById('title').value.trim();
+            if (!body && !title) { alert('Write the notice first, then translate it.'); return; }
+            const provider = aiConfig.provider;
+            const apiKey = aiConfig[provider];
+            if (!apiKey) { alert(`No API key set for ${providerNames[provider]}. Add one in Admin → Settings.`); return; }
+            const lang = document.getElementById('translateLang').value;
+            const btn = document.getElementById('translateBtn');
+            const status = document.getElementById('translateStatus');
+            btn.disabled = true;
+            status.style.display = '';
+            const prompt = `Translate the following condominium notice into ${lang}. Keep it natural and professional. Preserve dates, names, phone numbers, and building identifiers exactly. Return ONLY the translation, no preamble, no notes.
+
+${title ? 'TITLE: ' + title + '\n\n' : ''}${body}`;
+            try {
+                let text = '';
+                if (provider === 'gemini') text = await callGemini(prompt, apiKey);
+                else if (provider === 'groq') text = await callGroq(prompt, apiKey);
+                else if (provider === 'openai') text = await callOpenAI(prompt, apiKey);
+                else if (provider === 'deepseek') text = await callDeepSeek(prompt, apiKey);
+                if (!text) throw new Error('No response from AI');
+                const bodyEl = document.getElementById('body');
+                bodyEl.value = bodyEl.value.trim() + `\n\n———  ${lang}  ———\n` + text.trim();
+                showFlash(`${lang} translation added below the notice`, 'success');
+            } catch (e) {
+                alert('Translation failed: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                status.style.display = 'none';
+            }
+        };
 
         async function checkEdit() {
             const params = new URLSearchParams(window.location.search);
@@ -1550,6 +1675,7 @@ Rules:
                 document.getElementById('title').value = n.title || '';
                 document.getElementById('category').value = n.category || 'general';
                 document.getElementById('body').value = n.body || '';
+                document.getElementById('showQr').checked = !!n.show_qr;
                 document.getElementById('startDate').value = n.start_date || '';
                 document.getElementById('endDate').value = n.end_date || '';
 
@@ -1676,6 +1802,7 @@ Rules:
                     media_path: mediaPath,
                     file_type: fileType,
                     display_mode: document.getElementById('displayMode').value,
+                    show_qr: document.getElementById('showQr').checked,
                     start_date: document.getElementById('startDate').value || '',
                     end_date: document.getElementById('endDate').value || '',
                 };

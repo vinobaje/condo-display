@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice — Waterview Condominium</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', system-ui, sans-serif; background: #0a1a2e; color: #f0f2f5; min-height: 100vh; padding: 20px; display: flex; justify-content: center; }
+        .wrap { width: 100%; max-width: 620px; }
+        .brand { text-align: center; padding: 16px 0 24px; color: #9fb3c8; font-size: 14px; font-weight: 600; letter-spacing: .5px; }
+        .card { background: #12233d; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 26px; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+        .cat { display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 5px 12px; border-radius: 999px; background: rgba(59,130,246,.15); color: #7cb2ff; margin-bottom: 14px; }
+        .cat.urgent { background: rgba(239,68,68,.18); color: #ff8888; }
+        .cat.important { background: rgba(245,158,11,.18); color: #fbbf24; }
+        h1 { font-size: 26px; font-weight: 700; line-height: 1.25; margin-bottom: 16px; }
+        .media { width: 100%; border-radius: 12px; margin-bottom: 18px; }
+        .body { font-size: 17px; line-height: 1.65; color: #d6e0ec; white-space: pre-wrap; word-wrap: break-word; }
+        .dates { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.08); font-size: 14px; color: #9fb3c8; }
+        .loading, .error { text-align: center; padding: 60px 20px; color: #9fb3c8; }
+        .footer { text-align: center; padding: 24px 0; color: #64748b; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="brand" id="brand">Waterview Condominium</div>
+        <div id="content"><div class="loading">Loading notice…</div></div>
+        <div class="footer">Waterview Condominium Notice Board</div>
+    </div>
+    <script src="/js/firebase-config.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const CAT = {
+            general: '📋 General', maintenance: '🔧 Maintenance', safety: '🛡️ Safety',
+            event: '🎉 Event', rules: '📜 Rules', financial: '💰 Financial',
+            parking: '🅿️ Parking', amenities: '🏊 Amenities'
+        };
+        const esc = (s) => (s || '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+        const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }) : '';
+
+        async function load() {
+            const id = new URLSearchParams(location.search).get('id');
+            const content = document.getElementById('content');
+            if (!id) { content.innerHTML = '<div class="error">No notice specified.</div>'; return; }
+            try {
+                const snap = await getDoc(doc(db, 'notices', id));
+                if (!snap.exists()) { content.innerHTML = '<div class="error">This notice is no longer available.</div>'; return; }
+                const n = snap.data();
+                const catClass = n.priority >= 2 ? 'urgent' : n.priority >= 1 ? 'important' : '';
+                const ft = n.file_type || '';
+                let media = '';
+                if (n.media_url && n.display_mode !== 'text') {
+                    if (ft === 'video') media = `<video class="media" src="${esc(n.media_url)}" controls muted playsinline></video>`;
+                    else if (ft === 'image') media = `<img class="media" src="${esc(n.media_url)}" alt="">`;
+                }
+                let dates = '';
+                if (n.start_date || n.end_date) {
+                    dates = '<div class="dates">' +
+                        (n.start_date ? `📅 From: ${fmtDate(n.start_date)}<br>` : '') +
+                        (n.end_date ? `⏰ Until: ${fmtDate(n.end_date)}` : '') + '</div>';
+                }
+                const showBody = n.display_mode !== 'media_only' || !n.media_url;
+                content.innerHTML = `<div class="card">
+                    <span class="cat ${catClass}">${CAT[n.category] || CAT.general}${n.priority>=2?' · Urgent':n.priority>=1?' · Important':''}</span>
+                    <h1>${esc(n.title)}</h1>
+                    ${media}
+                    ${showBody ? `<div class="body">${esc(n.body || '')}</div>` : ''}
+                    ${dates}
+                </div>`;
+                document.title = (n.title || 'Notice') + ' — Waterview';
+            } catch (e) {
+                content.innerHTML = '<div class="error">Could not load this notice. Please try again.</div>';
+            }
+        }
+        load();
+    </script>
+</body>
+</html>
