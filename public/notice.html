@@ -11,6 +11,34 @@
     <style>
         .ai-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
         @keyframes spin{to{transform:rotate(360deg)}}
+        /* ═══ Live TV preview ═══ */
+        #livePreviewPanel{position:fixed;bottom:16px;right:16px;width:340px;max-width:calc(100vw - 32px);z-index:150;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.34);overflow:hidden;}
+        #livePreviewPanel .lp-header{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;font-size:12px;font-weight:700;cursor:pointer;user-select:none;color:var(--text);}
+        #livePreviewPanel .lp-body{padding:0 12px 12px;}
+        #livePreviewPanel.collapsed .lp-body{display:none;}
+        .tv-frame{aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:3px solid #141414;position:relative;background:var(--tv-bg);}
+        .tv-frame[data-theme="dark-modern"]{--tv-bg:#0a0e1a;--tv-text:#f0f2f5;--tv-text2:#94a3b8;--tv-accent:#3b82f6;--tv-urgent:#ef4444;--tv-important:#f59e0b;--tv-border:rgba(255,255,255,.1);--tv-fh:'Playfair Display',serif;--tv-fb:'DM Sans',sans-serif;}
+        .tv-frame[data-theme="light-classic"]{--tv-bg:#f0f2f5;--tv-text:#1a1a2e;--tv-text2:#64748b;--tv-accent:#2563eb;--tv-urgent:#dc2626;--tv-important:#d97706;--tv-border:rgba(0,0,0,.1);--tv-fh:'Libre Baskerville',serif;--tv-fb:'Source Sans 3',sans-serif;}
+        .tv-frame[data-theme="warm-luxury"]{--tv-bg:#1a1410;--tv-text:#f5efe6;--tv-text2:#a89880;--tv-accent:#d4a553;--tv-urgent:#e85d4a;--tv-important:#d4a553;--tv-border:rgba(212,165,83,.15);--tv-fh:'Crimson Pro',serif;--tv-fb:'DM Sans',sans-serif;}
+        .tv-frame[data-theme="corporate-navy"]{--tv-bg:#0c1829;--tv-text:#e8edf5;--tv-text2:#8899b0;--tv-accent:#4da6ff;--tv-urgent:#ff6b6b;--tv-important:#ffc857;--tv-border:rgba(77,166,255,.12);--tv-fh:'Outfit',sans-serif;--tv-fb:'Outfit',sans-serif;}
+        .tv-frame[data-theme="nature-green"]{--tv-bg:#0a1a12;--tv-text:#e6f0ea;--tv-text2:#7fa890;--tv-accent:#34d399;--tv-urgent:#f87171;--tv-important:#fbbf24;--tv-border:rgba(52,211,153,.12);--tv-fh:'Playfair Display',serif;--tv-fb:'DM Sans',sans-serif;}
+        .tv-frame[data-theme="waterview-classic"]{--tv-bg:#0a2540;--tv-text:#fff;--tv-text2:#b0c4de;--tv-accent:#2196F3;--tv-urgent:#ef4444;--tv-important:#ffc107;--tv-border:rgba(255,255,255,.15);--tv-fh:'DM Sans',sans-serif;--tv-fb:'DM Sans',sans-serif;}
+        .tv-card{width:100%;height:100%;display:flex;color:var(--tv-text);font-family:var(--tv-fb);}
+        .tv-card.text{flex-direction:column;justify-content:center;padding:14px 16px;}
+        .tv-card.side{flex-direction:row;}
+        .tv-media{flex:0 0 48%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+        .tv-media img,.tv-media video{width:100%;height:100%;object-fit:contain;}
+        .tv-media-only{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;}
+        .tv-media-only img,.tv-media-only video{width:100%;height:100%;object-fit:contain;}
+        .tv-content{flex:1;padding:12px 14px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;}
+        .tv-cat{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--tv-accent);margin-bottom:5px;display:flex;align-items:center;gap:4px;}
+        .tv-card.urgent .tv-cat{color:var(--tv-urgent);}
+        .tv-card.important .tv-cat{color:var(--tv-important);}
+        .tv-cat .dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+        .tv-title{font-family:var(--tv-fh);font-size:15px;font-weight:700;line-height:1.15;margin-bottom:6px;letter-spacing:-.3px;}
+        .tv-body{font-size:9px;line-height:1.55;color:var(--tv-text2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;}
+        .tv-empty{opacity:.5;font-style:italic;}
+        @media(max-width:640px){ #livePreviewPanel{width:calc(100vw - 24px);bottom:12px;right:12px;} }
         .ai-btn-group{display:flex;gap:8px;}
         .poster-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
         .poster-modal-overlay.active{display:flex;}
@@ -219,6 +247,20 @@
                     <div class="help-text">Leave empty for no expiry</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Live TV Preview -->
+    <div id="livePreviewPanel">
+        <div class="lp-header" onclick="toggleLivePreview()">
+            <span>📺 Live Preview</span>
+            <span id="lpToggle">▾</span>
+        </div>
+        <div class="lp-body">
+            <div class="tv-frame" id="tvFrame" data-theme="dark-modern">
+                <div id="tvCard"></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-top:6px;">How it will look on the TV (text notices)</div>
         </div>
     </div>
 
@@ -1569,7 +1611,69 @@ Rules:
             loadAISettings();
             loadTemplatesList();
             checkEdit();
+            initLivePreview();
         });
+
+        // ═══ Live TV Preview ═══
+        window.toggleLivePreview = () => {
+            const p = document.getElementById('livePreviewPanel');
+            p.classList.toggle('collapsed');
+            document.getElementById('lpToggle').textContent = p.classList.contains('collapsed') ? '▸' : '▾';
+        };
+
+        function previewMediaSrc() {
+            const img = document.getElementById('imagePreview');
+            const vid = document.getElementById('videoPreview');
+            const pdf = document.getElementById('pdfPreview');
+            if (img && img.style.display !== 'none' && img.getAttribute('src')) return { type: 'image', src: img.src };
+            if (vid && vid.style.display !== 'none' && vid.getAttribute('src')) return { type: 'video', src: vid.src };
+            if (pdf && pdf.style.display !== 'none') return { type: 'pdf' };
+            return null;
+        }
+
+        let _lastPreviewHtml = '';
+        window.updateNoticePreview = () => {
+            const title = document.getElementById('title').value.trim();
+            const body = document.getElementById('body').value.trim();
+            const catSel = document.getElementById('category');
+            const catLabel = catSel.options[catSel.selectedIndex]?.text || 'General';
+            const priority = parseInt(document.getElementById('priority').value) || 0;
+            const mode = document.getElementById('displayMode').value;
+            const media = previewMediaSrc();
+            const pc = priority >= 2 ? 'urgent' : priority >= 1 ? 'important' : '';
+            const prio = priority >= 2 ? ' · URGENT' : priority >= 1 ? ' · Important' : '';
+            const mediaEl = (m) => m.type === 'video' ? `<video src="${m.src}" muted></video>`
+                : m.type === 'pdf' ? `<div style="color:#fff;font-size:24px;">📄</div>` : `<img src="${m.src}">`;
+            const titleHtml = title ? escapeHtml(title) : '<span class="tv-empty">Notice title</span>';
+            const bodyHtml = body ? escapeHtml(body).replace(/\n/g, '<br>') : '<span class="tv-empty">Notice text will appear here…</span>';
+            const content = `<div class="tv-content"><div class="tv-cat"><span class="dot"></span>${escapeHtml(catLabel)}${prio}</div><div class="tv-title">${titleHtml}</div><div class="tv-body">${bodyHtml}</div></div>`;
+
+            let html;
+            if (media && mode === 'media_only') html = `<div class="tv-card"><div class="tv-media-only">${mediaEl(media)}</div></div>`;
+            else if (media && mode !== 'text') html = `<div class="tv-card side ${pc}"><div class="tv-media">${mediaEl(media)}</div>${content}</div>`;
+            else html = `<div class="tv-card text ${pc}">${content}</div>`;
+
+            if (html !== _lastPreviewHtml) {
+                document.getElementById('tvCard').innerHTML = html;
+                _lastPreviewHtml = html;
+            }
+        };
+
+        async function initLivePreview() {
+            try {
+                const snap = await getDoc(doc(db, 'settings', 'main'));
+                if (snap.exists()) {
+                    const theme = snap.data().display_theme || 'dark-modern';
+                    document.getElementById('tvFrame').setAttribute('data-theme', theme);
+                }
+            } catch (e) { /* keep default theme */ }
+            document.getElementById('title').addEventListener('input', updateNoticePreview);
+            document.getElementById('body').addEventListener('input', updateNoticePreview);
+            document.getElementById('category').addEventListener('change', updateNoticePreview);
+            updateNoticePreview();
+            // Poll for changes driven by buttons/functions (priority, display mode, media, templates)
+            setInterval(updateNoticePreview, 500);
+        }
 
         // ═══ Notice Templates ═══
         let templatesCache = [];
