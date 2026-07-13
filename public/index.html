@@ -287,6 +287,18 @@
         }
         sendHeartbeat();
         setInterval(sendHeartbeat, 2 * 60 * 1000); // every 2 minutes
+        // Extra beats so a TV shows online promptly after waking / reconnecting
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) sendHeartbeat(); });
+        window.addEventListener('online', sendHeartbeat);
+
+        // ═══ Self-update: reload every 6 hours ═══
+        // Kiosk Pis load the page once at boot and run for weeks, so they never
+        // pick up new code (or re-establish a fresh connection) on their own.
+        // A periodic reload keeps every TV current without a manual reboot.
+        // (Boot times differ per TV, so reloads stay naturally staggered.)
+        if (window.self === window.top) {
+            setTimeout(() => location.reload(), 6 * 60 * 60 * 1000);
+        }
 
         let settings = {}, notices = [], currentIndex = 0, slideTimer = null, currentVideoEl = null;
         let newsItems = [], feedGroups = [], newsTimers = [];
