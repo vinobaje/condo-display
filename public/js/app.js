@@ -4,7 +4,7 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot, query, orderBy, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 // ── Init Firebase ──
@@ -79,6 +79,35 @@ export async function getSettings() {
 
 export async function saveSettings(settings) {
     await setDoc(doc(db, 'settings', 'main'), settings, { merge: true });
+}
+
+// ═══ Secrets (auth-gated doc — API keys, super-admin list) ═══
+const SECRET_FIELDS = ['gemini_api_key', 'groq_api_key', 'openai_api_key', 'deepseek_api_key', 'pixabay_api_key', 'super_admin_emails'];
+
+export async function getSecrets() {
+    const snap = await getDoc(doc(db, 'secrets', 'main'));
+    return snap.exists() ? snap.data() : {};
+}
+
+export async function saveSecrets(secrets) {
+    await setDoc(doc(db, 'secrets', 'main'), secrets, { merge: true });
+}
+
+// One-time migration: move any secret fields still in the public settings/main
+// doc into the auth-gated secrets/main doc, then strip them from main.
+export async function migrateSecrets() {
+    const mainSnap = await getDoc(doc(db, 'settings', 'main'));
+    if (!mainSnap.exists()) return;
+    const main = mainSnap.data();
+    const found = {};
+    for (const f of SECRET_FIELDS) {
+        if (main[f] !== undefined) found[f] = main[f];
+    }
+    if (Object.keys(found).length === 0) return;
+    await setDoc(doc(db, 'secrets', 'main'), found, { merge: true });
+    const strip = {};
+    for (const f of Object.keys(found)) strip[f] = deleteField();
+    await updateDoc(doc(db, 'settings', 'main'), strip);
 }
 
 export function onSettingsChange(callback) {

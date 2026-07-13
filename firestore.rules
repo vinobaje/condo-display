@@ -1,9 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Secrets (API keys, super-admin list) — separate collection so the public
+    // settings read rule can never match it. Only logged-in admins read/write.
+    match /secrets/{doc} {
+      allow read, write: if request.auth != null;
+    }
+    // Public display settings (building name, theme, layout, weather, ticker)
     match /settings/{doc} {
       allow read: if true;
       allow write: if request.auth != null;
+    }
+    // Display heartbeat — single fixed doc; the unauthenticated TV writes a
+    // small timestamp payload, admins read it. Field allowlist prevents abuse.
+    match /status/display {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['last_seen', 'device'])
+                   && request.resource.data.last_seen is string
+                   && request.resource.data.last_seen.size() < 40
+                   && (!('device' in request.resource.data)
+                       || (request.resource.data.device is string
+                           && request.resource.data.device.size() < 200));
     }
     match /notices/{noticeId} {
       allow read: if true;

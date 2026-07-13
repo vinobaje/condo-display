@@ -528,7 +528,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
     <script type="module">
         import {
-            onAuthChange, logout, getSettings, saveSettings, onNoticesChange,
+            onAuthChange, logout, getSettings, saveSettings, getSecrets, saveSecrets, migrateSecrets, onNoticesChange,
             deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation,
             escapeHtml, formatDate, getFileType, CATEGORIES, db
         } from '/js/app.js';
@@ -686,19 +686,25 @@
                 return;
             }
             document.getElementById('loadingOverlay').style.display = 'none';
-            init().catch(e => {
+            // init() runs the secrets migration first; wait for it so the super-admin
+            // check reads super_admin_emails from its final location (secrets doc)
+            init().then(() => checkSuperAdmin(user)).catch(e => {
                 console.error('Init failed:', e);
                 alert('Error loading admin panel: ' + e.message);
             });
-            // Check super admin role after settings load
-            getSettings().then(s => {
-                const saEmailsRaw = s.super_admin_emails || '';
+        });
+
+        async function checkSuperAdmin(user) {
+            let sec = {};
+            try { sec = await getSecrets(); } catch (e) { console.warn('Could not read secrets for super-admin check:', e); }
+            {
+                const saEmailsRaw = sec.super_admin_emails || '';
                 const saEmails = saEmailsRaw.toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
                 const userEmail = (user.email || '').toLowerCase();
                 // Bootstrap: if no super admins set yet, first user becomes super admin
                 if (saEmails.length === 0) {
                     isSuperAdmin = true;
-                    saveSettings({ super_admin_emails: user.email });
+                    saveSecrets({ super_admin_emails: user.email });
                 } else {
                     isSuperAdmin = saEmails.includes(userEmail);
                 }
@@ -706,8 +712,8 @@
                 const btn = document.getElementById('saToggleBtn');
                 btn.textContent = isSuperAdmin ? '🔓 Super Admin' : '👤 Admin';
                 btn.title = user.email;
-            });
-        });
+            }
+        }
 
         window.handleLogout = async () => { await logout(); window.location.href = '/login.html'; };
 
@@ -763,7 +769,9 @@
 
         // ═══ Init ═══
         async function init() {
+            try { await migrateSecrets(); } catch (e) { console.warn('Secret migration skipped:', e); }
             settings = await getSettings();
+            try { Object.assign(settings, await getSecrets()); } catch (e) { console.warn('Could not load secrets:', e); }
             populateSettings(settings);
 
             onNoticesChange((notices) => {
@@ -1309,19 +1317,23 @@ DESIGN RULES:
                 show_notice_list: document.getElementById('sShowNoticeList').checked,
                 show_news_sidebar: document.getElementById('sShowNewsSidebar').checked,
                 display_theme: document.getElementById('sDisplayTheme').value,
+                ai_provider: document.getElementById('sAiProvider').value,
+                emergency_contacts: contacts,
+                layout: currentLayout,
+            };
+            // Secrets go to the auth-gated secrets doc, never the public settings doc
+            const secretsUpdate = {
                 gemini_api_key: document.getElementById('sGeminiApiKey').value.trim(),
                 groq_api_key: document.getElementById('sGroqApiKey').value.trim(),
                 openai_api_key: document.getElementById('sOpenaiApiKey').value.trim(),
                 deepseek_api_key: document.getElementById('sDeepseekApiKey').value.trim(),
                 pixabay_api_key: document.getElementById('sPixabayApiKey').value.trim(),
-                ai_provider: document.getElementById('sAiProvider').value,
                 super_admin_emails: document.getElementById('sSuperAdminEmails').value.trim(),
-                emergency_contacts: contacts,
-                layout: currentLayout,
             };
             try {
                 await saveSettings(updated);
-                settings = { ...settings, ...updated };
+                await saveSecrets(secretsUpdate);
+                settings = { ...settings, ...updated, ...secretsUpdate };
                 showFlash('Settings saved!', 'success');
             } catch (e) { showFlash('Error saving settings: ' + e.message, 'error'); }
         };

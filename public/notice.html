@@ -340,7 +340,7 @@
     </script>
     <script type="module">
         import {
-            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, db
+            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, getSecrets, db
         } from '/js/app.js';
         import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -354,20 +354,19 @@
         // Load AI settings from Firestore
         async function loadAISettings() {
             try {
-                const snap = await getDoc(doc(db, 'settings', 'main'));
-                if (snap.exists()) {
-                    const s = snap.data();
-                    aiConfig.provider = s.ai_provider || 'gemini';
-                    aiConfig.gemini = s.gemini_api_key || '';
-                    aiConfig.groq = s.groq_api_key || '';
-                    aiConfig.openai = s.openai_api_key || '';
-                    aiConfig.deepseek = s.deepseek_api_key || '';
-                    aiConfig.pixabay = s.pixabay_api_key || '';
-                    const activeKey = aiConfig[aiConfig.provider];
-                    if (!activeKey) {
-                        document.getElementById('aiGenerateBtn').title = 'Add an API key in Admin → Settings → AI Integration';
-                        document.getElementById('aiGenerateBtn').style.opacity = '0.5';
-                    }
+                // Provider preference lives in public settings; API keys live in the auth-gated secrets doc
+                const mainSnap = await getDoc(doc(db, 'settings', 'main'));
+                if (mainSnap.exists()) aiConfig.provider = mainSnap.data().ai_provider || 'gemini';
+                const sec = await getSecrets();
+                aiConfig.gemini = sec.gemini_api_key || '';
+                aiConfig.groq = sec.groq_api_key || '';
+                aiConfig.openai = sec.openai_api_key || '';
+                aiConfig.deepseek = sec.deepseek_api_key || '';
+                aiConfig.pixabay = sec.pixabay_api_key || '';
+                const activeKey = aiConfig[aiConfig.provider];
+                if (!activeKey) {
+                    document.getElementById('aiGenerateBtn').title = 'Add an API key in Admin → Settings → AI Integration';
+                    document.getElementById('aiGenerateBtn').style.opacity = '0.5';
                 }
             } catch (e) { console.warn('Could not load AI settings'); }
         }
