@@ -17,8 +17,13 @@ Digital signage system for condominium buildings. Deployed at **https://condo-no
 - **Firebase API Key:** `AIzaSyBmamgeL3fugc7jhnQ_DY7zUNF0eXbUz6Q`
 
 ### Firestore Collections
-- `settings/main` — All display settings (single document)
+- `settings/main` — Public display settings (single document, world-readable)
+- `secrets/main` — API keys + super_admin_emails (**auth-gated** read/write; never public)
 - `notices/{id}` — Individual notice documents
+- `templates/{id}` — Reusable notice templates (auth-gated)
+- `status/display` — Display heartbeat (`last_seen`, `device`); TV writes, admin reads
+
+**Security:** API keys live ONLY in `secrets/main` (readable only when logged in). `settings/main` is public because the TV display needs it. `js/app.js` `migrateSecrets()` moves any legacy keys out of `settings/main` on admin load. Never write key fields into `settings/main`.
 
 ### Storage
 - `uploads/` — Notice media (images, videos, PDFs)
