@@ -273,6 +273,9 @@
         function sendHeartbeat() {
             try {
                 if (typeof writeHeartbeat !== 'function') return;
+                // Skip when embedded as a preview (admin/notice editor) so it
+                // doesn't register as a phantom TV in the health monitor.
+                if (window.self !== window.top) return;
                 const deviceId = getDisplayDeviceId();
                 const params = new URLSearchParams(location.search);
                 let name = (params.get('device') || params.get('tv') || '').trim();

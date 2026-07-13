@@ -12,10 +12,16 @@
         .ai-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
         @keyframes spin{to{transform:rotate(360deg)}}
         /* ═══ Live TV preview ═══ */
-        #livePreviewPanel{position:fixed;bottom:16px;right:16px;width:340px;max-width:calc(100vw - 32px);z-index:150;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.34);overflow:hidden;}
+        #livePreviewPanel{position:fixed;bottom:16px;right:16px;width:340px;max-width:calc(100vw - 32px);z-index:150;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.34);overflow:hidden;transition:width .2s;}
+        #livePreviewPanel.full-mode{width:560px;}
         #livePreviewPanel .lp-header{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;font-size:12px;font-weight:700;cursor:pointer;user-select:none;color:var(--text);}
         #livePreviewPanel .lp-body{padding:0 12px 12px;}
         #livePreviewPanel.collapsed .lp-body{display:none;}
+        .lp-tabs{display:flex;gap:6px;margin-bottom:10px;}
+        .lp-tab{flex:1;padding:6px 8px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:8px;background:var(--bg-dark,rgba(0,0,0,.15));color:var(--text-dim);cursor:pointer;font-family:inherit;transition:all .15s;}
+        .lp-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(124,106,240,.1);}
+        .fulldisplay-wrap{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:3px solid #141414;background:#000;}
+        .fulldisplay-iframe{position:absolute;top:0;left:0;width:1920px;height:1080px;border:0;transform-origin:top left;}
         .tv-frame{aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:3px solid #141414;position:relative;background:var(--tv-bg);}
         .tv-frame[data-theme="dark-modern"]{--tv-bg:#0a0e1a;--tv-text:#f0f2f5;--tv-text2:#94a3b8;--tv-accent:#3b82f6;--tv-urgent:#ef4444;--tv-important:#f59e0b;--tv-border:rgba(255,255,255,.1);--tv-fh:'Playfair Display',serif;--tv-fb:'DM Sans',sans-serif;}
         .tv-frame[data-theme="light-classic"]{--tv-bg:#f0f2f5;--tv-text:#1a1a2e;--tv-text2:#64748b;--tv-accent:#2563eb;--tv-urgent:#dc2626;--tv-important:#d97706;--tv-border:rgba(0,0,0,.1);--tv-fh:'Libre Baskerville',serif;--tv-fb:'Source Sans 3',sans-serif;}
@@ -257,10 +263,20 @@
             <span id="lpToggle">▾</span>
         </div>
         <div class="lp-body">
-            <div class="tv-frame" id="tvFrame" data-theme="dark-modern">
-                <div id="tvCard"></div>
+            <div class="lp-tabs">
+                <button type="button" class="lp-tab active" id="lpTabNotice" onclick="setPreviewTab('notice')">📄 This Notice</button>
+                <button type="button" class="lp-tab" id="lpTabFull" onclick="setPreviewTab('full')">🖥️ Full Screen</button>
             </div>
-            <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-top:6px;">How it will look on the TV (text notices)</div>
+            <div id="lpNoticeView">
+                <div class="tv-frame" id="tvFrame" data-theme="dark-modern">
+                    <div id="tvCard"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-top:6px;">How this notice will look on the TV</div>
+            </div>
+            <div id="lpFullView" style="display:none;">
+                <div class="fulldisplay-wrap"><iframe id="fullDisplayFrame" class="fulldisplay-iframe" title="Full display preview"></iframe></div>
+                <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-top:6px;">The whole TV screen, live — shows published notices (not this draft)</div>
+            </div>
         </div>
     </div>
 
@@ -1619,6 +1635,31 @@ Rules:
             const p = document.getElementById('livePreviewPanel');
             p.classList.toggle('collapsed');
             document.getElementById('lpToggle').textContent = p.classList.contains('collapsed') ? '▸' : '▾';
+        };
+
+        let fullDisplayLoaded = false;
+        function scaleFullDisplay() {
+            const wrap = document.querySelector('.fulldisplay-wrap');
+            const frame = document.getElementById('fullDisplayFrame');
+            if (!wrap || !frame || !wrap.clientWidth) return;
+            frame.style.transform = `scale(${wrap.clientWidth / 1920})`;
+        }
+        // Re-scale whenever the frame's container changes size (panel widen, window resize)
+        const _fdWrap = document.querySelector('.fulldisplay-wrap');
+        if (_fdWrap && window.ResizeObserver) new ResizeObserver(scaleFullDisplay).observe(_fdWrap);
+
+        window.setPreviewTab = (tab) => {
+            const full = tab === 'full';
+            document.getElementById('lpTabNotice').classList.toggle('active', !full);
+            document.getElementById('lpTabFull').classList.toggle('active', full);
+            document.getElementById('lpNoticeView').style.display = full ? 'none' : '';
+            document.getElementById('lpFullView').style.display = full ? '' : 'none';
+            document.getElementById('livePreviewPanel').classList.toggle('full-mode', full);
+            if (full) {
+                const frame = document.getElementById('fullDisplayFrame');
+                if (!fullDisplayLoaded) { frame.src = '/index.html'; fullDisplayLoaded = true; }
+                scaleFullDisplay();
+            }
         };
 
         function previewMediaSrc() {
