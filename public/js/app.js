@@ -528,19 +528,38 @@ export function generateQRUrl(url, size) {
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size || 80}x${size || 80}&data=${encodeURIComponent(url)}&margin=1`;
 }
 
-// ═══ Display heartbeat (status/display doc) ═══════════════════
-export async function writeHeartbeat(device) {
-    // Fields must match firestore.rules allowlist: last_seen (string), device (string)
-    await setDoc(doc(db, 'status', 'display'), {
+// ═══ Display heartbeat — one doc per physical TV ═════════════
+// Each Pi gets a stable random id in its own localStorage, so multiple
+// displays each report separately. An optional ?device=Name URL param
+// sets a friendly label (remembered per device).
+export function getDisplayDeviceId() {
+    let id = localStorage.getItem('tv_device_id');
+    if (!id) {
+        id = 'tv_' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('tv_device_id', id);
+    }
+    return id;
+}
+
+export async function writeHeartbeat(deviceId, name, device) {
+    // Fields must match firestore.rules allowlist: last_seen, name, device
+    await setDoc(doc(db, 'status', deviceId || 'display'), {
         last_seen: new Date().toISOString(),
+        name: (name || '').slice(0, 60),
         device: (device || '').slice(0, 180)
     });
 }
 
-export function onDisplayStatus(callback) {
-    return onSnapshot(doc(db, 'status', 'display'), (snap) => {
-        callback(snap.exists() ? snap.data() : null);
+// Live list of every TV that has checked in
+export function onDisplayStatuses(callback) {
+    return onSnapshot(collection(db, 'status'), (snap) => {
+        callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
+}
+
+// Remove a display from the list (auth-gated) — for decommissioned TVs
+export async function deleteDisplayStatus(id) {
+    await deleteDoc(doc(db, 'status', id));
 }
 
 // ═══ Notice templates (auth-gated) ═══════════════════════════

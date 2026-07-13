@@ -264,16 +264,22 @@
 
     <script src="/js/firebase-config.js"></script>
     <script type="module">
-        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, writeHeartbeat, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
+        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, writeHeartbeat, getDisplayDeviceId, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
 
-        // ═══ Display heartbeat — lets admin see the TV is alive ═══
-        // Guarded so a transiently stale cached app.js (mid-deploy) can never
-        // break the whole display module.
+        // ═══ Display heartbeat — each TV reports separately ═══
+        // Device id is stable per Pi (localStorage). Friendly name comes from a
+        // ?device=Name (or ?tv=Name) URL param and is remembered afterwards.
+        // Guarded so a transiently stale cached app.js can never break the display.
         function sendHeartbeat() {
             try {
                 if (typeof writeHeartbeat !== 'function') return;
+                const deviceId = getDisplayDeviceId();
+                const params = new URLSearchParams(location.search);
+                let name = (params.get('device') || params.get('tv') || '').trim();
+                if (name) localStorage.setItem('tv_device_name', name.slice(0, 60));
+                name = name || localStorage.getItem('tv_device_name') || '';
                 const dev = `${screen.width}×${screen.height} · ${navigator.userAgent.slice(0, 120)}`;
-                Promise.resolve(writeHeartbeat(dev)).catch(() => {});
+                Promise.resolve(writeHeartbeat(deviceId, name, dev)).catch(() => {});
             } catch (e) { /* never let the heartbeat break the display */ }
         }
         sendHeartbeat();

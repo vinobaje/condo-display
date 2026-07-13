@@ -114,12 +114,8 @@
 
         <!-- TAB: Notices -->
         <div class="tab-panel active" id="panel-notices">
-            <!-- Display health -->
-            <div id="displayStatusBar" style="display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border);background:var(--bg-card);">
-                <span id="displayStatusDot" style="width:11px;height:11px;border-radius:50%;background:#9ca3af;flex-shrink:0;"></span>
-                <span id="displayStatusText" style="font-weight:600;font-size:14px;">Checking TV display…</span>
-                <span id="displayStatusMeta" style="font-size:12px;color:var(--text-dim);flex:1;"></span>
-            </div>
+            <!-- Display health (one row per TV) -->
+            <div id="displayStatusPanel" style="margin-bottom:14px;"></div>
             <!-- Stats -->
             <div class="stats">
                 <div class="stat-card"><div class="stat-label">Total Notices</div><div class="stat-value accent" id="statTotal">0</div></div>
@@ -549,7 +545,7 @@
     <script type="module">
         import {
             onAuthChange, logout, getSettings, saveSettings, getSecrets, saveSecrets, migrateSecrets, onNoticesChange,
-            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation, onDisplayStatus,
+            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation, onDisplayStatuses, deleteDisplayStatus,
             exportBackup, escapeHtml, formatDate, formatTimeAgo, getFileType, CATEGORIES, db
         } from '/js/app.js';
         import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -803,31 +799,52 @@
             // Re-check every 5 minutes so notices expire even if the tab stays open
             setInterval(() => { autoDeactivateExpired(); renderNoticeList(); updateStats(); }, 5 * 60 * 1000);
 
-            // Live display-health indicator
-            onDisplayStatus(s => { lastDisplayStatus = s; renderDisplayStatus(); });
-            setInterval(renderDisplayStatus, 30 * 1000); // refresh "last seen" text
+            // Live display-health panel (one row per TV)
+            onDisplayStatuses(list => { displayStatuses = list; renderDisplayStatuses(); });
+            setInterval(renderDisplayStatuses, 30 * 1000); // refresh "last seen" text
         }
 
-        // ═══ Display health indicator ═══
-        let lastDisplayStatus = null;
-        function renderDisplayStatus() {
-            const dot = document.getElementById('displayStatusDot');
-            const txt = document.getElementById('displayStatusText');
-            const meta = document.getElementById('displayStatusMeta');
-            if (!lastDisplayStatus || !lastDisplayStatus.last_seen) {
-                dot.style.background = '#9ca3af';
-                txt.textContent = '📺 TV display: never seen';
-                meta.textContent = 'The display hasn\'t checked in yet. Open the display URL on the TV/Pi.';
+        // ═══ Display health — multiple TVs ═══
+        let displayStatuses = [];
+        const isDisplayOnline = (s) => s.last_seen && (Date.now() - new Date(s.last_seen).getTime()) / 60000 < 6;
+
+        function renderDisplayStatuses() {
+            const panel = document.getElementById('displayStatusPanel');
+            if (!displayStatuses.length) {
+                panel.innerHTML = `<div style="padding:12px 18px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);font-size:13px;color:var(--text-dim);">📺 No TV displays have checked in yet. Open the display URL on each Pi (add <code>?device=Lobby</code> to name it).</div>`;
                 return;
             }
-            const seen = new Date(lastDisplayStatus.last_seen);
-            const minsAgo = (Date.now() - seen.getTime()) / 60000;
-            const online = minsAgo < 6; // heartbeat is every 2 min; allow a couple misses
-            dot.style.background = online ? '#10b981' : '#ef4444';
-            dot.style.boxShadow = online ? '0 0 8px rgba(16,185,129,.6)' : 'none';
-            txt.textContent = online ? '📺 TV display: Online' : '📺 TV display: Offline';
-            meta.textContent = `last seen ${formatTimeAgo(lastDisplayStatus.last_seen)}` + (lastDisplayStatus.device ? ` · ${lastDisplayStatus.device.split(' · ')[0]}` : '');
+            const online = displayStatuses.filter(isDisplayOnline).length;
+            const rows = displayStatuses.slice().sort((a, b) => {
+                // online first, then by name/id
+                const ao = isDisplayOnline(a) ? 0 : 1, bo = isDisplayOnline(b) ? 0 : 1;
+                if (ao !== bo) return ao - bo;
+                return (a.name || a.id).localeCompare(b.name || b.id);
+            }).map(s => {
+                const on = isDisplayOnline(s);
+                const label = s.name || (s.device ? s.device.split(' · ')[0] : '') || s.id;
+                const screenInfo = s.device ? s.device.split(' · ')[0] : '';
+                return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border);">
+                    <span style="width:10px;height:10px;border-radius:50%;background:${on ? '#10b981' : '#ef4444'};box-shadow:${on ? '0 0 8px rgba(16,185,129,.6)' : 'none'};flex-shrink:0;"></span>
+                    <span style="font-weight:600;min-width:110px;">${escapeHtml(label)}</span>
+                    <span style="font-size:12px;font-weight:600;color:${on ? 'var(--success)' : 'var(--urgent)'};min-width:54px;">${on ? 'Online' : 'Offline'}</span>
+                    <span style="font-size:12px;color:var(--text-dim);flex:1;">last seen ${s.last_seen ? formatTimeAgo(s.last_seen) : 'never'}${screenInfo && s.name ? ' · ' + escapeHtml(screenInfo) : ''}</span>
+                    <button class="btn btn-outline btn-sm" onclick="removeDisplay('${s.id}')" title="Remove this display from the list" style="font-size:11px;padding:2px 9px;">✕</button>
+                </div>`;
+            }).join('');
+            panel.innerHTML = `<div style="border:1px solid var(--border);border-radius:12px;background:var(--bg-card);overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;font-weight:700;font-size:14px;">📺 TV Displays
+                    <span style="font-size:12px;font-weight:500;color:${online === displayStatuses.length ? 'var(--success)' : 'var(--important)'};">${online} of ${displayStatuses.length} online</span>
+                </div>
+                ${rows}
+            </div>`;
         }
+
+        window.removeDisplay = async (id) => {
+            if (!confirm('Remove this display from the list?\n\nIf the TV is still running, it will reappear on its next check-in (within ~2 minutes). Use this to clear out a TV you\'ve decommissioned.')) return;
+            try { await deleteDisplayStatus(id); }
+            catch (e) { showFlash('Could not remove display: ' + e.message, 'error'); }
+        };
 
         // ═══ Auto-deactivate expired notices ═══
         const localToday = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
