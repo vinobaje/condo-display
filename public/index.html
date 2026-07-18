@@ -295,9 +295,17 @@
         // Kiosk Pis load the page once at boot and run for weeks, so they never
         // pick up new code (or re-establish a fresh connection) on their own.
         // A periodic reload keeps every TV current without a manual reboot.
-        // (Boot times differ per TV, so reloads stay naturally staggered.)
+        // Only reloads when the server is actually reachable — otherwise the TV
+        // could end up on a browser error page; retries every 30 min instead.
         if (window.self === window.top) {
-            setTimeout(() => location.reload(), 6 * 60 * 60 * 1000);
+            const tryReload = async () => {
+                try {
+                    const r = await fetch('/index.html', { method: 'HEAD', cache: 'no-store' });
+                    if (r.ok) { location.reload(); return; }
+                } catch (e) { /* offline — keep showing the current board */ }
+                setTimeout(tryReload, 30 * 60 * 1000);
+            };
+            setTimeout(tryReload, 6 * 60 * 60 * 1000);
         }
 
         let settings = {}, notices = [], currentIndex = 0, slideTimer = null, currentVideoEl = null;

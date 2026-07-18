@@ -16,7 +16,9 @@ service cloud.firestore {
     // stale display requires login.
     match /status/{device} {
       allow read: if true;
-      allow create, update: if request.resource.data.keys().hasOnly(['last_seen', 'name', 'device'])
+      // Doc ids come from getDisplayDeviceId(): "tv_" + 8 chars (legacy "display" also allowed)
+      allow create, update: if device.size() <= 16
+                   && request.resource.data.keys().hasOnly(['last_seen', 'name', 'device'])
                    && request.resource.data.last_seen is string
                    && request.resource.data.last_seen.size() < 40
                    && (!('name' in request.resource.data)

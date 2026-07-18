@@ -82,7 +82,7 @@ export async function saveSettings(settings) {
 }
 
 // ═══ Secrets (auth-gated doc — API keys, super-admin list) ═══
-const SECRET_FIELDS = ['gemini_api_key', 'groq_api_key', 'openai_api_key', 'deepseek_api_key', 'pixabay_api_key', 'super_admin_emails'];
+const SECRET_FIELDS = ['gemini_api_key', 'groq_api_key', 'openai_api_key', 'deepseek_api_key', 'pixabay_api_key', 'pexels_api_key', 'pollinations_api_key', 'super_admin_emails'];
 
 export async function getSecrets() {
     const snap = await getDoc(doc(db, 'secrets', 'main'));
