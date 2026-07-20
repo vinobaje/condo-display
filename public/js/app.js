@@ -562,6 +562,19 @@ export async function deleteDisplayStatus(id) {
     await deleteDoc(doc(db, 'status', id));
 }
 
+// ═══ Remote display commands (reload / reboot) ═══════════════
+// Admin issues a command; the TV listens on its own command doc and acts.
+export async function sendDisplayCommand(deviceId, action) {
+    await setDoc(doc(db, 'commands', deviceId), { action, ts: Date.now() });
+}
+
+export function onDisplayCommand(deviceId, callback) {
+    return onSnapshot(doc(db, 'commands', deviceId),
+        (snap) => callback(snap.exists() ? snap.data() : null),
+        () => { /* ignore listener errors (e.g. transient permission) */ }
+    );
+}
+
 // ═══ Notice templates (auth-gated) ═══════════════════════════
 export async function getTemplates() {
     const snap = await getDocs(query(collection(db, 'templates'), orderBy('created_at', 'desc')));

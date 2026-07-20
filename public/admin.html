@@ -545,7 +545,7 @@
     <script type="module">
         import {
             onAuthChange, logout, getSettings, saveSettings, getSecrets, saveSecrets, migrateSecrets, onNoticesChange,
-            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation, onDisplayStatuses, deleteDisplayStatus,
+            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation, onDisplayStatuses, deleteDisplayStatus, sendDisplayCommand,
             exportBackup, escapeHtml, formatDate, formatTimeAgo, getFileType, CATEGORIES, db
         } from '/js/app.js';
         import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -829,6 +829,7 @@
                     <span style="font-weight:600;min-width:110px;">${escapeHtml(label)}</span>
                     <span style="font-size:12px;font-weight:600;color:${on ? 'var(--success)' : 'var(--urgent)'};min-width:54px;">${on ? 'Online' : 'Offline'}</span>
                     <span style="font-size:12px;color:var(--text-dim);flex:1;">last seen ${s.last_seen ? formatTimeAgo(s.last_seen) : 'never'}${screenInfo && s.name ? ' · ' + escapeHtml(screenInfo) : ''}</span>
+                    <button class="btn btn-outline btn-sm" onclick="reloadDisplay('${s.id}', this)" title="Restart the display (refreshes the screen remotely)" style="font-size:11px;padding:2px 9px;">↻ Reload</button>
                     <button class="btn btn-outline btn-sm" onclick="removeDisplay('${s.id}')" title="Remove this display from the list" style="font-size:11px;padding:2px 9px;">✕</button>
                 </div>`;
             }).join('');
@@ -839,6 +840,16 @@
                 ${rows}
             </div>`;
         }
+
+        window.reloadDisplay = async (id, btn) => {
+            const orig = btn.textContent;
+            btn.disabled = true; btn.textContent = '↻ Sending…';
+            try {
+                await sendDisplayCommand(id, 'reload');
+                showFlash('Reload sent — the TV will refresh within a few seconds (if it\'s online).', 'success');
+            } catch (e) { showFlash('Could not send reload: ' + e.message, 'error'); }
+            finally { setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 2500); }
+        };
 
         window.removeDisplay = async (id) => {
             if (!confirm('Remove this display from the list?\n\nIf the TV is still running, it will reappear on its next check-in (within ~2 minutes). Use this to clear out a TV you\'ve decommissioned.')) return;

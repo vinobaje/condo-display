@@ -264,7 +264,7 @@
 
     <script src="/js/firebase-config.js"></script>
     <script type="module">
-        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, writeHeartbeat, getDisplayDeviceId, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
+        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, writeHeartbeat, getDisplayDeviceId, onDisplayCommand, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
 
         // ═══ Display heartbeat — each TV reports separately ═══
         // Device id is stable per Pi (localStorage). Friendly name comes from a
@@ -290,6 +290,28 @@
         // Extra beats so a TV shows online promptly after waking / reconnecting
         document.addEventListener('visibilitychange', () => { if (!document.hidden) sendHeartbeat(); });
         window.addEventListener('online', sendHeartbeat);
+
+        // ═══ Remote commands from admin (reload) ═══
+        // Admin writes a command to this TV's command doc; we reload when a NEW
+        // one arrives. The first snapshot is recorded without acting, so an old
+        // command can never cause a reload loop on boot.
+        (function listenForCommands() {
+            if (window.self !== window.top || typeof onDisplayCommand !== 'function') return;
+            try {
+                const deviceId = getDisplayDeviceId();
+                let lastCmdTs = null;
+                onDisplayCommand(deviceId, (cmd) => {
+                    if (!cmd || !cmd.ts) return;
+                    if (lastCmdTs === null) { lastCmdTs = cmd.ts; return; } // ignore pre-existing on load
+                    if (cmd.ts > lastCmdTs) {
+                        lastCmdTs = cmd.ts;
+                        // Browser can only reload the page (not OS-reboot); this
+                        // restarts the display app and pulls the latest code.
+                        if (cmd.action === 'reload' || cmd.action === 'reboot') location.reload();
+                    }
+                });
+            } catch (e) { /* never let command listener break the display */ }
+        })();
 
         // ═══ Self-update: reload every 6 hours ═══
         // Kiosk Pis load the page once at boot and run for weeks, so they never
