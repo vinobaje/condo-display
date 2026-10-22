@@ -971,7 +971,7 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             </div>`;
 
             // Hours as a clear box — as important as the dates for an entry notice
-            const hoursHtml = hours ? `<div style="margin-top:.75em;display:inline-block;padding:.45em 1.1em;border-radius:.6em;background:${p.card};border:2px solid ${p.cardBorder};font-size:1.08em;font-weight:800;color:${p.ink};"><span style="color:${p.accent};letter-spacing:.08em;text-transform:uppercase;margin-right:.55em;">Hours</span>${H(hours)}</div>` : '';
+            const hoursHtml = hours ? `<div style="text-align:center;"><div style="margin-top:.75em;display:inline-block;padding:.45em 1.1em;border-radius:.6em;background:${p.card};border:2px solid ${p.cardBorder};font-size:1.08em;font-weight:800;color:${p.ink};"><span style="color:${p.accent};letter-spacing:.08em;text-transform:uppercase;margin-right:.55em;">Hours</span>${H(hours)}</div></div>` : '';
             const scheduleHtml = schedule.length ? `<div style="margin-bottom:1.1em;">
                     ${sectionTitle('Schedule')}
                     <div style="display:flex;flex-wrap:wrap;gap:1em;">
