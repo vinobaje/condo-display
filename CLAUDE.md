@@ -121,7 +121,9 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
     - 📤 Upload Photo
     - 📷 Stock Photos (Pixabay API)
     - 🎨 Illustrations (built-in SVG library: garage, fire, elevator, water, pool, etc.)
-    - 🤖 AI Generate — Gemini paints ARTWORK ONLY (prompt forbids any text; imagery on the left ~42%, calm panel on the right; an attached Upload/Stock photo is placed unaltered on the left). The notice text is overlaid by the app as HTML (`#aiTextPanel`, auto-shrinks to fit) and captured with html2canvas, so no words are ever dropped or invented. Text comes from posterData sections; if any number in the notice body (dates, building/unit numbers, times) is missing from them, it falls back to the body verbatim. Buildings/units, dates and times are highlighted in amber. (Image models paint text unreliably — do not go back to having them render the words.)
+    - 🤖 AI Generate — Gemini designs the WHOLE poster as one image, text included (the original prompt; looks polished but can drop/garble text on long notices — that's why long notices go to the Schedule layout). In the Schedule layout this button instead makes a text-free 4:3 picture for the poster header and keeps the layout.
+    - A painted-text-free "artwork + HTML text overlay" variant was tried on 2026-10-22 and rejected by Vino as looking worse; so was forcing every fact into `sections` (it made the AI dump whole paragraphs). Don't reintroduce either without asking.
+  - Date typo check: `findDateTypos()` warns (form + poster window) when a weekday doesn't match its date/year, e.g. "Friday, November 27th, 2025" (a Thursday) → suggests 2026
   - Auto-fetches stock photo on "Design Poster" click if Pixabay key is set
   - html2canvas for converting poster to PNG → uploaded as notice media
 

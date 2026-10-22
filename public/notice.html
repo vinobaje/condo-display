@@ -157,6 +157,7 @@
             <div class="form-group">
                 <label>Notice Body</label>
                 <textarea id="body" class="form-control" placeholder="Type a brief description or leave empty — AI will generate a professional notice from your title."></textarea>
+                <div id="bodyDateWarning" style="display:none;margin-top:8px;padding:8px 12px;border-radius:8px;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;font-size:12px;line-height:1.45;"></div>
                 <div class="ai-action-row">
                     <button type="button" class="ai-action-btn ai-write-btn" id="aiGenerateBtn" onclick="generateWithAI()">
                         <span class="ai-icon">✨</span>
@@ -370,8 +371,8 @@
                     <button class="ai-generate-btn poster-img-btn" id="btnAiGenerate" onclick="generateAiPosterImage()">
                         <span style="font-size:22px;line-height:1;flex-shrink:0;">🤖</span>
                         <span style="flex:1;">
-                            <span style="display:block;font-size:14px;font-weight:700;letter-spacing:.2px;">AI Generate Poster</span>
-                            <span style="display:block;font-size:11px;opacity:.85;margin-top:1px;">Designs the entire poster — select or upload a photo first to feature it (~20 sec)</span>
+                            <span data-ai-title style="display:block;font-size:14px;font-weight:700;letter-spacing:.2px;">AI Generate Poster</span>
+                            <span data-ai-sub style="display:block;font-size:11px;opacity:.85;margin-top:1px;">AI paints the artwork, your exact text goes on top — pick or upload a photo first to feature it (~20 sec)</span>
                         </span>
                         <span style="font-size:16px;opacity:.7;flex-shrink:0;">→</span>
                     </button>
@@ -404,6 +405,7 @@
                 <span id="posterFontScaleLabel" style="font-size:12px;color:var(--text-dim);min-width:36px;text-align:center;">100%</span>
             </div>
 
+            <div id="posterDateWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;font-size:13px;line-height:1.45;"></div>
             <div class="poster-preview-wrap">
                 <div class="poster-canvas" id="posterCanvas"></div>
             </div>
@@ -601,6 +603,37 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
         // restructured text lost. Leading zeros ignored so "9:00 AM" vs "9 AM" doesn't false-alarm.
         const numberSet = (s) => new Set((String(s || '').match(/\d+/g) || []).map(n => n.replace(/^0+/, '')).filter(Boolean));
         const missingNumbers = (source, shown) => { const have = numberSet(shown); return [...numberSet(source)].filter(n => !have.has(n)); };
+
+        // Date typo check: "Friday, November 27th, 2025" — Nov 27 2025 is a Thursday, so the year is probably wrong
+        const WEEKDAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const MONTH_ABBR = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        function findDateTypos(text) {
+            const W = '(Sun|Mon|Tues|Wednes|Thurs|Fri|Satur)day,?', M = '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\.?', D = '(\\d{1,2})(?:st|nd|rd|th)?', Y = '(\\d{4})';
+            const forms = [
+                { re: new RegExp(`\\b${W}\\s+${M}\\s+${D},?\\s+${Y}\\b`, 'gi'), wd: 1, mo: 2, d: 3, y: 4 },   // Friday, November 27th, 2025
+                { re: new RegExp(`\\b${W}\\s+${D}\\s+${M},?\\s+${Y}\\b`, 'gi'), wd: 1, d: 2, mo: 3, y: 4 },   // Friday 27th November 2025
+            ];
+            const out = [];
+            for (const f of forms) for (const m of String(text || '').matchAll(f.re)) {
+                const wd = WEEKDAYS.findIndex(w => w.toLowerCase().startsWith(m[f.wd].toLowerCase()));
+                const mo = MONTH_ABBR.indexOf(m[f.mo].slice(0, 3).toLowerCase());
+                const day = +m[f.d], yr = +m[f.y];
+                const dt = new Date(yr, mo, day);
+                if (wd < 0 || mo < 0 || dt.getMonth() !== mo || dt.getDay() === wd) continue;
+                const fix = [yr + 1, yr - 1].find(y => new Date(y, mo, day).getDay() === wd);
+                out.push(`"${m[0]}" — that date is a ${WEEKDAYS[dt.getDay()]}${fix ? `; did you mean ${fix}?` : '.'}`);
+            }
+            return out;
+        }
+        function updateDateWarnings() {
+            const typos = findDateTypos(document.getElementById('body')?.value || '');
+            const html = typos.length ? '⚠️ <b>Please check the date' + (typos.length > 1 ? 's' : '') + ' in your notice:</b><br>' + typos.map(escP).join('<br>') : '';
+            ['bodyDateWarning', 'posterDateWarning'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.innerHTML = html; el.style.display = html ? '' : 'none'; }
+            });
+        }
+        document.getElementById('body')?.addEventListener('input', updateDateWarnings);
         let currentPosterStyle = 'corporate';
         let currentPosterLayout = 'detailed'; // 'detailed' or 'visual'
         let posterImageMode = 'icons'; // 'none', 'icons', 'photo'
@@ -748,6 +781,7 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
 
         function renderForLayout() {
             if (!posterData) return;
+            updateDateWarnings();
             if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
             else if (currentPosterLayout === 'schedule') renderSchedulePoster(posterData, currentPosterStyle);
             else renderPoster(posterData, currentPosterStyle);
@@ -858,6 +892,16 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             document.querySelectorAll('.poster-layout-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             currentPosterLayout = el.dataset.layout;
+
+            // The AI button adds a header picture in Schedule layout, full artwork otherwise
+            const aiBtn = document.getElementById('btnAiGenerate');
+            if (aiBtn && !aiBtn.disabled) {
+                const sched = currentPosterLayout === 'schedule';
+                aiBtn.querySelector('[data-ai-title]').textContent = sched ? 'AI Picture for this Poster' : 'AI Generate Poster';
+                aiBtn.querySelector('[data-ai-sub]').textContent = sched
+                    ? 'Adds an AI-made picture to the poster header — the Schedule layout stays as it is (~20 sec)'
+                    : 'AI paints the artwork, your exact text goes on top — pick or upload a photo first to feature it (~20 sec)';
+            }
 
             // Show/hide font size slider (detailed only)
             document.getElementById('posterFontSliderWrap').style.display = currentPosterLayout === 'detailed' ? 'flex' : 'none';
@@ -1279,9 +1323,13 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
                 return;
             }
 
+            // In the Schedule layout the AI only makes a header picture; the layout itself stays
+            const pictureOnly = currentPosterLayout === 'schedule';
+            updateDateWarnings();
+
             // If a photo is selected (uploaded or stock), attach it so Gemini builds the poster around it
             let photoPart = null;
-            if (posterImageMode === 'photo' && posterImageUrl) {
+            if (!pictureOnly && posterImageMode === 'photo' && posterImageUrl) {
                 try {
                     const blob = await fetch(posterImageUrl).then(r => r.blob());
                     const b64 = await new Promise((resolve, reject) => {
@@ -1299,42 +1347,66 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             btn.disabled = true;
             btn.innerHTML = `<span class="ai-spinner"></span>
                 <span style="flex:1;">
-                    <span style="display:block;font-size:14px;font-weight:700;">Generating your poster…</span>
-                    <span style="display:block;font-size:11px;opacity:.85;margin-top:1px;">${photoPart ? 'Designing around your photo' : 'Gemini is designing it'} — this takes about 20 seconds</span>
+                    <span style="display:block;font-size:14px;font-weight:700;">${pictureOnly ? 'Creating a picture for your poster…' : 'Generating your poster…'}</span>
+                    <span style="display:block;font-size:11px;opacity:.85;margin-top:1px;">${pictureOnly ? 'Gemini is drawing it' : photoPart ? 'Designing around your photo' : 'Gemini is designing it'} — this takes about 20 seconds</span>
                 </span>`;
 
-            const category = document.getElementById('category')?.value || 'general';
-            const headline = posterData.visual_headline || posterData.headline || document.getElementById('title').value.trim();
-            const badge = posterData.tag || 'NOTICE';
-
-            // The poster TEXT is laid out by the app on top of the AI artwork — the image AI never
-            // paints words, so nothing can be dropped, merged, misspelled or invented.
-            let lines = [];
-            (posterData.sections || []).forEach(s => {
-                if (s.type === 'bullets') (s.items || []).forEach(i => { if (i) lines.push({ text: i, kind: 'bullet' }); });
-                else if (s.text) lines.push({ text: s.text, kind: s.type === 'highlight' ? 'highlight' : 'text' });
-            });
-            // Safety net: every number in the notice (dates, building/unit numbers, times) must appear.
-            // If the AI's restructured version lost any, use the notice text exactly as written instead.
-            const bodyText = document.getElementById('body').value.trim();
-            const lostNumbers = missingNumbers(bodyText, lines.map(l => l.text).join(' ') + ' ' + headline);
-            if (bodyText && (!lines.length || lostNumbers.length)) {
-                lines = bodyText.split(/\n+/).map(t => t.trim()).filter(Boolean).map(t => ({ text: t, kind: 'text' }));
-            }
+            const title = posterData.visual_headline || posterData.headline || '';
+            const subtitle = posterData.visual_subtitle || posterData.subtitle || '';
+            const details = posterData.visual_detail || '';
             const signoff = posterData.signoff || '';
-            const showSignoff = signoff && !lines.some(l => l.text.includes(signoff));
+            const tag = posterData.tag || '';
+            const category = document.getElementById('category')?.value || 'general';
 
-            const prompt = `Create BACKGROUND ARTWORK for a WIDE LANDSCAPE 16:9 digital-signage poster shown on a condominium lobby TV. Topic: "${headline}" (category: ${category}).
+            // Collect poster text, skipping lines that duplicate info already shown
+            const seenLines = new Set();
+            const addLine = (arr, text) => {
+                const norm = (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                if (!norm || seenLines.has(norm)) return;
+                seenLines.add(norm);
+                arr.push(text.trim());
+            };
+            const textLines = [];
+            addLine(textLines, title);
+            addLine(textLines, subtitle);
+            addLine(textLines, details);
+            (posterData.sections || []).forEach(s => {
+                if (s.type === 'bullets') (s.items || []).forEach(i => addLine(textLines, i));
+                else addLine(textLines, s.text);
+            });
 
-ABSOLUTELY NO TEXT: the image must not contain any words, letters, numbers, labels, signs, captions, logos or watermarks anywhere. All text is added afterwards by software.
+            // Schedule layout: the AI only draws a header picture (no text) — the layout stays as is
+            const prompt = pictureOnly
+                ? `Create one high-quality picture that illustrates this condominium building notice: "${title}" (category: ${category}). Realistic photo style, bright, clean and professional, suitable as the header image of a notice on a lobby TV.
 
-LAYOUT:
-${photoPart
-    ? `- A REAL PHOTOGRAPH IS ATTACHED. Place it on the LEFT, filling about 42% of the width and the full height. Keep it exactly as it is — do not redraw, repaint, or change its content; only mild color grading to blend with the design is allowed.`
-    : `- LEFT ~42% of the width: a strong, relevant visual for the topic (realistic photo-style scene or bold illustration).`}
-- RIGHT ~58%: a calm, uncluttered area — a smooth color gradient with only subtle decorative shapes or icons near the edges. Keep the middle of this area plain, because text will be placed on it.
-- Bold, professional color scheme that suits the topic, with a clean diagonal or curved transition between the two areas.
-- Fill the entire canvas — no borders, frames, or blank margins.`;
+ABSOLUTELY NO TEXT: the image must not contain any words, letters, numbers, labels, signs, captions, logos or watermarks anywhere.`
+                : `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
+
+The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Do not add any words of your own, do not print any field labels or headings that are not listed, and do not show the same information twice.
+
+===POSTER TEXT START===
+${tag ? `${tag} (small badge, top corner)` : ''}
+${textLines[0] ? `${textLines[0]} (main headline, largest text)` : ''}
+${textLines.slice(1).map(l => `${l}`).join('\n')}
+${signoff ? `${signoff} (small, at the bottom)` : ''}
+===POSTER TEXT END===
+
+The notes in parentheses describe placement only — NEVER print the parenthetical notes, the === markers, or any label on the poster.
+${photoPart ? `
+A REAL PHOTOGRAPH IS ATTACHED. It shows the actual location or subject of this notice, so residents must be able to recognize it in real life. PHOTO RULES:
+- Feature the attached photograph prominently, covering roughly 40-50% of the poster (for example as a full-height panel on one side, or a large framed region)
+- Keep the photograph exactly as it is — do NOT redraw, repaint, alter, or replace its content. Only mild color grading to blend with the design is allowed
+- Design the poster's colors and layout to complement the photo
+` : ''}
+DESIGN RULES:
+- MUST be WIDE LANDSCAPE layout (16:9 ratio, like a widescreen TV)
+- Professional, modern graphic design for a building lobby TV
+- Bold colors, eye-catching layout with relevant imagery for "${category}" category
+- ALL listed text must be included exactly once and perfectly legible
+- Include relevant visual elements (icons, shapes${photoPart ? '' : ', photos'}) matching the topic — imagery only, no extra words
+- Text must be perfectly spelled with no errors
+- Use visual hierarchy: headline largest, details medium, fine print smaller
+- Fill the entire wide landscape canvas — no blank space or borders`;
 
             try {
                 // Best text rendering first, then fall back if quota/deprecation hits
@@ -1349,7 +1421,7 @@ ${photoPart
                             generationConfig: {
                                 responseModalities: ['TEXT', 'IMAGE'],
                                 imageConfig: {
-                                    aspectRatio: '16:9'
+                                    aspectRatio: pictureOnly ? '4:3' : '16:9'
                                 }
                             }
                         })
@@ -1378,30 +1450,23 @@ ${photoPart
                 const blob = new Blob([byteArray], { type: imageData.mimeType });
                 const blobUrl = URL.createObjectURL(blob);
 
-                // Artwork as background, exact notice text laid on top
-                const esc = escP, hl = (s) => hlP(s, '#ffc35a');
-                const linesHtml = lines.map(l => {
-                    if (l.kind === 'highlight') return `<div style="font-weight:700;color:#ffc35a;margin-bottom:.55em;">${esc(l.text)}</div>`;
-                    if (l.kind === 'bullet') return `<div style="display:flex;gap:.55em;margin-bottom:.45em;"><span style="color:#ffc35a;">●</span><span>${hl(l.text)}</span></div>`;
-                    return `<div style="margin-bottom:.55em;">${hl(l.text)}</div>`;
-                }).join('');
+                if (pictureOnly) {
+                    posterImageUrl = blobUrl;
+                    posterImageMode = 'photo';
+                    renderSchedulePoster(posterData, currentPosterStyle);
+                    document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById('posterImagePreview').style.display = '';
+                    document.getElementById('posterImgThumb').src = blobUrl;
+                    document.getElementById('posterImgLabel').textContent = 'AI picture (poster header)';
+                    return;
+                }
+
+                // Display directly in the poster canvas as a full poster image
                 const canvas = document.getElementById('posterCanvas');
-                canvas.innerHTML = `<div style="width:1920px;height:1080px;position:relative;overflow:hidden;font-family:'Montserrat','DM Sans',sans-serif;">
-                    <img src="${blobUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
-                    <div id="aiTextPanel" style="position:absolute;top:0;right:0;width:58%;height:100%;box-sizing:border-box;padding:72px 84px 72px 130px;display:flex;flex-direction:column;justify-content:center;color:#fff;font-size:34px;line-height:1.35;background:linear-gradient(90deg,rgba(6,18,40,0) 0%,rgba(6,18,40,.84) 16%,rgba(6,18,40,.92) 100%);">
-                        <div id="aiTextInner">
-                            <div style="display:inline-block;font-size:.6em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:.45em 1em;border:2px solid rgba(255,255,255,.75);border-radius:.6em;margin-bottom:1em;">${esc(badge)}</div>
-                            <div style="font-size:2.05em;font-weight:900;line-height:1.08;text-transform:uppercase;margin-bottom:.6em;">${esc(headline)}</div>
-                            <div style="font-weight:500;">${linesHtml}</div>
-                            ${showSignoff ? `<div style="margin-top:.6em;font-size:.8em;opacity:.85;font-weight:600;">${esc(signoff)}</div>` : ''}
-                        </div>
-                    </div>
+                canvas.innerHTML = `<div style="width:1920px;height:1080px;position:relative;overflow:hidden;">
+                    <img src="${blobUrl}" style="width:100%;height:100%;object-fit:cover;" />
                 </div>`;
-                // Shrink the text until everything fits — never cut any of it off
-                const panel = document.getElementById('aiTextPanel');
-                const inner = document.getElementById('aiTextInner');
-                let fs = 34;
-                while (inner.offsetHeight > panel.clientHeight - 144 && fs > 14) { fs -= 1; panel.style.fontSize = fs + 'px'; }
 
                 // Update UI
                 document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
@@ -1620,8 +1685,6 @@ IMPORTANT: Include ALL information from the notice. Do not summarize or remove c
 CRITICAL — BE FAITHFUL TO THE ORIGINAL TEXT:
 - Use ONLY words and facts that appear in the notice above. NEVER invent or add words, dates, or descriptions that are not in the original (e.g. do not add "Annual", "Testing", "Mandatory" or similar unless the original says so).
 - Do NOT repeat the same date, time, or fact in more than one field. Each piece of information should appear exactly once across headline, subtitle, detail, and sections.
-- KEEP DISTINCT GROUPS SEPARATE. If different buildings, units, floors, towers, or groups have DIFFERENT dates/times (e.g. "Building 550 - Mon 23, Tue 24" and "Building 560 - Thu 26, Fri 27"), give EACH its own bullet in "sections" with its label attached (e.g. "Building 550: Monday 23, Tuesday 24, Wednesday 25"). NEVER merge different groups' schedules into one combined date range, and never drop the group labels.
-- Every distinct fact from the notice (each building's days, each location, each instruction) must land in "sections". The short visual_* fields are a summary — the complete detail lives in sections.
 
 Available icons for decoration (pick 1-2 that best match the topic):
 wrench, car, water, flame, elevator, pool, building, shield, clock, alert, trash, leaf, mail, calendar, megaphone, key, window, power, wifi, party, dog, snowflake, sun, paint
@@ -1655,8 +1718,8 @@ Rules:
 - visual_headline: Write this like a BILLBOARD — short, bold, direct, action-oriented. Like "NO PARKING FRIDAY" or "ELEVATOR CLOSED MONDAY" — but built ONLY from words/facts in the original notice
 - Use "highlight" for critical info (dates, closures, deadlines) — these get a colored left border
 - Use "text" for regular paragraphs
-- Use "bullets" for lists of items or expectations — use one bullet PER group when different buildings/units/dates are involved
-- Include ALL dates, times, details from the original text in sections — nothing from the notice may be left out
+- Use "bullets" for lists of items or expectations
+- Include ALL dates, times, details from the original text in sections
 - Keep the original tone and wording as much as possible
 - schedule: one entry PER building/unit/floor/group that has its own dates — "label" is the group name exactly as written, "when" is exactly its dates (keep the years as written). If there is a single date or period with no groups, use one entry with label "When". Use [] if the notice has no dates.
 - groups: put EVERY instruction, requirement and other piece of information into 1–3 groups, each with a SHORT uppercase heading of 2–4 words (e.g. BEFORE THE VISIT, ACCESS & ATTENDANCE, IMPORTANT). Items are short sentences that use only the notice's own facts and wording. Together, intro + schedule + hours + groups + footer must cover everything in the notice. Do not repeat the schedule dates inside groups.
@@ -1932,6 +1995,7 @@ ${title ? 'TITLE: ' + title + '\n\n' : ''}${body}`;
                 document.getElementById('title').value = n.title || '';
                 document.getElementById('category').value = n.category || 'general';
                 document.getElementById('body').value = n.body || '';
+            updateDateWarnings();
                 document.getElementById('showQr').checked = !!n.show_qr;
                 document.getElementById('startDate').value = n.start_date || '';
                 document.getElementById('endDate').value = n.end_date || '';
