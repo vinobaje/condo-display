@@ -119,7 +119,7 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
     - 📤 Upload Photo
     - 📷 Stock Photos (Pixabay API)
     - 🎨 Illustrations (built-in SVG library: garage, fire, elevator, water, pool, etc.)
-    - 🤖 AI Generate (Gemini image generation — creates entire poster as an image; if a photo is selected via Upload/Stock first, it is attached to the request and Gemini features the real photo prominently in the poster, unaltered)
+    - 🤖 AI Generate — Gemini paints ARTWORK ONLY (prompt forbids any text; imagery on the left ~42%, calm panel on the right; an attached Upload/Stock photo is placed unaltered on the left). The notice text is overlaid by the app as HTML (`#aiTextPanel`, auto-shrinks to fit) and captured with html2canvas, so no words are ever dropped or invented. Text comes from posterData sections; if any number in the notice body (dates, building/unit numbers, times) is missing from them, it falls back to the body verbatim. Buildings/units, dates and times are highlighted in amber. (Image models paint text unreliably — do not go back to having them render the words.)
   - Auto-fetches stock photo on "Design Poster" click if Pixabay key is set
   - html2canvas for converting poster to PNG → uploaded as notice media
 

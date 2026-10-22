@@ -1209,58 +1209,40 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
                     <span style="display:block;font-size:11px;opacity:.85;margin-top:1px;">${photoPart ? 'Designing around your photo' : 'Gemini is designing it'} — this takes about 20 seconds</span>
                 </span>`;
 
-            const title = posterData.visual_headline || posterData.headline || '';
-            const subtitle = posterData.visual_subtitle || posterData.subtitle || '';
-            const details = posterData.visual_detail || '';
-            const signoff = posterData.signoff || '';
-            const tag = posterData.tag || '';
             const category = document.getElementById('category')?.value || 'general';
+            const headline = posterData.visual_headline || posterData.headline || document.getElementById('title').value.trim();
+            const badge = posterData.tag || 'NOTICE';
 
-            // Collect poster text, skipping lines that duplicate info already shown
-            const seenLines = new Set();
-            const addLine = (arr, text) => {
-                const norm = (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
-                if (!norm || seenLines.has(norm)) return;
-                seenLines.add(norm);
-                arr.push(text.trim());
-            };
-            const textLines = [];
-            addLine(textLines, title);
-            addLine(textLines, subtitle);
-            addLine(textLines, details);
+            // The poster TEXT is laid out by the app on top of the AI artwork — the image AI never
+            // paints words, so nothing can be dropped, merged, misspelled or invented.
+            let lines = [];
             (posterData.sections || []).forEach(s => {
-                if (s.type === 'bullets') (s.items || []).forEach(i => addLine(textLines, i));
-                else addLine(textLines, s.text);
+                if (s.type === 'bullets') (s.items || []).forEach(i => { if (i) lines.push({ text: i, kind: 'bullet' }); });
+                else if (s.text) lines.push({ text: s.text, kind: s.type === 'highlight' ? 'highlight' : 'text' });
             });
+            // Safety net: every number in the notice (dates, building/unit numbers, times) must appear.
+            // If the AI's restructured version lost any, use the notice text exactly as written instead.
+            const bodyText = document.getElementById('body').value.trim();
+            const numbersIn = (s) => new Set(s.match(/\d+/g) || []);
+            const shown = numbersIn(lines.map(l => l.text).join(' ') + ' ' + headline);
+            const lostNumbers = [...numbersIn(bodyText)].filter(n => !shown.has(n));
+            if (bodyText && (!lines.length || lostNumbers.length)) {
+                lines = bodyText.split(/\n+/).map(t => t.trim()).filter(Boolean).map(t => ({ text: t, kind: 'text' }));
+            }
+            const signoff = posterData.signoff || '';
+            const showSignoff = signoff && !lines.some(l => l.text.includes(signoff));
 
-            const prompt = `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
+            const prompt = `Create BACKGROUND ARTWORK for a WIDE LANDSCAPE 16:9 digital-signage poster shown on a condominium lobby TV. Topic: "${headline}" (category: ${category}).
 
-The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Render EVERY numbered line. Do NOT skip, shorten, summarize, or merge any line. If space is tight, make the text smaller — never drop a line. Keep each group label (such as a building or unit number) on the SAME line as its own dates/times. Do not add words of your own, do not print the numbers or the field labels, and do not show the same information twice.
+ABSOLUTELY NO TEXT: the image must not contain any words, letters, numbers, labels, signs, captions, logos or watermarks anywhere. All text is added afterwards by software.
 
-===POSTER TEXT START===
-${tag ? `BADGE (small, top corner): ${tag}` : ''}
-${textLines[0] ? `HEADLINE (largest text): ${textLines[0]}` : ''}
-DETAIL LINES — render all ${textLines.slice(1).length}, each one clearly legible:
-${textLines.slice(1).map((l, i) => `${i + 1}. ${l}`).join('\n')}
-${signoff ? `SIGN-OFF (small, at the bottom): ${signoff}` : ''}
-===POSTER TEXT END===
-
-The notes in parentheses and the "BADGE/HEADLINE/DETAIL/SIGN-OFF:" labels and the line numbers describe placement only — NEVER print any of them, the === markers, or any label on the poster. Print only the actual text values.
-${photoPart ? `
-A REAL PHOTOGRAPH IS ATTACHED. It shows the actual location or subject of this notice, so residents must be able to recognize it in real life. PHOTO RULES:
-- Feature the attached photograph prominently, covering roughly 40-50% of the poster (for example as a full-height panel on one side, or a large framed region)
-- Keep the photograph exactly as it is — do NOT redraw, repaint, alter, or replace its content. Only mild color grading to blend with the design is allowed
-- Design the poster's colors and layout to complement the photo
-` : ''}
-DESIGN RULES:
-- MUST be WIDE LANDSCAPE layout (16:9 ratio, like a widescreen TV)
-- Professional, modern graphic design for a building lobby TV
-- Bold colors, eye-catching layout with relevant imagery for "${category}" category
-- EVERY listed line must be included exactly once and perfectly legible — completeness matters more than big text, so shrink text to fit rather than omitting any line
-- Include relevant visual elements (icons, shapes${photoPart ? '' : ', photos'}) matching the topic — imagery only, no extra words
-- Text must be perfectly spelled with no errors
-- Use visual hierarchy: headline largest, details medium, fine print smaller
-- Fill the entire wide landscape canvas — no blank space or borders`;
+LAYOUT:
+${photoPart
+    ? `- A REAL PHOTOGRAPH IS ATTACHED. Place it on the LEFT, filling about 42% of the width and the full height. Keep it exactly as it is — do not redraw, repaint, or change its content; only mild color grading to blend with the design is allowed.`
+    : `- LEFT ~42% of the width: a strong, relevant visual for the topic (realistic photo-style scene or bold illustration).`}
+- RIGHT ~58%: a calm, uncluttered area — a smooth color gradient with only subtle decorative shapes or icons near the edges. Keep the middle of this area plain, because text will be placed on it.
+- Bold, professional color scheme that suits the topic, with a clean diagonal or curved transition between the two areas.
+- Fill the entire canvas — no borders, frames, or blank margins.`;
 
             try {
                 // Best text rendering first, then fall back if quota/deprecation hits
@@ -1304,11 +1286,33 @@ DESIGN RULES:
                 const blob = new Blob([byteArray], { type: imageData.mimeType });
                 const blobUrl = URL.createObjectURL(blob);
 
-                // Display directly in the poster canvas as a full poster image
+                // Artwork as background, exact notice text laid on top
+                const esc = (s) => escapeHtml(String(s));
+                // Same words, but buildings/units, dates and times stand out so residents spot their day
+                const KEY = /\b(?:(?:Building|Bldg|Unit|Suite|Floor|Tower)s?\s+\d+[A-Za-z]?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|\d{1,2}(?::\d{2})?\s?[AaPp]\.?[Mm]\.?)/g;
+                const hl = (s) => esc(s).replace(KEY, m => `<b style="color:#ffc35a;font-weight:800;">${m}</b>`);
+                const linesHtml = lines.map(l => {
+                    if (l.kind === 'highlight') return `<div style="font-weight:700;color:#ffc35a;margin-bottom:.55em;">${esc(l.text)}</div>`;
+                    if (l.kind === 'bullet') return `<div style="display:flex;gap:.55em;margin-bottom:.45em;"><span style="color:#ffc35a;">●</span><span>${hl(l.text)}</span></div>`;
+                    return `<div style="margin-bottom:.55em;">${hl(l.text)}</div>`;
+                }).join('');
                 const canvas = document.getElementById('posterCanvas');
-                canvas.innerHTML = `<div style="width:1920px;height:1080px;position:relative;overflow:hidden;">
-                    <img src="${blobUrl}" style="width:100%;height:100%;object-fit:cover;" />
+                canvas.innerHTML = `<div style="width:1920px;height:1080px;position:relative;overflow:hidden;font-family:'Montserrat','DM Sans',sans-serif;">
+                    <img src="${blobUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+                    <div id="aiTextPanel" style="position:absolute;top:0;right:0;width:58%;height:100%;box-sizing:border-box;padding:72px 84px 72px 130px;display:flex;flex-direction:column;justify-content:center;color:#fff;font-size:34px;line-height:1.35;background:linear-gradient(90deg,rgba(6,18,40,0) 0%,rgba(6,18,40,.84) 16%,rgba(6,18,40,.92) 100%);">
+                        <div id="aiTextInner">
+                            <div style="display:inline-block;font-size:.6em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:.45em 1em;border:2px solid rgba(255,255,255,.75);border-radius:.6em;margin-bottom:1em;">${esc(badge)}</div>
+                            <div style="font-size:2.05em;font-weight:900;line-height:1.08;text-transform:uppercase;margin-bottom:.6em;">${esc(headline)}</div>
+                            <div style="font-weight:500;">${linesHtml}</div>
+                            ${showSignoff ? `<div style="margin-top:.6em;font-size:.8em;opacity:.85;font-weight:600;">${esc(signoff)}</div>` : ''}
+                        </div>
+                    </div>
                 </div>`;
+                // Shrink the text until everything fits — never cut any of it off
+                const panel = document.getElementById('aiTextPanel');
+                const inner = document.getElementById('aiTextInner');
+                let fs = 34;
+                while (inner.offsetHeight > panel.clientHeight - 144 && fs > 14) { fs -= 1; panel.style.fontSize = fs + 'px'; }
 
                 // Update UI
                 document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
