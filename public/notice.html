@@ -1235,16 +1235,17 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
 
             const prompt = `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
 
-The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Do not add any words of your own, do not print any field labels or headings that are not listed, and do not show the same information twice.
+The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Render EVERY numbered line. Do NOT skip, shorten, summarize, or merge any line. If space is tight, make the text smaller — never drop a line. Keep each group label (such as a building or unit number) on the SAME line as its own dates/times. Do not add words of your own, do not print the numbers or the field labels, and do not show the same information twice.
 
 ===POSTER TEXT START===
-${tag ? `${tag} (small badge, top corner)` : ''}
-${textLines[0] ? `${textLines[0]} (main headline, largest text)` : ''}
-${textLines.slice(1).map(l => `${l}`).join('\n')}
-${signoff ? `${signoff} (small, at the bottom)` : ''}
+${tag ? `BADGE (small, top corner): ${tag}` : ''}
+${textLines[0] ? `HEADLINE (largest text): ${textLines[0]}` : ''}
+DETAIL LINES — render all ${textLines.slice(1).length}, each one clearly legible:
+${textLines.slice(1).map((l, i) => `${i + 1}. ${l}`).join('\n')}
+${signoff ? `SIGN-OFF (small, at the bottom): ${signoff}` : ''}
 ===POSTER TEXT END===
 
-The notes in parentheses describe placement only — NEVER print the parenthetical notes, the === markers, or any label on the poster.
+The notes in parentheses and the "BADGE/HEADLINE/DETAIL/SIGN-OFF:" labels and the line numbers describe placement only — NEVER print any of them, the === markers, or any label on the poster. Print only the actual text values.
 ${photoPart ? `
 A REAL PHOTOGRAPH IS ATTACHED. It shows the actual location or subject of this notice, so residents must be able to recognize it in real life. PHOTO RULES:
 - Feature the attached photograph prominently, covering roughly 40-50% of the poster (for example as a full-height panel on one side, or a large framed region)
@@ -1255,7 +1256,7 @@ DESIGN RULES:
 - MUST be WIDE LANDSCAPE layout (16:9 ratio, like a widescreen TV)
 - Professional, modern graphic design for a building lobby TV
 - Bold colors, eye-catching layout with relevant imagery for "${category}" category
-- ALL listed text must be included exactly once and perfectly legible
+- EVERY listed line must be included exactly once and perfectly legible — completeness matters more than big text, so shrink text to fit rather than omitting any line
 - Include relevant visual elements (icons, shapes${photoPart ? '' : ', photos'}) matching the topic — imagery only, no extra words
 - Text must be perfectly spelled with no errors
 - Use visual hierarchy: headline largest, details medium, fine print smaller
@@ -1515,6 +1516,8 @@ IMPORTANT: Include ALL information from the notice. Do not summarize or remove c
 CRITICAL — BE FAITHFUL TO THE ORIGINAL TEXT:
 - Use ONLY words and facts that appear in the notice above. NEVER invent or add words, dates, or descriptions that are not in the original (e.g. do not add "Annual", "Testing", "Mandatory" or similar unless the original says so).
 - Do NOT repeat the same date, time, or fact in more than one field. Each piece of information should appear exactly once across headline, subtitle, detail, and sections.
+- KEEP DISTINCT GROUPS SEPARATE. If different buildings, units, floors, towers, or groups have DIFFERENT dates/times (e.g. "Building 550 - Mon 23, Tue 24" and "Building 560 - Thu 26, Fri 27"), give EACH its own bullet in "sections" with its label attached (e.g. "Building 550: Monday 23, Tuesday 24, Wednesday 25"). NEVER merge different groups' schedules into one combined date range, and never drop the group labels.
+- Every distinct fact from the notice (each building's days, each location, each instruction) must land in "sections". The short visual_* fields are a summary — the complete detail lives in sections.
 
 Available icons for decoration (pick 1-2 that best match the topic):
 wrench, car, water, flame, elevator, pool, building, shield, clock, alert, trash, leaf, mail, calendar, megaphone, key, window, power, wifi, party, dog, snowflake, sun, paint
@@ -1544,8 +1547,8 @@ Rules:
 - visual_headline: Write this like a BILLBOARD — short, bold, direct, action-oriented. Like "NO PARKING FRIDAY" or "ELEVATOR CLOSED MONDAY" — but built ONLY from words/facts in the original notice
 - Use "highlight" for critical info (dates, closures, deadlines) — these get a colored left border
 - Use "text" for regular paragraphs
-- Use "bullets" for lists of items or expectations
-- Include ALL dates, times, details from the original text in sections
+- Use "bullets" for lists of items or expectations — use one bullet PER group when different buildings/units/dates are involved
+- Include ALL dates, times, details from the original text in sections — nothing from the notice may be left out
 - Keep the original tone and wording as much as possible
 - Return ONLY the JSON`;
 
