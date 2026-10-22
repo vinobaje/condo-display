@@ -289,6 +289,7 @@
             <div style="display:flex;gap:8px;margin-bottom:16px;">
                 <button class="btn btn-sm poster-layout-btn active" data-layout="detailed" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">📋 Detailed</button>
                 <button class="btn btn-sm poster-layout-btn" data-layout="visual" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">🎨 Visual / Bold</button>
+                <button class="btn btn-sm poster-layout-btn" data-layout="schedule" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">🗓️ Schedule</button>
             </div>
 
             <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
@@ -590,6 +591,16 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
 
         // ═══ AI POSTER DESIGNER ═══
         let posterData = null;
+
+        // ═══ Poster text helpers (shared by the Schedule layout and the AI-artwork overlay) ═══
+        // Buildings/units, dates and times — highlighted so residents spot their day at a glance
+        const POSTER_KEY_RE = /\b(?:(?:Building|Bldg|Unit|Suite|Floor|Tower)s?\s+\d+[A-Za-z]?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|\d{1,2}(?::\d{2})?\s?[AaPp]\.?[Mm]\.?)/g;
+        const escP = (s) => escapeHtml(String(s ?? ''));
+        const hlP = (s, color) => escP(s).replace(POSTER_KEY_RE, m => `<b style="color:${color};font-weight:800;">${m}</b>`);
+        // Safety net: numbers (dates, building/unit numbers, times) in the notice that the AI's
+        // restructured text lost. Leading zeros ignored so "9:00 AM" vs "9 AM" doesn't false-alarm.
+        const numberSet = (s) => new Set((String(s || '').match(/\d+/g) || []).map(n => n.replace(/^0+/, '')).filter(Boolean));
+        const missingNumbers = (source, shown) => { const have = numberSet(shown); return [...numberSet(source)].filter(n => !have.has(n)); };
         let currentPosterStyle = 'corporate';
         let currentPosterLayout = 'detailed'; // 'detailed' or 'visual'
         let posterImageMode = 'icons'; // 'none', 'icons', 'photo'
@@ -735,11 +746,17 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             paint: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="6" rx="2"/><path d="M6 10v8a2 2 0 002 2h0a2 2 0 002-2v-3"/></svg>`,
         };
 
+        function renderForLayout() {
+            if (!posterData) return;
+            if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+            else if (currentPosterLayout === 'schedule') renderSchedulePoster(posterData, currentPosterStyle);
+            else renderPoster(posterData, currentPosterStyle);
+        }
+
         function renderCurrentPoster() {
             if (!posterData) return;
             if (posterImageMode === 'ai_full') return; // AI-generated full image — don't override
-            if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
-            else renderPoster(posterData, currentPosterStyle);
+            renderForLayout();
         }
 
         function renderPoster(data, style) {
@@ -833,8 +850,7 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             el.classList.add('selected');
             currentPosterStyle = el.dataset.style;
             if (posterData) {
-                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
-                else renderPoster(posterData, currentPosterStyle);
+                renderForLayout();
             }
         };
 
@@ -861,10 +877,88 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             }
 
             if (posterData) {
-                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
-                else renderPoster(posterData, currentPosterStyle);
+                renderForLayout();
             }
         };
+
+        // ═══ Schedule / Info layout ═══
+        // Information-first poster: header band, one card per building/unit with its dates,
+        // instructions grouped under short headings. All real text, so nothing can go missing.
+        const SCHEDULE_PALETTES = {
+            corporate: { hFrom:'#0B1F36', hTo:'#163D60', hInk:'#FFFFFF', hMuted:'rgba(255,255,255,.85)', tag:'#F5B14C', bg:'#EEF2F7', card:'#FFFFFF', cardBorder:'#D9E1EB', ink:'#0B1F36', muted:'#4A5B70', accent:'#E35D44', heads:['#163D60','#E35D44','#0F7C7A','#B7791F'], foot:'#F5B14C', footInk:'#0B1F36', key:'#B45309' },
+            bold:      { hFrom:'#B91C1C', hTo:'#EA580C', hInk:'#FFFFFF', hMuted:'rgba(255,255,255,.9)', tag:'#FFE08A', bg:'#FFF7ED', card:'#FFFFFF', cardBorder:'#F2D7C2', ink:'#431407', muted:'#7C2D12', accent:'#EA580C', heads:['#B91C1C','#EA580C','#9A3412','#C2410C'], foot:'#431407', footInk:'#FFE08A', key:'#C2410C' },
+            minimal:   { hFrom:'#F8FAFC', hTo:'#E2E8F0', hInk:'#0F172A', hMuted:'#475569', tag:'#2563EB', bg:'#FFFFFF', card:'#F8FAFC', cardBorder:'#E2E8F0', ink:'#0F172A', muted:'#475569', accent:'#2563EB', heads:['#1E293B','#2563EB','#0F766E','#7C3AED'], foot:'#0F172A', footInk:'#FFFFFF', key:'#1D4ED8' },
+            dark:      { hFrom:'#020617', hTo:'#111827', hInk:'#F8FAFC', hMuted:'#94A3B8', tag:'#38BDF8', bg:'#0B1220', card:'#111827', cardBorder:'#243247', ink:'#E5E7EB', muted:'#94A3B8', accent:'#38BDF8', heads:['#1D4ED8','#0E7490','#7C3AED','#B45309'], foot:'#38BDF8', footInk:'#0B1220', key:'#38BDF8' },
+        };
+
+        function renderSchedulePoster(data, style) {
+            const p = SCHEDULE_PALETTES[style] || SCHEDULE_PALETTES.corporate;
+            const canvas = document.getElementById('posterCanvas');
+            const headline = data.headline || data.visual_headline || document.getElementById('title').value.trim();
+            const tag = data.tag || 'NOTICE';
+            let intro = data.intro || '';
+            let hours = data.hours || '';
+            let schedule = (data.schedule || []).filter(s => s && (s.label || s.when));
+            let groups = (data.groups || []).map(g => ({ heading: g.heading || '', items: (g.items || []).filter(Boolean) })).filter(g => g.items.length);
+            let thanks = [data.footer, data.signoff].filter(Boolean).join(' — ');
+
+            // Safety net: if any number from the notice didn't make it into the structured version,
+            // show the notice text exactly as written instead.
+            const bodyText = document.getElementById('body').value.trim();
+            const shownText = [headline, intro, hours, thanks, ...schedule.flatMap(s => [s.label, s.when]), ...groups.flatMap(g => g.items)].join(' ');
+            if (bodyText && (!groups.length || missingNumbers(bodyText, shownText).length)) {
+                intro = ''; hours = ''; thanks = ''; schedule = [];
+                groups = [{ heading: 'Details', items: bodyText.split(/\n+/).map(t => t.trim()).filter(Boolean), plain: true }];
+            }
+
+            const H = (s) => hlP(s, p.key);
+            const photo = posterImageMode === 'photo' && posterImageUrl ? posterImageUrl : '';
+            const sectionTitle = (t) => `<div style="font-size:.88em;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${p.ink};">${escP(t)}</div><div style="width:2.8em;height:.2em;border-radius:1em;background:${p.accent};margin:.35em 0 .8em;"></div>`;
+            const cardStyle = `background:${p.card};border:2px solid ${p.cardBorder};border-radius:.8em;`; // no box-shadow: html2canvas renders it as grey blocks
+
+            const header = `<div style="flex:none;display:flex;align-items:center;gap:2em;padding:1.5em 2.4em 1.4em;background:linear-gradient(90deg,${p.hFrom},${p.hTo});color:${p.hInk};">
+                <div style="flex:1;min-width:0;">
+                    <div style="width:3.2em;height:.26em;border-radius:1em;background:${p.tag};margin-bottom:.75em;"></div>
+                    <div style="font-size:.85em;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${p.tag};">${escP(tag)}${data.badge ? `<span style="display:inline-block;margin-left:.9em;padding:.2em .7em;border-radius:.4em;background:${p.accent};color:#fff;">${escP(data.badge)}</span>` : ''}</div>
+                    <div style="font-size:2.45em;font-weight:900;line-height:1.05;text-transform:uppercase;margin:.25em 0 .3em;">${escP(headline)}</div>
+                    ${intro ? `<div style="font-size:1.05em;font-weight:500;color:${p.hMuted};">${hlP(intro, p.tag)}</div>` : ''}
+                </div>
+                ${photo ? `<div style="flex:none;width:11em;align-self:stretch;min-height:6.5em;border-radius:.8em;background:url('${photo}') center/cover no-repeat;border:3px solid rgba(255,255,255,.85);"></div>` : ''}
+            </div>`;
+
+            const scheduleHtml = schedule.length ? `<div style="margin-bottom:1.1em;">
+                    ${sectionTitle('Schedule')}
+                    <div style="display:flex;flex-wrap:wrap;gap:1em;">
+                        ${schedule.map((s, i) => `<div style="flex:1 1 0;min-width:22%;overflow:hidden;${cardStyle}">
+                            ${s.label ? `<div style="background:${p.heads[i % p.heads.length]};color:#fff;font-weight:900;font-size:1.2em;letter-spacing:.04em;text-transform:uppercase;padding:.42em .9em;">${escP(s.label)}</div>` : ''}
+                            <div style="padding:.65em 1em .75em;font-weight:800;font-size:1.08em;line-height:1.3;color:${p.ink};">${escP(s.when || '')}</div>
+                        </div>`).join('')}
+                    </div>
+                    ${hours ? `<div style="margin-top:.65em;font-weight:800;font-size:.88em;letter-spacing:.06em;text-transform:uppercase;color:${p.muted};">Hours: ${escP(hours)}</div>` : ''}
+                </div>`
+                : (hours ? `<div style="margin-bottom:1em;font-weight:800;color:${p.ink};">Hours: ${H(hours)}</div>` : '');
+
+            const groupsHtml = groups.length ? `<div style="display:flex;flex-wrap:wrap;gap:1em;">
+                ${groups.map(g => `<div style="flex:1 1 0;min-width:30%;padding:1em 1.2em .6em;${cardStyle}">
+                    ${g.heading ? sectionTitle(g.heading) : ''}
+                    ${g.items.map(it => g.plain
+                        ? `<div style="line-height:1.42;color:${p.ink};margin-bottom:.55em;">${H(it)}</div>`
+                        : `<div style="display:flex;gap:.6em;line-height:1.36;color:${p.ink};margin-bottom:.5em;"><span style="color:${p.accent};flex:none;">●</span><span>${H(it)}</span></div>`).join('')}
+                </div>`).join('')}
+            </div>` : '';
+
+            const footer = thanks ? `<div style="flex:none;margin:0 2.4em 1.1em;padding:.6em 1.2em;border-radius:.8em;background:${p.foot};color:${p.footInk};font-weight:900;text-align:center;">${escP(thanks)}</div>` : '';
+
+            canvas.innerHTML = `<div id="schedPoster" style="width:1920px;height:1080px;overflow:hidden;display:flex;flex-direction:column;background:${p.bg};font-family:'Montserrat','DM Sans',sans-serif;font-size:34px;">
+                ${header}
+                <div style="flex:1 0 auto;display:flex;flex-direction:column;justify-content:center;padding:1em 2.4em;">${scheduleHtml}${groupsHtml}</div>
+                ${footer}
+            </div>`;
+            // Shrink everything until it fits on the poster — never cut anything off
+            const poster = document.getElementById('schedPoster');
+            let fs = 34;
+            while (poster.scrollHeight > poster.clientHeight && fs > 13) { fs -= 1; poster.style.fontSize = fs + 'px'; }
+        }
 
         function renderVisualPoster(data, style) {
             const s = POSTER_STYLES[style] || POSTER_STYLES['teal-fun'];
@@ -1223,9 +1317,7 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             // Safety net: every number in the notice (dates, building/unit numbers, times) must appear.
             // If the AI's restructured version lost any, use the notice text exactly as written instead.
             const bodyText = document.getElementById('body').value.trim();
-            const numbersIn = (s) => new Set(s.match(/\d+/g) || []);
-            const shown = numbersIn(lines.map(l => l.text).join(' ') + ' ' + headline);
-            const lostNumbers = [...numbersIn(bodyText)].filter(n => !shown.has(n));
+            const lostNumbers = missingNumbers(bodyText, lines.map(l => l.text).join(' ') + ' ' + headline);
             if (bodyText && (!lines.length || lostNumbers.length)) {
                 lines = bodyText.split(/\n+/).map(t => t.trim()).filter(Boolean).map(t => ({ text: t, kind: 'text' }));
             }
@@ -1287,10 +1379,7 @@ ${photoPart
                 const blobUrl = URL.createObjectURL(blob);
 
                 // Artwork as background, exact notice text laid on top
-                const esc = (s) => escapeHtml(String(s));
-                // Same words, but buildings/units, dates and times stand out so residents spot their day
-                const KEY = /\b(?:(?:Building|Bldg|Unit|Suite|Floor|Tower)s?\s+\d+[A-Za-z]?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|\d{1,2}(?::\d{2})?\s?[AaPp]\.?[Mm]\.?)/g;
-                const hl = (s) => esc(s).replace(KEY, m => `<b style="color:#ffc35a;font-weight:800;">${m}</b>`);
+                const esc = escP, hl = (s) => hlP(s, '#ffc35a');
                 const linesHtml = lines.map(l => {
                     if (l.kind === 'highlight') return `<div style="font-weight:700;color:#ffc35a;margin-bottom:.55em;">${esc(l.text)}</div>`;
                     if (l.kind === 'bullet') return `<div style="display:flex;gap:.55em;margin-bottom:.45em;"><span style="color:#ffc35a;">●</span><span>${hl(l.text)}</span></div>`;
@@ -1425,7 +1514,18 @@ ${photoPart
             const prevData = posterData;
             await designPoster();
             const gotNewData = posterData && posterData !== prevData;
-            if (gotNewData && aiConfig.gemini) {
+            if (!gotNewData) return;
+            const words = document.getElementById('body').value.trim().split(/\s+/).filter(Boolean).length;
+            if (words >= 50 || (posterData.schedule || []).length >= 2) {
+                // Long or multi-building notices read best as an information layout — instant, no image AI
+                const btn = document.querySelector('.poster-layout-btn[data-layout="schedule"]');
+                if (btn) switchPosterLayout(btn);
+            } else if (aiConfig.gemini) {
+                // Artwork poster — don't leave the Schedule button showing as selected from an earlier poster
+                if (currentPosterLayout === 'schedule') {
+                    const detailed = document.querySelector('.poster-layout-btn[data-layout="detailed"]');
+                    if (detailed) switchPosterLayout(detailed);
+                }
                 await generateAiPosterImage();
             }
         };
@@ -1537,6 +1637,10 @@ Return ONLY valid JSON (no markdown, no backticks, no extra text):
   "visual_headline": "SHORT PUNCHY VERSION OF THE MESSAGE for a big bold visual poster (5-12 words max, like a billboard, e.g. PLEASE DRIVE WITH CARE IN THE PARKING AREA)",
   "visual_subtitle": "One short sentence with key details (date, time, or action needed), or empty string",
   "visual_detail": "Optional: one critical detail like a date or time that must be shown, or empty string",
+  "intro": "One short sentence with who/what and the daily hours if given, using only the notice's facts (e.g. MC Mechanical will be on-site 9:00 AM to 5:00 PM daily.), or empty string",
+  "schedule": [{"label": "Building 550", "when": "Monday, November 23rd to Wednesday, November 25th, 2026"}],
+  "hours": "The daily time window if stated (e.g. 9:00 AM to 5:00 PM daily), or empty string",
+  "groups": [{"heading": "BEFORE THE VISIT", "items": ["Short sentence", "Short sentence"]}],
   "sections": [
     {"type": "highlight", "heading": "SECTION HEADING", "text": "Key info like dates, times, critical details"},
     {"type": "text", "heading": "OPTIONAL HEADING", "text": "Regular paragraph text"},
@@ -1554,6 +1658,8 @@ Rules:
 - Use "bullets" for lists of items or expectations — use one bullet PER group when different buildings/units/dates are involved
 - Include ALL dates, times, details from the original text in sections — nothing from the notice may be left out
 - Keep the original tone and wording as much as possible
+- schedule: one entry PER building/unit/floor/group that has its own dates — "label" is the group name exactly as written, "when" is exactly its dates (keep the years as written). If there is a single date or period with no groups, use one entry with label "When". Use [] if the notice has no dates.
+- groups: put EVERY instruction, requirement and other piece of information into 1–3 groups, each with a SHORT uppercase heading of 2–4 words (e.g. BEFORE THE VISIT, ACCESS & ATTENDANCE, IMPORTANT). Items are short sentences that use only the notice's own facts and wording. Together, intro + schedule + hours + groups + footer must cover everything in the notice. Do not repeat the schedule dates inside groups.
 - Return ONLY the JSON`;
 
             try {
@@ -1617,8 +1723,7 @@ Rules:
                     } catch (e) { console.warn('Auto photo fetch failed:', e); }
                 }
 
-                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
-                else renderPoster(posterData, currentPosterStyle);
+                renderForLayout();
                 document.getElementById('posterModal').classList.add('active');
             } catch (e) {
                 alert(`Poster design failed (${providerNames[provider]}): ${e.message}`);

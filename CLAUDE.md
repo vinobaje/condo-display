@@ -104,7 +104,9 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 - Create/edit notices with title, body, category, priority, media upload, date scheduling
 - **AI text generation:** "Write with AI" button generates notice text
 - **AI poster designer:** "Design Poster" button generates structured poster data
-  - Two layout modes: 📋 Detailed (multi-section text) and 🎨 Visual/Bold (billboard-style)
+  - Three layout modes: 📋 Detailed (multi-section text), 🎨 Visual/Bold (billboard-style), and 🗓️ Schedule (info layout: header band + optional photo accent, one colour-coded card per building/unit from posterData.schedule, instructions grouped under short headings from posterData.groups, thank-you footer; Bold/Corporate/Minimal/Dark styles set its palette; auto-shrinks to fit; falls back to the notice body verbatim if any number from the body is missing from the structured text)
+  - One-click "AI Generate Poster" picks the layout: notices of 50+ words or with 2+ building/unit schedules → Schedule layout (instant, no image AI); shorter notices → AI artwork with text overlay
+  - html2canvas quirk: never use box-shadow on poster elements — it saves as grey blocks; use solid borders
   - 4 base styles: Bold, Corporate, Minimal, Dark
   - 9 visual-only styles: Teal, Sunset, Purple Pop, Forest, Neon, Glass, Diagonal, Luxury, Deep Ocean
   - Each visual style has unique decorative elements (glow effects, glass panels, diagonal cuts, gold borders, wave patterns)
