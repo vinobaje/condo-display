@@ -136,6 +136,7 @@
         .news-card{position:absolute;inset:0;opacity:0;transform:translateY(calc(8px*var(--u)));transition:opacity .6s ease,transform .6s ease;display:flex;flex-direction:column;overflow:hidden}
         .news-card.active{opacity:1;transform:translateY(0)}
         .news-card-primary{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
+        .fit-hide{display:none!important}
         .news-card-img{width:35%;height:100%;object-fit:cover;background:rgba(255,255,255,.03);flex-shrink:0}
         .news-card-body{flex:1;padding:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)));display:flex;flex-direction:column;overflow:hidden}
         .news-card-source{font-size:clamp(calc(11px*var(--u)),1.5vh,calc(18px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(.8px*var(--u));color:var(--accent);margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)));display:flex;align-items:center;gap:calc(5px*var(--u))}
@@ -145,8 +146,9 @@
         .news-card-time{margin-top:auto;font-size:clamp(calc(11px*var(--u)),1.5vh,calc(18px*var(--u)));color:var(--text-secondary);opacity:.7;padding-top:calc(4px*var(--u))}
         .news-card-footer{flex-shrink:0;margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:calc(8px*var(--u));padding-top:calc(4px*var(--u))}
         .news-card-footer .news-card-time{margin-top:0;padding-top:0}
-        .news-card-qr{width:clamp(calc(36px*var(--u)),5vmin,calc(60px*var(--u)));height:clamp(calc(36px*var(--u)),5vmin,calc(60px*var(--u)));border-radius:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)));background:#fff;padding:clamp(calc(2px*var(--u)),.3vmin,calc(4px*var(--u)));flex-shrink:0;opacity:.8;transition:opacity .3s}
-        .news-card-qr img{width:100%;height:100%;image-rendering:pixelated}
+        /* QR width: 100px floor on purpose (not scaled by --u) — below that, small screens can't draw the squares and phones can't scan */
+        .news-card-qr{width:max(100px,min(8vmin,calc(96px*var(--u))));align-self:flex-end;flex-shrink:0;margin:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)));border-radius:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)));background:#fff;padding:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)))}
+        .news-card-qr img{display:block;width:100%;height:auto}  /* smooth scaling of a 400px code — 'pixelated' dropped rows when shrinking */
         .news-card-qr-label{font-size:clamp(calc(5px*var(--u)),.7vh,calc(8px*var(--u)));text-align:center;color:var(--text-secondary);opacity:.5;margin-top:calc(1px*var(--u))}
         .news-card-secondary{border-top:calc(1px*var(--u)) solid var(--border);flex:1;display:flex;align-items:stretch;gap:0;min-height:0;overflow:hidden}
         .news-card-secondary .sec-img{width:35%;height:100%;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.03)}
@@ -155,8 +157,8 @@
         .news-card-secondary .sec-title{flex-shrink:0;font-size:clamp(calc(17px*var(--u)),2.8vh,calc(34px*var(--u)));font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)))}
         .news-card-secondary .sec-desc{flex-shrink:0;font-size:clamp(calc(12px*var(--u)),1.8vh,calc(21px*var(--u)));line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
         .news-card-secondary .sec-time{margin-top:auto;font-size:clamp(calc(8px*var(--u)),1vh,calc(12px*var(--u)));color:var(--text-secondary);opacity:.6;padding-top:calc(4px*var(--u))}
-        .news-card-secondary .sec-qr{width:clamp(calc(36px*var(--u)),5vmin,calc(60px*var(--u)));align-self:flex-end;padding:clamp(calc(2px*var(--u)),.3vmin,calc(4px*var(--u)));flex-shrink:0;opacity:.7;margin:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)))}
-        .news-card-secondary .sec-qr img{width:100%;image-rendering:pixelated;background:#fff;border-radius:calc(4px*var(--u));padding:calc(2px*var(--u))}
+        .news-card-secondary .sec-qr{width:max(100px,min(8vmin,calc(96px*var(--u))));align-self:flex-end;padding:0;flex-shrink:0;margin:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)))}
+        .news-card-secondary .sec-qr img{display:block;width:100%;height:auto;box-sizing:border-box;background:#fff;border-radius:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)));padding:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)))}
         .news-badge{display:inline-flex;align-items:center;gap:calc(4px*var(--u));font-size:clamp(calc(7px*var(--u)),.9vh,calc(10px*var(--u)));font-weight:800;text-transform:uppercase;letter-spacing:calc(1px*var(--u));padding:clamp(calc(1px*var(--u)),.2vmin,calc(3px*var(--u))) clamp(calc(4px*var(--u)),.6vmin,calc(8px*var(--u)));border-radius:calc(3px*var(--u));margin-left:calc(6px*var(--u));animation:badge-pulse 2s ease infinite}
         .news-badge.breaking{background:var(--urgent);color:#fff}
         .news-badge.trending{background:var(--important);color:#1a1a1a}
@@ -706,7 +708,7 @@
                             secHtml = `<div class="news-card-secondary">${secImg}<div class="sec-body"><div class="sec-source">${escapeHtml(secondary.source)}${secBadgeHtml}</div><div class="sec-title">${escapeHtml(secTitle)}</div><div class="sec-desc">${escapeHtml(secondary.description||'')}</div><div class="sec-time">${formatTimeAgo(secondary.pub_date)}</div></div>${secQr}</div>`;
                         }
 
-                        ch += `<div class="news-card nc-${gi} ${cardIdx===0?'active':''} ${isBreaking?'breaking-card':''}" data-idx="${cardIdx}"><div class="news-card-primary">${img}<div class="news-card-body"><div class="news-card-source"><span class="live-dot"></span>${escapeHtml(primary.source)}${badgeHtml}</div><div class="news-card-title">${escapeHtml(title)}</div><div class="news-card-desc">${escapeHtml(primary.description||'')}</div><div class="news-card-footer"><div class="news-card-time">${formatTimeAgo(primary.pub_date)}</div>${qrHtml}</div></div></div>${secHtml}</div>`;
+                        ch += `<div class="news-card nc-${gi} ${cardIdx===0?'active':''} ${isBreaking?'breaking-card':''}" data-idx="${cardIdx}"><div class="news-card-primary">${img}<div class="news-card-body"><div class="news-card-source"><span class="live-dot"></span>${escapeHtml(primary.source)}${badgeHtml}</div><div class="news-card-title">${escapeHtml(title)}</div><div class="news-card-desc">${escapeHtml(primary.description||'')}</div><div class="news-card-footer"><div class="news-card-time">${formatTimeAgo(primary.pub_date)}</div></div></div>${qrHtml}</div>${secHtml}</div>`;
                         dh += `<div class="news-dot nd-${gi} ${cardIdx===0?'active':''}"></div>`;
                         cardIdx++;
                     }
@@ -800,8 +802,8 @@
         }
 
         // TV auto-fit: scale page to fit viewport if content overflows
-        // Fit each news card: always the full headline (shrinking its text slightly if needed), then as many
-        // whole summary lines as still fit (max 3). Nothing is cut mid-line.
+        // Fit each news card: always the full headline (shrinking its text slightly if needed, and on small
+        // screens dropping the photo if that's what it takes), then as many whole summary lines as fit (max 3).
         function fitNewsSummaries() {
             // Space used = the parts' own heights (layout sizes, unaffected by zoom). Not scrollHeight: the QR
             // code pokes ~2px out of its row, which would make every card look full.
@@ -824,13 +826,23 @@
                 if (desc) desc.style.display = 'none';
                 // 1. The FULL headline, as many lines as it needs. If it doesn't fit, shrink this headline's
                 //    text a little at a time (down to 70%); only as a last resort cut it with "…".
-                title.style.removeProperty('font-size');
+                const photo = body.parentElement.querySelector(':scope > .news-card-img, :scope > .sec-img');
+                photo?.classList.remove('fit-hide');
                 title.style.webkitLineClamp = 'unset';
-                const base = parseFloat(getComputedStyle(title).fontSize);
-                let size = base;
-                while (!fits(body) && size > base * 0.7) {
-                    size = Math.max(base * 0.7, size - Math.max(1, base * 0.04));
-                    title.style.setProperty('font-size', size + 'px', 'important'); // beats the admin font override
+                const shrinkToFit = () => {
+                    title.style.removeProperty('font-size');
+                    const base = parseFloat(getComputedStyle(title).fontSize);
+                    let size = base;
+                    while (!fits(body) && size > base * 0.7) {
+                        size = Math.max(base * 0.7, size - Math.max(1, base * 0.04));
+                        title.style.setProperty('font-size', size + 'px', 'important'); // beats the admin font override
+                    }
+                };
+                shrinkToFit();
+                // Still too long on a small screen: a full headline matters more than the photo — drop the photo
+                if (!fits(body) && photo && getComputedStyle(photo).display !== 'none') {
+                    photo.classList.add('fit-hide');
+                    shrinkToFit();
                 }
                 if (!fits(body)) {
                     for (let n = 6; n >= 1; n--) { title.style.webkitLineClamp = String(n); if (fits(body)) break; }

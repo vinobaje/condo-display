@@ -525,7 +525,9 @@ export function sortNewsByPriority(items) {
 
 export function generateQRUrl(url, size) {
     if (!url) return '';
-    return `https://api.qrserver.com/v1/create-qr-code/?size=${size || 80}x${size || 80}&data=${encodeURIComponent(url)}&margin=1`;
+    // Always fetch a high-resolution code (with a 2-module white quiet zone) and let CSS shrink it smoothly:
+    // small source images scaled to odd sizes lost or distorted rows of squares and wouldn't scan.
+    return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&qzone=2&margin=0&data=${encodeURIComponent(url)}`;
 }
 
 // ═══ Display heartbeat — one doc per physical TV ═════════════
