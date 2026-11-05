@@ -141,7 +141,7 @@
         .news-card-source{font-size:clamp(calc(11px*var(--u)),1.5vh,calc(18px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(.8px*var(--u));color:var(--accent);margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)));display:flex;align-items:center;gap:calc(5px*var(--u))}
         .news-card-source .live-dot{width:calc(5px*var(--u));height:calc(5px*var(--u));border-radius:50%;background:var(--urgent);animation:pulse-dot 2s ease infinite}
         .news-card-title{flex-shrink:0;font-size:clamp(calc(17px*var(--u)),2.8vh,calc(34px*var(--u)));font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)))}
-        .news-card-desc{min-height:0;font-size:clamp(calc(14px*var(--u)),2.1vh,calc(24px*var(--u)));line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .news-card-desc{flex-shrink:0;font-size:clamp(calc(14px*var(--u)),2.1vh,calc(24px*var(--u)));line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
         .news-card-time{margin-top:auto;font-size:clamp(calc(11px*var(--u)),1.5vh,calc(18px*var(--u)));color:var(--text-secondary);opacity:.7;padding-top:calc(4px*var(--u))}
         .news-card-footer{flex-shrink:0;margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:calc(8px*var(--u));padding-top:calc(4px*var(--u))}
         .news-card-footer .news-card-time{margin-top:0;padding-top:0}
@@ -153,7 +153,7 @@
         .news-card-secondary .sec-body{flex:1;padding:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)));display:flex;flex-direction:column;overflow:hidden;min-width:0}
         .news-card-secondary .sec-source{font-size:clamp(calc(10px*var(--u)),1.3vh,calc(16px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(.6px*var(--u));color:var(--accent);margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)));display:flex;align-items:center;gap:calc(4px*var(--u))}
         .news-card-secondary .sec-title{flex-shrink:0;font-size:clamp(calc(17px*var(--u)),2.8vh,calc(34px*var(--u)));font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)))}
-        .news-card-secondary .sec-desc{min-height:0;font-size:clamp(calc(12px*var(--u)),1.8vh,calc(21px*var(--u)));line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .news-card-secondary .sec-desc{flex-shrink:0;font-size:clamp(calc(12px*var(--u)),1.8vh,calc(21px*var(--u)));line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
         .news-card-secondary .sec-time{margin-top:auto;font-size:clamp(calc(8px*var(--u)),1vh,calc(12px*var(--u)));color:var(--text-secondary);opacity:.6;padding-top:calc(4px*var(--u))}
         .news-card-secondary .sec-qr{width:clamp(calc(36px*var(--u)),5vmin,calc(60px*var(--u)));align-self:flex-end;padding:clamp(calc(2px*var(--u)),.3vmin,calc(4px*var(--u)));flex-shrink:0;opacity:.7;margin:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)))}
         .news-card-secondary .sec-qr img{width:100%;image-rendering:pixelated;background:#fff;border-radius:calc(4px*var(--u));padding:calc(2px*var(--u))}
@@ -514,6 +514,8 @@
                 styleEl.textContent = css;
                 document.head.appendChild(styleEl);
             }
+            // Zoom and font sizes just changed the news cards' space — re-fit them
+            requestAnimationFrame(() => fitNewsSummaries());
 
             // Bottom bar brand (Waterview Classic)
             document.getElementById('bottomBarName').textContent = s.building_name || '';
@@ -796,14 +798,40 @@
         }
 
         // TV auto-fit: scale page to fit viewport if content overflows
-        // News summaries get whatever height is left in a card; show only whole lines so nothing is cut mid-line
+        // Fit each news card to its space using whole lines only: headline up to 2 lines, then as many
+        // summary lines as fit (max 3); with no summary the headline may take a 3rd line instead of a gap.
         function fitNewsSummaries() {
-            document.querySelectorAll('.news-card-desc, .sec-desc').forEach(el => {
-                el.style.display = ''; el.style.webkitLineClamp = '';
-                const lh = parseFloat(getComputedStyle(el).lineHeight) || 1;
-                const lines = Math.min(3, Math.floor((el.clientHeight + 1) / lh));
-                if (lines < 1 || !el.textContent.trim()) el.style.display = 'none';
-                else el.style.webkitLineClamp = String(lines);
+            // Space used = the parts' own heights (layout sizes, unaffected by zoom). Not scrollHeight: the QR
+            // code pokes ~2px out of its row, which would make every card look full.
+            const used = (body) => {
+                const cs = getComputedStyle(body);
+                let h = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+                for (const c of body.children) {
+                    const ccs = getComputedStyle(c);
+                    if (ccs.display === 'none') continue;
+                    const autoTop = c.matches('.news-card-footer, .news-card-time, .sec-time'); // margin-top:auto just fills leftover space
+                    h += c.offsetHeight + parseFloat(ccs.marginBottom) + (autoTop ? 0 : parseFloat(ccs.marginTop));
+                }
+                return h;
+            };
+            const fits = (body) => used(body) <= body.clientHeight + 0.5;
+            document.querySelectorAll('.news-card-body, .sec-body').forEach(body => {
+                const title = body.querySelector('.news-card-title, .sec-title');
+                const desc = body.querySelector('.news-card-desc, .sec-desc');
+                if (!title) return;
+                if (desc) desc.style.display = 'none';
+                for (let n = 2; n >= 1; n--) { title.style.webkitLineClamp = String(n); if (fits(body)) break; }
+                let descShown = false;
+                if (desc && desc.textContent.trim()) {
+                    desc.style.display = '';
+                    for (let n = 3; n >= 1; n--) { desc.style.webkitLineClamp = String(n); if (fits(body)) { descShown = true; break; } }
+                    if (!descShown) desc.style.display = 'none';
+                }
+                if (!descShown) {
+                    title.style.webkitLineClamp = '3';
+                    if (!fits(body)) title.style.webkitLineClamp = '2';
+                    if (!fits(body)) title.style.webkitLineClamp = '1';
+                }
             });
         }
         window.addEventListener('resize', () => setTimeout(fitNewsSummaries, 50));
