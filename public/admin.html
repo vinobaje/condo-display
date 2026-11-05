@@ -810,6 +810,7 @@
 
         function renderDisplayStatuses() {
             const panel = document.getElementById('displayStatusPanel');
+            if (panel.contains(document.activeElement) && document.activeElement.tagName === 'SELECT') return;
             if (!displayStatuses.length) {
                 panel.innerHTML = `<div style="padding:12px 18px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);font-size:13px;color:var(--text-dim);">📺 No TV displays have checked in yet. Open the display URL on each Pi (add <code>?device=Lobby</code> to name it).</div>`;
                 return;
@@ -829,6 +830,7 @@
                     <span style="font-weight:600;min-width:110px;">${escapeHtml(label)}</span>
                     <span style="font-size:12px;font-weight:600;color:${on ? 'var(--success)' : 'var(--urgent)'};min-width:54px;">${on ? 'Online' : 'Offline'}</span>
                     <span style="font-size:12px;color:var(--text-dim);flex:1;">last seen ${s.last_seen ? formatTimeAgo(s.last_seen) : 'never'}${screenInfo && s.name ? ' · ' + escapeHtml(screenInfo) : ''}</span>
+                    ${displaySizeSelect(s.id)}
                     <button class="btn btn-outline btn-sm" onclick="reloadDisplay('${s.id}', this)" title="Restart the display (refreshes the screen remotely)" style="font-size:11px;padding:2px 9px;">↻ Reload</button>
                     <button class="btn btn-outline btn-sm" onclick="removeDisplay('${s.id}')" title="Remove this display from the list" style="font-size:11px;padding:2px 9px;">✕</button>
                 </div>`;
@@ -840,6 +842,30 @@
                 ${rows}
             </div>`;
         }
+
+        // ═══ Per-TV size ═══
+        // A browser can tell a TV's resolution but not its physical size or viewing distance,
+        // so each TV gets its own size here (stored in settings/main display_overrides).
+        const TV_SIZES = [0.8, 0.9, 1, 1.1, 1.25, 1.4, 1.5, 1.75];
+        function displaySizeSelect(id) {
+            const current = settings.display_overrides?.[id]?.zoom || '';
+            const globalPct = Math.round((parseFloat(settings.display_zoom) || 1) * 100);
+            return `<select class="form-control" title="Size of everything on this TV — bigger for large TVs or ones read from far away" onchange="setDisplaySize('${id}', this.value)" style="width:auto;font-size:11px;padding:3px 6px;">
+                <option value=""${current ? '' : ' selected'}>Size: default (${globalPct}%)</option>
+                ${TV_SIZES.map(z => `<option value="${z}"${parseFloat(current) === z ? ' selected' : ''}>Size: ${Math.round(z * 100)}%</option>`).join('')}
+            </select>`;
+        }
+
+        window.setDisplaySize = async (id, value) => {
+            const zoom = value ? parseFloat(value) : null;
+            settings.display_overrides = { ...(settings.display_overrides || {}), [id]: { zoom } };
+            try {
+                await saveSettings({ display_overrides: { [id]: { zoom } } });
+                showFlash(zoom ? `TV size set to ${Math.round(zoom * 100)}% — it updates within a few seconds.` : 'TV set back to the default size.', 'success');
+            } catch (e) { showFlash('Could not save TV size: ' + e.message, 'error'); }
+            document.activeElement?.blur?.();
+            renderDisplayStatuses();
+        };
 
         window.reloadDisplay = async (id, btn) => {
             const orig = btn.textContent;

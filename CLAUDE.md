@@ -82,7 +82,8 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 - Themes: `dark-modern`, `light-classic`, `warm-luxury`, `corporate-navy`, `nature-green`, `waterview-classic`
 - `waterview-classic` theme: hides the standard header, uses a bottom bar with logo + clock + ticker
 - Font size overrides: pixel-based (`fs_header_px`, `fs_notice_px`, etc.) — 0 = auto/responsive
-- Display zoom: CSS transform scale (1.0–1.5) for different TV sizes
+- **Resolution scaling:** every px in the stylesheet is written as `calc(Npx*var(--u))`. A head script sets `--u = max(1, min(w/1920, h/1080))` — 1 at 1080p and below (unchanged), 2 on 4K (3840×2160) — so 4K TVs look like 1080p instead of half-size. Admin font overrides get the same scaling. Keep new CSS sizes in this form.
+- Display zoom: CSS transform scale (1.0–1.5). **Per TV:** Admin → TV Displays → Size dropdown writes `settings/main.display_overrides.{tvId}.zoom`; a TV uses its own value, else the global `display_zoom`. A browser can't detect physical TV size or viewing distance — that's what the per-TV size is for.
 - Logo size: separate slider (60%–200%)
 - News ticker at bottom with scrolling headlines
 - Expired notice filtering via `setInterval` every 5 minutes
@@ -247,7 +248,7 @@ cache_version: (integer, incremented to trigger SW cache clear on displays)
 - SD card master image v2 created
 - Chromium kiosk mode pointing to https://condo-notice-board.web.app
 - `unclutter -idle 0.1 -root &` for cursor hiding
-- Hisense 4K TV (3840×2160) with display zoom 1.25
+- Hisense 4K TVs report 3840×2160 / 4096×2160 to the browser (no OS scaling) — handled by the `--u` resolution scaling
 
 ---
 
@@ -255,7 +256,7 @@ cache_version: (integer, incremented to trigger SW cache clear on displays)
 
 ### Standard deploy (hosting only — most common):
 ```bash
-cd ~/Downloads/condo-notice-board-firebase
+cd ~/Documents/condo-display-main
 firebase deploy --only hosting
 ```
 
@@ -266,7 +267,7 @@ firebase deploy
 
 ### Git push:
 ```bash
-cd ~/Downloads/condo-notice-board-firebase
+cd ~/Documents/condo-display-main
 git add .
 git commit -m "description"
 git push -u origin main --force
