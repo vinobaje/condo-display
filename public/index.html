@@ -515,7 +515,7 @@
                 document.head.appendChild(styleEl);
             }
             // Zoom and font sizes just changed the news cards' space — re-fit them
-            requestAnimationFrame(() => fitNewsSummaries());
+            scheduleNewsFit(); // timer-based, not requestAnimationFrame: rAF is paused for hidden/background pages
 
             // Bottom bar brand (Waterview Classic)
             document.getElementById('bottomBarName').textContent = s.building_name || '';
@@ -712,6 +712,8 @@
                     }
                     carousel.innerHTML = ch;
                     fitNewsSummaries();
+                    carousel.querySelectorAll('img').forEach(img => { img.addEventListener('load', () => scheduleNewsFit()); img.addEventListener('error', () => scheduleNewsFit()); });
+                    setTimeout(fitNewsSummaries, 1500); // safety net once photos/fonts have settled
                     if (dotsEl) dotsEl.innerHTML = dh;
                     if (cardIdx > 1) {
                         let idx = 0;
@@ -798,8 +800,8 @@
         }
 
         // TV auto-fit: scale page to fit viewport if content overflows
-        // Fit each news card to its space using whole lines only: headline up to 2 lines, then as many
-        // summary lines as fit (max 3); with no summary the headline may take a 3rd line instead of a gap.
+        // Fit each news card: always the full headline (shrinking its text slightly if needed), then as many
+        // whole summary lines as still fit (max 3). Nothing is cut mid-line.
         function fitNewsSummaries() {
             // Space used = the parts' own heights (layout sizes, unaffected by zoom). Not scrollHeight: the QR
             // code pokes ~2px out of its row, which would make every card look full.
@@ -820,22 +822,35 @@
                 const desc = body.querySelector('.news-card-desc, .sec-desc');
                 if (!title) return;
                 if (desc) desc.style.display = 'none';
-                for (let n = 2; n >= 1; n--) { title.style.webkitLineClamp = String(n); if (fits(body)) break; }
-                let descShown = false;
+                // 1. The FULL headline, as many lines as it needs. If it doesn't fit, shrink this headline's
+                //    text a little at a time (down to 70%); only as a last resort cut it with "…".
+                title.style.removeProperty('font-size');
+                title.style.webkitLineClamp = 'unset';
+                const base = parseFloat(getComputedStyle(title).fontSize);
+                let size = base;
+                while (!fits(body) && size > base * 0.7) {
+                    size = Math.max(base * 0.7, size - Math.max(1, base * 0.04));
+                    title.style.setProperty('font-size', size + 'px', 'important'); // beats the admin font override
+                }
+                if (!fits(body)) {
+                    for (let n = 6; n >= 1; n--) { title.style.webkitLineClamp = String(n); if (fits(body)) break; }
+                }
+                // 2. The summary only with whatever room is left — whole lines, up to 3
                 if (desc && desc.textContent.trim()) {
                     desc.style.display = '';
-                    for (let n = 3; n >= 1; n--) { desc.style.webkitLineClamp = String(n); if (fits(body)) { descShown = true; break; } }
-                    if (!descShown) desc.style.display = 'none';
-                }
-                if (!descShown) {
-                    title.style.webkitLineClamp = '3';
-                    if (!fits(body)) title.style.webkitLineClamp = '2';
-                    if (!fits(body)) title.style.webkitLineClamp = '1';
+                    let shown = false;
+                    for (let n = 3; n >= 1; n--) { desc.style.webkitLineClamp = String(n); if (fits(body)) { shown = true; break; } }
+                    if (!shown) desc.style.display = 'none';
                 }
             });
         }
-        window.addEventListener('resize', () => setTimeout(fitNewsSummaries, 50));
-        document.fonts?.ready.then(() => fitNewsSummaries());
+        // Re-fit whenever something can change a card's layout after it was drawn: settings, window size,
+        // late-loading fonts, and news photos loading or failing (a failed photo is hidden, widening the text).
+        let newsFitTimer = null;
+        function scheduleNewsFit(delay = 60) { clearTimeout(newsFitTimer); newsFitTimer = setTimeout(fitNewsSummaries, delay); }
+        window.addEventListener('resize', () => scheduleNewsFit());
+        document.fonts?.ready.then(() => scheduleNewsFit());
+        document.fonts?.addEventListener?.('loadingdone', () => scheduleNewsFit());
 
         function fitDisplay() {
             const b = document.body;
