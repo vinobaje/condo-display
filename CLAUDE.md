@@ -82,7 +82,7 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 - Themes: `dark-modern`, `light-classic`, `warm-luxury`, `corporate-navy`, `nature-green`, `waterview-classic`
 - `waterview-classic` theme: hides the standard header, uses a bottom bar with logo + clock + ticker
 - Font size overrides: pixel-based (`fs_header_px`, `fs_notice_px`, etc.) — 0 = auto/responsive
-- **Resolution scaling:** every px in the stylesheet is written as `calc(Npx*var(--u))`. A head script sets `--u = max(1, min(w/1920, h/1080))` — 1 at 1080p and below (unchanged), 2 on 4K (3840×2160) — so 4K TVs look like 1080p instead of half-size. Admin font overrides get the same scaling. Keep new CSS sizes in this form.
+- **Resolution scaling:** every px in the stylesheet is written as `calc(Npx*var(--u))`. A head script sets `--u = max(0.5, min(w/1920, h/1080))` — 2 on 4K, 1 at 1080p, less on 720p or a non-fullscreen browser window — so every screen shows the same proportions as a 1080p TV. Admin font overrides get the same scaling. Keep new CSS sizes in this form.
 - Display zoom: CSS transform scale (1.0–1.5). **Per TV:** Admin → TV Displays → Size dropdown writes `settings/main.display_overrides.{tvId}.zoom`; a TV uses its own value, else the global `display_zoom`. A browser can't detect physical TV size or viewing distance — that's what the per-TV size is for.
 - Logo size: separate slider (60%–200%)
 - News ticker at bottom with scrolling headlines

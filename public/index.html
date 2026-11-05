@@ -228,10 +228,10 @@
         .no-notices-text{font-size:clamp(calc(16px*var(--u)),2.8vh,calc(28px*var(--u)));color:var(--text-secondary)}
     </style>
     <script>
-        // The display is designed for 1920×1080. On bigger-resolution screens (4K TVs) every size
-        // grows in proportion so they look the same; 1080p and smaller screens are unchanged.
+        // The display is designed for 1920×1080. Every size scales with the screen so any TV shows the
+        // same proportions: ×2 on 4K, ×1 at 1080p, smaller on 720p or a browser window (never below ×0.5).
         (function () {
-            const setU = () => document.documentElement.style.setProperty('--u', String(Math.max(1, Math.min(innerWidth / 1920, innerHeight / 1080))));
+            const setU = () => document.documentElement.style.setProperty('--u', String(Math.max(0.5, Math.min(innerWidth / 1920, innerHeight / 1080))));
             setU(); addEventListener('resize', setU);
         })();
     </script>
