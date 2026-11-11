@@ -810,19 +810,36 @@
             setInterval(() => { autoDeactivateExpired(); renderNoticeList(); updateStats(); }, 5 * 60 * 1000);
 
             // Live display-health panel (one row per TV)
-            onDisplayStatuses(list => { displayStatuses = list; renderDisplayStatuses(); });
-            setInterval(renderDisplayStatuses, 30 * 1000); // refresh "last seen" text
+            onDisplayStatuses(list => { displayStatuses = list; renderDisplayStatuses(); cleanStaleDisplays(); });
+            setInterval(() => { renderDisplayStatuses(); cleanStaleDisplays(); }, 30 * 1000); // refresh "last seen" text
         }
 
         // ═══ Display health — multiple TVs ═══
         let displayStatuses = [];
         const isDisplayOnline = (s) => s.last_seen && (Date.now() - new Date(s.last_seen).getTime()) / 60000 < 6;
 
+        // Admin-given TV name (settings/main.display_overrides.{id}.name), else ?device= name from the TV
+        const displayName = (s) => (settings.display_overrides?.[s.id]?.name || s.name || '').trim();
+
+        // Leftover entries: unnamed and offline for over an hour — old IDs from restarts and
+        // computers that opened the display page. Named TVs are kept so a dead TV still shows.
+        const cleaningDisplays = new Set();
+        function cleanStaleDisplays() {
+            const hourAgo = Date.now() - 60 * 60 * 1000;
+            for (const s of displayStatuses) {
+                if (displayName(s) || cleaningDisplays.has(s.id)) continue;
+                const seen = s.last_seen ? new Date(s.last_seen).getTime() : 0;
+                if (seen > hourAgo) continue;
+                cleaningDisplays.add(s.id);
+                deleteDisplayStatus(s.id).catch(() => cleaningDisplays.delete(s.id));
+            }
+        }
+
         function renderDisplayStatuses() {
             const panel = document.getElementById('displayStatusPanel');
             if (panel.contains(document.activeElement) && document.activeElement.tagName === 'SELECT') return;
             if (!displayStatuses.length) {
-                panel.innerHTML = `<div style="padding:12px 18px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);font-size:13px;color:var(--text-dim);">📺 No TV displays have checked in yet. Open the display URL on each Pi (add <code>?device=Lobby</code> to name it).</div>`;
+                panel.innerHTML = `<div style="padding:12px 18px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);font-size:13px;color:var(--text-dim);">📺 No TV displays have checked in yet. Once a TV is on, it appears here — use ✏️ Name to label it.</div>`;
                 return;
             }
             const online = displayStatuses.filter(isDisplayOnline).length;
@@ -830,16 +847,24 @@
                 // online first, then by name/id
                 const ao = isDisplayOnline(a) ? 0 : 1, bo = isDisplayOnline(b) ? 0 : 1;
                 if (ao !== bo) return ao - bo;
-                return (a.name || a.id).localeCompare(b.name || b.id);
+                const an = displayName(a), bn = displayName(b);
+                if (!!an !== !!bn) return an ? -1 : 1;
+                return (an || a.id).localeCompare(bn || b.id);
             }).map(s => {
                 const on = isDisplayOnline(s);
-                const label = s.name || (s.device ? s.device.split(' · ')[0] : '') || s.id;
                 const screenInfo = s.device ? s.device.split(' · ')[0] : '';
+                const tvName = displayName(s);
+                const label = tvName || 'Unnamed TV';
                 return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border);">
                     <span style="width:10px;height:10px;border-radius:50%;background:${on ? '#10b981' : '#ef4444'};box-shadow:${on ? '0 0 8px rgba(16,185,129,.6)' : 'none'};flex-shrink:0;"></span>
-                    <span style="font-weight:600;min-width:110px;">${escapeHtml(label)}</span>
+                    <span style="min-width:150px;display:flex;flex-direction:column;line-height:1.25;">
+                        <span style="font-weight:600;${tvName ? '' : 'color:var(--text-dim);font-style:italic;'}">${escapeHtml(label)}</span>
+                        <span style="font-size:10px;color:var(--text-dim);">${escapeHtml(screenInfo || s.id)}</span>
+                    </span>
                     <span style="font-size:12px;font-weight:600;color:${on ? 'var(--success)' : 'var(--urgent)'};min-width:54px;">${on ? 'Online' : 'Offline'}</span>
-                    <span style="font-size:12px;color:var(--text-dim);flex:1;">last seen ${s.last_seen ? formatTimeAgo(s.last_seen) : 'never'}${screenInfo && s.name ? ' · ' + escapeHtml(screenInfo) : ''}</span>
+                    <span style="font-size:12px;color:var(--text-dim);flex:1;">last seen ${s.last_seen ? formatTimeAgo(s.last_seen) : 'never'}</span>
+                    <button class="btn btn-outline btn-sm" onclick="renameDisplay('${s.id}')" title="Give this TV a name, e.g. Lobby" style="font-size:11px;padding:2px 9px;">✏️ Name</button>
+                    <button class="btn btn-outline btn-sm" onclick="identifyDisplay('${s.id}', this)" title="Show a big label on this TV for 15 seconds so you can tell which one it is" style="font-size:11px;padding:2px 9px;"${on ? '' : ' disabled'}>👁 Show</button>
                     ${displaySizeSelect(s.id)}
                     <button class="btn btn-outline btn-sm" onclick="reloadDisplay('${s.id}', this)" title="Restart the display (refreshes the screen remotely)" style="font-size:11px;padding:2px 9px;">↻ Reload</button>
                     <button class="btn btn-outline btn-sm" onclick="removeDisplay('${s.id}')" title="Remove this display from the list" style="font-size:11px;padding:2px 9px;">✕</button>
@@ -868,13 +893,36 @@
 
         window.setDisplaySize = async (id, value) => {
             const zoom = value ? parseFloat(value) : null;
-            settings.display_overrides = { ...(settings.display_overrides || {}), [id]: { zoom } };
+            settings.display_overrides = { ...(settings.display_overrides || {}), [id]: { ...(settings.display_overrides?.[id] || {}), zoom } };
             try {
                 await saveSettings({ display_overrides: { [id]: { zoom } } });
                 showFlash(zoom ? `TV size set to ${Math.round(zoom * 100)}% — it updates within a few seconds.` : 'TV set back to the default size.', 'success');
             } catch (e) { showFlash('Could not save TV size: ' + e.message, 'error'); }
             document.activeElement?.blur?.();
             renderDisplayStatuses();
+        };
+
+        window.renameDisplay = async (id) => {
+            const s = displayStatuses.find(d => d.id === id) || { id };
+            const input = prompt('Name for this TV (e.g. Lobby, Mailroom, Elevator):\n\nTip: press 👁 Show first to see which TV this is.', displayName(s));
+            if (input === null) return;
+            const name = input.trim().slice(0, 40);
+            settings.display_overrides = { ...(settings.display_overrides || {}), [id]: { ...(settings.display_overrides?.[id] || {}), name } };
+            try {
+                await saveSettings({ display_overrides: { [id]: { name } } });
+                showFlash(name ? `TV named "${name}".` : 'TV name removed.', 'success');
+            } catch (e) { showFlash('Could not save name: ' + e.message, 'error'); }
+            renderDisplayStatuses();
+        };
+
+        window.identifyDisplay = async (id, btn) => {
+            const orig = btn.textContent;
+            btn.disabled = true; btn.textContent = '👁 Showing…';
+            try {
+                await sendDisplayCommand(id, 'identify');
+                showFlash('Look at the TVs — this one shows a big label for 15 seconds.', 'success');
+            } catch (e) { showFlash('Could not send: ' + e.message, 'error'); }
+            finally { setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 15000); }
         };
 
         window.reloadDisplay = async (id, btn) => {
@@ -1140,6 +1188,8 @@
             });
             document.getElementById('statTotal').textContent = allNotices.length;
             document.getElementById('statActive').textContent = active.length;
+            const tabCount = document.getElementById('tabNoticeCount');
+            if (tabCount) { tabCount.textContent = active.length; tabCount.title = 'Notices showing on the TVs now'; }
             document.getElementById('statUrgent').textContent = allNotices.filter(n => n.priority >= 2).length;
             document.getElementById('statMedia').textContent = allNotices.filter(n => n.media_url).length;
         }

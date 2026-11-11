@@ -307,6 +307,20 @@
         // Admin writes a command to this TV's command doc; we reload when a NEW
         // one arrives. The first snapshot is recorded without acting, so an old
         // command can never cause a reload loop on boot.
+        // Big on-screen label so the admin can tell which TV is which (👁 Show in TV Displays)
+        function showIdentify(deviceId) {
+            document.getElementById('tvIdentify')?.remove();
+            const name = (settings.display_overrides?.[deviceId]?.name || '').trim();
+            const el = document.createElement('div');
+            el.id = 'tvIdentify';
+            el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;background:rgba(10,20,40,.92);color:#fff;font-family:system-ui,sans-serif;text-align:center';
+            el.innerHTML = `<div style="font-size:4vh;opacity:.75">This TV is</div>
+                <div style="font-size:14vh;font-weight:800;line-height:1.1">${escapeHtml(name || 'Unnamed TV')}</div>
+                <div style="font-size:3vh;opacity:.6">${escapeHtml(`${screen.width}×${screen.height} · ${deviceId}`)}</div>`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 15000);
+        }
+
         (function listenForCommands() {
             if (window.self !== window.top || typeof onDisplayCommand !== 'function') return;
             try {
@@ -320,6 +334,7 @@
                         // Browser can only reload the page (not OS-reboot); this
                         // restarts the display app and pulls the latest code.
                         if (cmd.action === 'reload' || cmd.action === 'reboot') location.reload();
+                        else if (cmd.action === 'identify') showIdentify(deviceId);
                     }
                 });
             } catch (e) { /* never let command listener break the display */ }
