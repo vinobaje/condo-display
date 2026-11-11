@@ -250,6 +250,7 @@ cache_version: (integer, incremented to trigger SW cache clear on displays)
 - SD card master image v2 created
 - Chromium kiosk mode pointing to https://condo-notice-board.web.app
 - `unclutter -idle 0.1 -root &` for cursor hiding
+- **Remote reboot:** Admin → Settings → "⚡ Reboot Pi" (super admin) writes `settings/main.pi_reboot_requested_at` (ISO time). `pi-scripts/reboot-watcher.sh` (systemd service `reboot-watcher`, install with `cd pi-scripts && sudo bash install.sh` on each Pi) polls that field every 30s and reboots once per NEW value; it remembers the last value in `/var/lib/condo-notice-board/last-reboot-request` and ignores requests older than 15 min. It only reads Firestore — never make the Pi or the TV page clear a flag with an unauthenticated write (rules deny it → endless reboot/reload loop; that was the v3 bug, Nov 2026). Reboots every Pi (the watcher doesn't know the browser's tvId); per-TV page reload is Admin → TV Displays → ↻ Reload.
 - Hisense 4K TVs report 3840×2160 / 4096×2160 to the browser (no OS scaling) — handled by the `--u` resolution scaling
 
 ---
@@ -300,7 +301,9 @@ The `.firebaserc` file contains the project binding. No `npm install` needed for
 
 7. **Cloud Functions not deployed yet.** The `functions/` directory has an RSS CORS proxy ready to deploy, but requires Blaze plan. Currently using Cloudflare Worker instead. Don't add function rewrites to `firebase.json` hosting config unless the function is deployed first — it will block hosting deployment.
 
-8. **Two Firebase projects for Condo Super app:** The `condo-super` project hosts the marketing website, and `condo-super-app-web` has the Cloud Functions. NEVER deploy functions to `condo-super` — it will overwrite the iOS app's functions. This Notice Board project (`condo-notice-board`) is completely separate.
+8. **Deploy only from this folder (~/Documents/condo-display-main), on top of the latest GitHub main.** On Nov 9 2026 a Claude cloud session built "v3" from a March copy and deployed it, wiping a week of display work (TV scaling, news/QR fixes, heartbeats) and making the slideshow restart every minute (only the first 2 slides ever showed). Its code is kept on the `backup-v3-cloud-session` branch. `~/Documents/condo-notice-board-firebase` is an old March copy — never deploy from it. The display's expiry re-check must stay at 5 min and must not restart the slideshow more often than slides × slide_duration.
+
+9. **Two Firebase projects for Condo Super app:** The `condo-super` project hosts the marketing website, and `condo-super-app-web` has the Cloud Functions. NEVER deploy functions to `condo-super` — it will overwrite the iOS app's functions. This Notice Board project (`condo-notice-board`) is completely separate.
 
 ---
 

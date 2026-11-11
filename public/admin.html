@@ -316,6 +316,16 @@
                         </div>
                     </div>
                     <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;">⚡ Reboot Pi Units</div>
+                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Restarts every Raspberry Pi that has the reboot watcher installed (use when a TV is frozen; for a normal refresh use ↻ Reload in TV Displays)</div>
+                                <div id="lastRebootRequest" style="font-size:10px;color:var(--text-dim);margin-top:4px;"></div>
+                            </div>
+                            <button type="button" class="btn btn-sm" id="btnRebootPi" onclick="rebootPis()" style="background:#ef4444;color:#fff;border-color:#ef4444;">⚡ Reboot Pi</button>
+                        </div>
+                    </div>
+                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
                         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
                             <div>
                                 <div style="font-size:13px;font-weight:600;">💾 Backup &amp; Restore</div>
@@ -911,7 +921,13 @@
         }
 
         // ═══ Populate Settings ═══
+        function showLastRebootRequest(iso) {
+            const el = document.getElementById('lastRebootRequest');
+            if (el) el.textContent = iso ? 'Last reboot request: ' + new Date(iso).toLocaleString() : '';
+        }
+
         function populateSettings(s) {
+            showLastRebootRequest(s.pi_reboot_requested_at);
             document.getElementById('navSubtitle').textContent = s.building_name;
             document.getElementById('sBuildingName').value = s.building_name || '';
             document.getElementById('sManagementCompany').value = s.management_company || '';
@@ -1506,6 +1522,25 @@ DESIGN RULES:
             } catch (e) {
                 showFlash('Error: ' + e.message, 'error');
             }
+        };
+
+        // Pi reboot: write a new request timestamp. Each Pi's watcher (pi-scripts/reboot-watcher.sh)
+        // remembers the last timestamp it acted on and reboots once per new one — nothing ever
+        // has to clear the value, so a Pi can't get stuck in a reboot loop.
+        window.rebootPis = async () => {
+            if (!confirm('Reboot all Raspberry Pi units?\n\nThe TVs will go dark for about a minute while they restart.')) return;
+            const btn = document.getElementById('btnRebootPi');
+            btn.disabled = true; btn.textContent = '⏳ Sending...';
+            try {
+                const at = new Date().toISOString();
+                await updateDoc(doc(db, 'settings', 'main'), { pi_reboot_requested_at: at });
+                showLastRebootRequest(at);
+                showFlash('Reboot sent — the Pis will restart within about 30 seconds.', 'success');
+                btn.textContent = '✅ Sent';
+            } catch (e) {
+                showFlash('Error: ' + e.message, 'error');
+            }
+            setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Reboot Pi'; }, 60000);
         };
 
         // ═══ Backup / Restore ═══

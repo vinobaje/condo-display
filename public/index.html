@@ -579,14 +579,21 @@
             filterAndRender();
         });
 
+        let lastNoticesKey = null;
         function filterAndRender() {
             const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD, so notices last until local midnight
-            notices = allNoticesRaw.filter(n => {
+            const next = allNoticesRaw.filter(n => {
                 if (!n.active) return false;
                 if (n.start_date && n.start_date > today) return false;
                 if (n.end_date && n.end_date < today) return false;
                 return true;
             }).sort((a, b) => (b.priority || 0) - (a.priority || 0));
+            // Only rebuild when the shown notices actually changed — every rebuild restarts the
+            // slideshow at slide 1, and restarting on a timer meant later slides never showed.
+            const key = JSON.stringify(next);
+            if (key === lastNoticesKey) return;
+            lastNoticesKey = key;
+            notices = next;
             renderNotices();
             startRotation();
         }
