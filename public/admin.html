@@ -318,11 +318,11 @@
                     <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
                         <div style="display:flex;align-items:center;justify-content:space-between;">
                             <div>
-                                <div style="font-size:13px;font-weight:600;">⚡ Reboot Pi Units</div>
-                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Restarts every Raspberry Pi that has the reboot watcher installed (use when a TV is frozen; for a normal refresh use ↻ Reload in TV Displays)</div>
+                                <div style="font-size:13px;font-weight:600;">⚡ Reboot TVs</div>
+                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Use if a TV is frozen or stuck. All TVs go dark for about a minute, then come back on their own. (They also restart automatically every Sunday at 2 AM.)</div>
                                 <div id="lastRebootRequest" style="font-size:10px;color:var(--text-dim);margin-top:4px;"></div>
                             </div>
-                            <button type="button" class="btn btn-sm" id="btnRebootPi" onclick="rebootPis()" style="background:#ef4444;color:#fff;border-color:#ef4444;">⚡ Reboot Pi</button>
+                            <button type="button" class="btn btn-sm" id="btnRebootPi" onclick="rebootPis()" style="background:#ef4444;color:#fff;border-color:#ef4444;">⚡ Reboot TVs</button>
                         </div>
                     </div>
                     <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
@@ -923,7 +923,7 @@
         // ═══ Populate Settings ═══
         function showLastRebootRequest(iso) {
             const el = document.getElementById('lastRebootRequest');
-            if (el) el.textContent = iso ? 'Last reboot request: ' + new Date(iso).toLocaleString() : '';
+            if (el) el.textContent = iso ? 'Last restart: ' + new Date(iso).toLocaleString() : '';
         }
 
         function populateSettings(s) {
@@ -1528,19 +1528,19 @@ DESIGN RULES:
         // remembers the last timestamp it acted on and reboots once per new one — nothing ever
         // has to clear the value, so a Pi can't get stuck in a reboot loop.
         window.rebootPis = async () => {
-            if (!confirm('Reboot all Raspberry Pi units?\n\nThe TVs will go dark for about a minute while they restart.')) return;
+            if (!confirm('Restart all TVs?\n\nThe screens will go dark for about a minute, then come back on their own.')) return;
             const btn = document.getElementById('btnRebootPi');
             btn.disabled = true; btn.textContent = '⏳ Sending...';
             try {
                 const at = new Date().toISOString();
                 await updateDoc(doc(db, 'settings', 'main'), { pi_reboot_requested_at: at });
                 showLastRebootRequest(at);
-                showFlash('Reboot sent — the Pis will restart within about 30 seconds.', 'success');
+                showFlash('Restart sent — the TVs will restart within about 30 seconds.', 'success');
                 btn.textContent = '✅ Sent';
             } catch (e) {
                 showFlash('Error: ' + e.message, 'error');
             }
-            setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Reboot Pi'; }, 60000);
+            setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Reboot TVs'; }, 60000);
         };
 
         // ═══ Backup / Restore ═══
