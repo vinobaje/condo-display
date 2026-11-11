@@ -821,15 +821,15 @@
         // Admin-given TV name (settings/main.display_overrides.{id}.name), else ?device= name from the TV
         const displayName = (s) => (settings.display_overrides?.[s.id]?.name || s.name || '').trim();
 
-        // Leftover entries: unnamed and offline for over an hour — old IDs from restarts and
+        // Leftover entries: unnamed and offline for over 30 min — old IDs from restarts and
         // computers that opened the display page. Named TVs are kept so a dead TV still shows.
         const cleaningDisplays = new Set();
         function cleanStaleDisplays() {
-            const hourAgo = Date.now() - 60 * 60 * 1000;
+            const cutoff = Date.now() - 30 * 60 * 1000;
             for (const s of displayStatuses) {
                 if (displayName(s) || cleaningDisplays.has(s.id)) continue;
                 const seen = s.last_seen ? new Date(s.last_seen).getTime() : 0;
-                if (seen > hourAgo) continue;
+                if (seen > cutoff) continue;
                 cleaningDisplays.add(s.id);
                 deleteDisplayStatus(s.id).catch(() => cleaningDisplays.delete(s.id));
             }
@@ -854,7 +854,8 @@
                 const on = isDisplayOnline(s);
                 const screenInfo = s.device ? s.device.split(' · ')[0] : '';
                 const tvName = displayName(s);
-                const label = tvName || 'Unnamed TV';
+                const isComputer = /Macintosh|Windows|iPhone|iPad/.test(s.device || '');
+                const label = tvName || (isComputer ? '💻 Computer' : 'Unnamed TV');
                 return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border);">
                     <span style="width:10px;height:10px;border-radius:50%;background:${on ? '#10b981' : '#ef4444'};box-shadow:${on ? '0 0 8px rgba(16,185,129,.6)' : 'none'};flex-shrink:0;"></span>
                     <span style="min-width:150px;display:flex;flex-direction:column;line-height:1.25;">
