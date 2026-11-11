@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login — Condo Notice Board</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css?v=20261111a">
+    <link rel="stylesheet" href="/css/style.css?v=20261111b">
 </head>
 <body style="display:flex;align-items:center;justify-content:center;padding:20px;position:relative;">
     <button onclick="toggleAdminTheme()" id="adminThemeToggle" title="Toggle light/dark mode" style="position:absolute;top:16px;right:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:16px;color:var(--text);">🌙</button>
@@ -45,7 +45,7 @@
         }
     </script>
     <script type="module">
-        import { login, onAuthChange } from '/js/app.js?v=20261111a';
+        import { login, onAuthChange } from '/js/app.js?v=20261111b';
 
         // If already logged in, redirect
         onAuthChange(user => {

@@ -2,6 +2,7 @@
 # Install (or update) the Pi helpers:
 #   - reboot-watcher: reboots when Admin → Settings → ⚡ Reboot Pi is pressed
 #   - weekly-reboot.timer: clean reboot every Sunday at 2 AM
+#   - patches ~/kiosk.sh: permanent TV ID (?tvid=<serial>), no --incognito
 # Run on each Pi:  cd pi-scripts && sudo bash install.sh   (safe to re-run)
 set -e
 cd "$(dirname "$0")"
@@ -21,6 +22,16 @@ systemctl is-active reboot-watcher
 echo; echo "=== Weekly reboot (next run) ==="
 systemctl list-timers weekly-reboot.timer --no-pager | head -n 2
 
+U=${SUDO_USER:-pi}; H=$(getent passwd "$U" | cut -d: -f6)
+
+# Give the TV page a permanent ID from the Pi's serial (kiosk URL ?tvid=...) and drop --incognito.
+echo; echo "=== Kiosk script ==="
+BEFORE=$(cat "$H/kiosk.sh" 2>/dev/null | md5sum)
+python3 patch-kiosk.py "$H/kiosk.sh" "$H/kiosk-setup/kiosk.sh"
+chown "$U:$U" "$H"/kiosk.sh* "$H"/kiosk-setup/kiosk.sh* 2>/dev/null || true
+echo "This TV's permanent ID: tv_$(awk '/^Serial/{print substr($3, length($3)-7)}' /proc/cpuinfo)"
+[ "$BEFORE" != "$(cat "$H/kiosk.sh" 2>/dev/null | md5sum)" ] && NEED_REBOOT=1
+
 # The notice media cache lives in Chromium's profile on the SD card and survives
 # a reboot — unless Chromium runs incognito or keeps its profile in /tmp.
 echo; echo "=== Media cache check ==="
@@ -30,7 +41,8 @@ if echo "$ARGS" | grep -qiE -- '--incognito|--user-data-dir=/(tmp|run|dev/shm)';
 else
     echo "OK: Chromium uses a normal profile, so cached notice media survives reboots."
 fi
-U=${SUDO_USER:-pi}; H=$(getent passwd "$U" | cut -d: -f6)
 C=$(ls -d "$H"/.config/chromium/Default/Service\ Worker/CacheStorage 2>/dev/null || true)
 [ -n "$C" ] && echo "Cached media on this Pi: $(du -sh "$C" | cut -f1)"
 echo; echo "Logs: journalctl -u reboot-watcher -f"
+[ -n "$NEED_REBOOT" ] && echo && echo ">>> Kiosk script changed — run: sudo reboot"
+exit 0

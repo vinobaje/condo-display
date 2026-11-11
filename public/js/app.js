@@ -535,6 +535,11 @@ export function generateQRUrl(url, size) {
 // displays each report separately. An optional ?device=Name URL param
 // sets a friendly label (remembered per device).
 export function getDisplayDeviceId() {
+    // Kiosk Pis open the page with ?tvid=<last 8 hex of the Pi serial> (set in ~/kiosk.sh by
+    // pi-scripts/install.sh), so a TV keeps the same ID — and its admin name/size — through any
+    // restart. Chromium on the Pis loses localStorage when rebooted, so don't rely on it there.
+    const fromUrl = (new URLSearchParams(location.search).get('tvid') || '').toLowerCase();
+    if (/^[a-z0-9]{4,12}$/.test(fromUrl)) return 'tv_' + fromUrl;
     let id = localStorage.getItem('tv_device_id');
     if (!id) {
         id = 'tv_' + Math.random().toString(36).slice(2, 10);
