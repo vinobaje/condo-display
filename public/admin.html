@@ -821,11 +821,11 @@
         // Admin-given TV name (settings/main.display_overrides.{id}.name), else ?device= name from the TV
         const displayName = (s) => (settings.display_overrides?.[s.id]?.name || s.name || '').trim();
 
-        // Leftover entries: unnamed and offline for over 30 min — old IDs from restarts and
+        // Leftover entries: unnamed and offline for over 10 min — old IDs from restarts and
         // computers that opened the display page. Named TVs are kept so a dead TV still shows.
         const cleaningDisplays = new Set();
         function cleanStaleDisplays() {
-            const cutoff = Date.now() - 30 * 60 * 1000;
+            const cutoff = Date.now() - 10 * 60 * 1000;
             for (const s of displayStatuses) {
                 if (displayName(s) || cleaningDisplays.has(s.id)) continue;
                 const seen = s.last_seen ? new Date(s.last_seen).getTime() : 0;
@@ -860,7 +860,7 @@
                     <span style="width:10px;height:10px;border-radius:50%;background:${on ? '#10b981' : '#ef4444'};box-shadow:${on ? '0 0 8px rgba(16,185,129,.6)' : 'none'};flex-shrink:0;"></span>
                     <span style="min-width:150px;display:flex;flex-direction:column;line-height:1.25;">
                         <span style="font-weight:600;${tvName ? '' : 'color:var(--text-dim);font-style:italic;'}">${escapeHtml(label)}</span>
-                        <span style="font-size:10px;color:var(--text-dim);">${escapeHtml(screenInfo || s.id)}</span>
+                        <span style="font-size:10px;color:var(--text-dim);">${escapeHtml([screenInfo, s.id].filter(Boolean).join(' · '))}</span>
                     </span>
                     <span style="font-size:12px;font-weight:600;color:${on ? 'var(--success)' : 'var(--urgent)'};min-width:54px;">${on ? 'Online' : 'Offline'}</span>
                     <span style="font-size:12px;color:var(--text-dim);flex:1;">last seen ${s.last_seen ? formatTimeAgo(s.last_seen) : 'never'}</span>
