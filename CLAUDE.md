@@ -14,16 +14,11 @@ Digital signage system for condominium buildings. Deployed at **https://condo-no
 - **Project Number:** `874615845455`
 - **Region:** northamerica-northeast1
 - **Hosting URL:** https://condo-notice-board.web.app
-- **Firebase API Key:** `AIzaSyBmamgeL3fugc7jhnQ_DY7zUNF0eXbUz6Q`
+- **Firebase API Key:** (see firebase-config.js)
 
 ### Firestore Collections
-- `settings/main` — Public display settings (single document, world-readable)
-- `secrets/main` — API keys + super_admin_emails (**auth-gated** read/write; never public)
+- `settings/main` — All display settings (single document)
 - `notices/{id}` — Individual notice documents
-- `templates/{id}` — Reusable notice templates (auth-gated)
-- `status/display` — Display heartbeat (`last_seen`, `device`); TV writes, admin reads
-
-**Security:** API keys live ONLY in `secrets/main` (readable only when logged in). `settings/main` is public because the TV display needs it. `js/app.js` `migrateSecrets()` moves any legacy keys out of `settings/main` on admin load. Never write key fields into `settings/main`.
 
 ### Storage
 - `uploads/` — Notice media (images, videos, PDFs)
@@ -82,10 +77,7 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 - Themes: `dark-modern`, `light-classic`, `warm-luxury`, `corporate-navy`, `nature-green`, `waterview-classic`
 - `waterview-classic` theme: hides the standard header, uses a bottom bar with logo + clock + ticker
 - Font size overrides: pixel-based (`fs_header_px`, `fs_notice_px`, etc.) — 0 = auto/responsive
-- **Resolution scaling:** every px in the stylesheet is written as `calc(Npx*var(--u))`. A head script sets `--u = max(0.5, min(w/1920, h/1080))` — 2 on 4K, 1 at 1080p, less on 720p or a non-fullscreen browser window — so every screen shows the same proportions as a 1080p TV. Admin font overrides get the same scaling. Keep new CSS sizes in this form.
-- **News cards** (`fitNewsSummaries()`): always the full headline (shrinks that headline's text down to 70%, then drops the card's photo on small screens, before ever adding "…"); summaries only in whole lines that fit. Measures with layout heights (offsetHeight), not scrollHeight (the QR pokes out of its row). Re-fits on settings change, resize, font load, photo load/error, and 1.5s after render — timers, not requestAnimationFrame (paused in background pages).
-- **QR codes:** `generateQRUrl()` always fetches a 400px code with a quiet zone; CSS scales it down smoothly. Never use `image-rendering:pixelated` or opacity on QR codes (pixelated shrinking drops rows of squares — CHCH codes wouldn't scan). News QRs have a fixed 100px floor (not scaled by `--u`) so small screens still have ~2px per square.
-- Display zoom: CSS transform scale (1.0–1.5). **Per TV:** Admin → TV Displays → Size dropdown writes `settings/main.display_overrides.{tvId}.zoom`; a TV uses its own value, else the global `display_zoom`. A browser can't detect physical TV size or viewing distance — that's what the per-TV size is for.
+- Display zoom: CSS transform scale (1.0–1.5) for different TV sizes
 - Logo size: separate slider (60%–200%)
 - News ticker at bottom with scrolling headlines
 - Expired notice filtering via `setInterval` every 5 minutes
@@ -93,8 +85,6 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 
 ### admin.html — Admin Dashboard
 - 3 tabs: Notices, Settings, Layout
-- **Import Schedule** (Notices tab): upload any yearly service schedule (docx via mammoth.js CDN, PDF/photo via Gemini multimodal, or pasted text) → Gemini extracts every date + writes a notice template → bulk-creates one pre-scheduled notice per date (start_date = N days before, end_date = service date, default N=7), optionally with an AI-generated poster each (media_only). Imported notices carry `auto_delete: true` and are deleted (media included) by the admin expiry sweep after their date passes; regular notices are only set inactive
-- Expired-notice sweep runs on notice load + every 5 min while admin is open
 - Super Admin system: `super_admin_emails` field in Firestore (comma-separated)
   - First user auto-becomes super admin (bootstrap)
   - Regular admins see: Notices, Layout, Building Info, Display toggles, widgets, theme, ticker
@@ -107,9 +97,7 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 - Create/edit notices with title, body, category, priority, media upload, date scheduling
 - **AI text generation:** "Write with AI" button generates notice text
 - **AI poster designer:** "Design Poster" button generates structured poster data
-  - Three layout modes: 📋 Detailed (multi-section text), 🎨 Visual/Bold (billboard-style), and 🗓️ Schedule (info layout: header band + optional photo accent, one colour-coded card per building/unit from posterData.schedule, instructions grouped under short headings from posterData.groups, thank-you footer; Bold/Corporate/Minimal/Dark styles set its palette; auto-shrinks to fit; falls back to the notice body verbatim if any number from the body is missing from the structured text)
-  - One-click "AI Generate Poster" picks the layout: notices of 50+ words or with 2+ building/unit schedules → Schedule layout (instant, no image AI); shorter notices → AI artwork with text overlay
-  - html2canvas quirk: never use box-shadow on poster elements — it saves as grey blocks; use solid borders
+  - Two layout modes: 📋 Detailed (multi-section text) and 🎨 Visual/Bold (billboard-style)
   - 4 base styles: Bold, Corporate, Minimal, Dark
   - 9 visual-only styles: Teal, Sunset, Purple Pop, Forest, Neon, Glass, Diagonal, Luxury, Deep Ocean
   - Each visual style has unique decorative elements (glow effects, glass panels, diagonal cuts, gold borders, wave patterns)
@@ -124,9 +112,7 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
     - 📤 Upload Photo
     - 📷 Stock Photos (Pixabay API)
     - 🎨 Illustrations (built-in SVG library: garage, fire, elevator, water, pool, etc.)
-    - 🤖 AI Generate — Gemini designs the WHOLE poster as one image, text included (the original prompt; looks polished but can drop/garble text on long notices — that's why long notices go to the Schedule layout). In the Schedule layout this button instead makes a text-free 4:3 picture for the poster header and keeps the layout.
-    - A painted-text-free "artwork + HTML text overlay" variant was tried on 2026-10-22 and rejected by Vino as looking worse; so was forcing every fact into `sections` (it made the AI dump whole paragraphs). Don't reintroduce either without asking.
-  - Date typo check: `findDateTypos()` warns (form + poster window) when a weekday doesn't match its date/year, e.g. "Friday, November 27th, 2025" (a Thursday) → suggests 2026
+    - 🤖 AI Generate (Gemini image generation — creates entire poster as an image)
   - Auto-fetches stock photo on "Design Poster" click if Pixabay key is set
   - html2canvas for converting poster to PNG → uploaded as notice media
 
@@ -138,16 +124,16 @@ Everything runs client-side. RSS feeds proxied through Cloudflare Worker at `htt
 | Field | Service | Notes |
 |-------|---------|-------|
 | `gemini_api_key` | Google Gemini AI | Text gen: `gemini-2.5-flash-lite`, Image gen: `gemini-2.5-flash-image` |
-| `pixabay_api_key` | Pixabay Stock Photos | Key: `55018669-e5f1692a43606a5b4f7fabec3` |
+| `pixabay_api_key` | Pixabay Stock Photos | Stored in Firestore |
 | `groq_api_key` | Groq (alternative AI) | Optional |
 | `openai_api_key` | OpenAI (alternative AI) | Optional |
 | `deepseek_api_key` | DeepSeek (alternative AI) | Optional |
 
 ### AI Models Used
 - **Text generation:** `gemini-2.5-flash-lite` (via `v1beta` REST API)
-- **Image generation:** `gemini-3-pro-image` (best text rendering), auto-fallback to `gemini-3.1-flash-image` then `gemini-2.5-flash-image` on API error
-  - Uses `responseModalities: ['TEXT', 'IMAGE']` and `imageConfig: { aspectRatio: '16:9' }`
-- **Available on this account (July 2026):** gemini-2.5-flash-image, gemini-3-pro-image, gemini-3.1-flash-image, gemini-3.1-flash-lite-image, imagen-4.0-generate-001 / -ultra / -fast (predict API)
+- **Image generation:** `gemini-2.5-flash-image` (Nano Banana, ~500 free/day)
+  - Uses `responseModalities: ['TEXT', 'IMAGE']` and `imageGenerationConfig: { aspectRatio: '16:9' }`
+- **Available on this account:** gemini-2.5-flash-image, gemini-3-pro-image-preview, gemini-3.1-flash-image-preview, imagen-4.0-fast-generate-001
 
 ### RSS News
 - Proxied through Cloudflare Worker: `https://rss-proxy.vino-a6a.workers.dev/?url=...`
@@ -250,7 +236,7 @@ cache_version: (integer, incremented to trigger SW cache clear on displays)
 - SD card master image v2 created
 - Chromium kiosk mode pointing to https://condo-notice-board.web.app
 - `unclutter -idle 0.1 -root &` for cursor hiding
-- Hisense 4K TVs report 3840×2160 / 4096×2160 to the browser (no OS scaling) — handled by the `--u` resolution scaling
+- Hisense 4K TV (3840×2160) with display zoom 1.25
 
 ---
 
@@ -258,7 +244,7 @@ cache_version: (integer, incremented to trigger SW cache clear on displays)
 
 ### Standard deploy (hosting only — most common):
 ```bash
-cd ~/Documents/condo-display-main
+cd ~/Downloads/condo-notice-board-firebase
 firebase deploy --only hosting
 ```
 
@@ -269,7 +255,7 @@ firebase deploy
 
 ### Git push:
 ```bash
-cd ~/Documents/condo-display-main
+cd ~/Downloads/condo-notice-board-firebase
 git add .
 git commit -m "description"
 git push -u origin main --force
