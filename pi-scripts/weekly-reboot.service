@@ -1,0 +1,6 @@
+[Unit]
+Description=Condo Notice Board - scheduled weekly reboot
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl reboot

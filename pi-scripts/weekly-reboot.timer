@@ -1,0 +1,11 @@
+[Unit]
+Description=Condo Notice Board - reboot every Sunday at 2 AM (clears the monthly hang)
+
+[Timer]
+# Pi local time (EST/EDT). Persistent=false: if the Pi was off at 2 AM, don't reboot later.
+OnCalendar=Sun *-*-* 02:00:00
+Persistent=false
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
