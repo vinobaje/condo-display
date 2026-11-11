@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "condo-notice-board",
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
@@ -7,9 +8,9 @@
     ],
     "headers": [
       {
-        "source": "**/*.@(js|css|html)",
+        "source": "**/*.@(js|css)",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+          { "key": "Cache-Control", "value": "max-age=3600" }
         ]
       }
     ]

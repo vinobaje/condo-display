@@ -6,8 +6,6 @@
     <title>Notice Board</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Libre+Baskerville:wght@400;700&family=Outfit:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --u: resolution scale set in <head> — 1 at 1080p or below, 2 at 4K */
-        :root{--u:1}
         :root,[data-theme="dark-modern"]{--bg-primary:#0a0e1a;--bg-card:#111827;--bg-card-hover:#1a2332;--text-primary:#f0f2f5;--text-secondary:#94a3b8;--accent:#3b82f6;--accent-glow:rgba(59,130,246,0.25);--urgent:#ef4444;--urgent-glow:rgba(239,68,68,0.3);--important:#f59e0b;--success:#10b981;--border:rgba(255,255,255,0.06);--border-light:rgba(255,255,255,0.1);--header-bg:rgba(10,14,26,.85);--header-border:var(--border);--ticker-bg:rgba(10,14,26,.9);--orb1:#3b82f6;--orb2:#8b5cf6;--orb3:#06b6d4;--orb-opacity:.12;--font-heading:'Playfair Display',serif;--font-body:'DM Sans',sans-serif;--transition-speed:1.2s}
         [data-theme="light-classic"]{--bg-primary:#f0f2f5;--bg-card:#ffffff;--bg-card-hover:#f8f9fb;--text-primary:#1a1a2e;--text-secondary:#64748b;--accent:#2563eb;--accent-glow:rgba(37,99,235,0.15);--urgent:#dc2626;--urgent-glow:rgba(220,38,38,0.15);--important:#d97706;--success:#059669;--border:rgba(0,0,0,0.08);--border-light:rgba(0,0,0,0.12);--header-bg:rgba(255,255,255,.92);--header-border:rgba(0,0,0,0.06);--ticker-bg:rgba(255,255,255,.95);--orb1:#93c5fd;--orb2:#c4b5fd;--orb3:#a5f3fc;--orb-opacity:.25;--font-heading:'Libre Baskerville',serif;--font-body:'Source Sans 3',sans-serif}
         [data-theme="warm-luxury"]{--bg-primary:#1a1410;--bg-card:#241e17;--bg-card-hover:#2e2620;--text-primary:#f5efe6;--text-secondary:#a89880;--accent:#d4a553;--accent-glow:rgba(212,165,83,0.2);--urgent:#e85d4a;--urgent-glow:rgba(232,93,74,0.25);--important:#d4a553;--success:#7ab648;--border:rgba(212,165,83,0.08);--border-light:rgba(212,165,83,0.15);--header-bg:rgba(26,20,16,.9);--header-border:rgba(212,165,83,0.08);--ticker-bg:rgba(26,20,16,.92);--orb1:#d4a553;--orb2:#8b5e3c;--orb3:#c07040;--orb-opacity:.08;--font-heading:'Crimson Pro',serif;--font-body:'DM Sans',sans-serif}
@@ -19,13 +17,13 @@
         [data-theme="waterview-classic"] .header{display:none}
         [data-theme="waterview-classic"] .ambient-bg{background:linear-gradient(135deg,#0a3d6b 0%,#0d5a8e 30%,#0e7490 60%,#0891b2 100%)}
         [data-theme="waterview-classic"] .orb{display:none}
-        [data-theme="waterview-classic"] .widget-grid{padding:calc(12px*var(--u))}
-        [data-theme="waterview-classic"] .widget{border-radius:calc(8px*var(--u))}
-        [data-theme="waterview-classic"] .w-notices{border:none;border-radius:calc(8px*var(--u))}
-        [data-theme="waterview-classic"] .w-notices .slide-area{border-radius:calc(8px*var(--u))}
-        [data-theme="waterview-classic"] .news-ticker{height:clamp(calc(48px*var(--u)),7vh,calc(72px*var(--u)));background:#0d1f3c;border-top:none}
+        [data-theme="waterview-classic"] .widget-grid{padding:12px}
+        [data-theme="waterview-classic"] .widget{border-radius:8px}
+        [data-theme="waterview-classic"] .w-notices{border:none;border-radius:8px}
+        [data-theme="waterview-classic"] .w-notices .slide-area{border-radius:8px}
+        [data-theme="waterview-classic"] .news-ticker{height:clamp(48px,7vh,72px);background:#0d1f3c;border-top:none}
         [data-theme="waterview-classic"] .news-ticker-label{display:none}
-        [data-theme="waterview-classic"] .news-item{font-size:clamp(calc(14px*var(--u)),2.5vh,calc(24px*var(--u)));font-weight:600;color:#ffffff;padding:0 clamp(calc(24px*var(--u)),4vw,calc(56px*var(--u)))}
+        [data-theme="waterview-classic"] .news-item{font-size:clamp(14px,2.5vh,24px);font-weight:600;color:#ffffff;padding:0 clamp(24px,4vw,56px)}
         [data-theme="waterview-classic"] .news-item-dot{color:rgba(255,255,255,.3)}
         [data-theme="waterview-classic"] .bottom-bar-info{display:flex}
         [data-theme="waterview-classic"] .news-card{background:rgba(0,0,0,.2)}
@@ -35,17 +33,17 @@
 
         /* Waterview Classic — weather widget blue gradient + hourly */
         [data-theme="waterview-classic"] .w-weather{background:linear-gradient(180deg,#1565c0 0%,#1976d2 40%,#2196f3 100%);border:none;padding:0;overflow:hidden}
-        [data-theme="waterview-classic"] .w-weather .wloc{font-size:clamp(calc(16px*var(--u)),2.5vh,calc(28px*var(--u)));font-weight:700;opacity:1;color:#fff;letter-spacing:calc(1px*var(--u));margin-top:0;padding:clamp(calc(8px*var(--u)),1.2vmin,calc(18px*var(--u))) clamp(calc(10px*var(--u)),1.5vmin,calc(20px*var(--u))) 0}
-        [data-theme="waterview-classic"] .w-weather .wi{font-size:clamp(calc(28px*var(--u)),4.5vh,calc(52px*var(--u)));margin:0}
-        [data-theme="waterview-classic"] .w-weather .wtemp{font-size:clamp(calc(28px*var(--u)),4.5vh,calc(52px*var(--u)))}
-        [data-theme="waterview-classic"] .w-weather .wdesc{font-size:clamp(calc(12px*var(--u)),1.6vh,calc(18px*var(--u)));color:rgba(255,255,255,.85);margin:0;text-transform:uppercase;letter-spacing:calc(.5px*var(--u))}
+        [data-theme="waterview-classic"] .w-weather .wloc{font-size:clamp(16px,2.5vh,28px);font-weight:700;opacity:1;color:#fff;letter-spacing:1px;margin-top:0;padding:clamp(8px,1.2vmin,18px) clamp(10px,1.5vmin,20px) 0}
+        [data-theme="waterview-classic"] .w-weather .wi{font-size:clamp(28px,4.5vh,52px);margin:0}
+        [data-theme="waterview-classic"] .w-weather .wtemp{font-size:clamp(28px,4.5vh,52px)}
+        [data-theme="waterview-classic"] .w-weather .wdesc{font-size:clamp(12px,1.6vh,18px);color:rgba(255,255,255,.85);margin:0;text-transform:uppercase;letter-spacing:.5px}
         [data-theme="waterview-classic"] .w-weather .wfc{display:none}
-        [data-theme="waterview-classic"] .w-weather .wfc-hourly{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(1px*var(--u));background:rgba(255,255,255,.12);margin-top:auto}
-        [data-theme="waterview-classic"] .w-weather .wfc-h{text-align:center;padding:clamp(calc(4px*var(--u)),.6vmin,calc(10px*var(--u))) clamp(calc(2px*var(--u)),.4vmin,calc(6px*var(--u)));background:rgba(25,118,210,.85);display:flex;flex-direction:column;align-items:center;gap:clamp(calc(1px*var(--u)),.2vmin,calc(3px*var(--u)))}
-        [data-theme="waterview-classic"] .w-weather .wfc-h .ht{font-size:clamp(calc(9px*var(--u)),1vh,calc(13px*var(--u)));color:rgba(255,255,255,.7);font-weight:600}
-        [data-theme="waterview-classic"] .w-weather .wfc-h .hi{font-size:clamp(calc(16px*var(--u)),2.5vh,calc(28px*var(--u)))}
-        [data-theme="waterview-classic"] .w-weather .wfc-h .htemp{font-size:clamp(calc(12px*var(--u)),1.6vh,calc(20px*var(--u)));font-weight:700;color:#fff}
-        [data-theme="waterview-classic"] .w-weather .wfc-h .hdesc{font-size:clamp(calc(7px*var(--u)),.8vh,calc(10px*var(--u)));color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:calc(.3px*var(--u))}
+        [data-theme="waterview-classic"] .w-weather .wfc-hourly{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.12);margin-top:auto}
+        [data-theme="waterview-classic"] .w-weather .wfc-h{text-align:center;padding:clamp(4px,.6vmin,10px) clamp(2px,.4vmin,6px);background:rgba(25,118,210,.85);display:flex;flex-direction:column;align-items:center;gap:clamp(1px,.2vmin,3px)}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .ht{font-size:clamp(9px,1vh,13px);color:rgba(255,255,255,.7);font-weight:600}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .hi{font-size:clamp(16px,2.5vh,28px)}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .htemp{font-size:clamp(12px,1.6vh,20px);font-weight:700;color:#fff}
+        [data-theme="waterview-classic"] .w-weather .wfc-h .hdesc{font-size:clamp(7px,.8vh,10px);color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.3px}
         [data-theme="light-classic"] .media-overlay-text{background:linear-gradient(transparent,rgba(0,0,0,.75))}
         [data-theme="light-classic"] .media-overlay-text .notice-title{color:#fff}
         [data-theme="light-classic"] .news-ticker-label{background:var(--accent)}
@@ -53,45 +51,42 @@
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);overflow:hidden;height:100vh;height:100dvh;width:100vw;margin:0;cursor:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
         .ambient-bg{position:fixed;inset:0;z-index:0;overflow:hidden}
-        .orb{position:absolute;border-radius:50%;filter:blur(calc(120px*var(--u)));opacity:var(--orb-opacity);animation:orb-float 25s ease-in-out infinite}
-        .orb-1{width:calc(600px*var(--u));height:calc(600px*var(--u));background:var(--orb1);top:-10%;left:-5%}
-        .orb-2{width:calc(500px*var(--u));height:calc(500px*var(--u));background:var(--orb2);bottom:-10%;right:-5%;animation-delay:-8s}
-        .orb-3{width:calc(400px*var(--u));height:calc(400px*var(--u));background:var(--orb3);top:40%;left:40%;animation-delay:-16s}
-        @keyframes orb-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(calc(30px*var(--u)),calc(-40px*var(--u))) scale(1.05)}66%{transform:translate(calc(-20px*var(--u)),calc(30px*var(--u))) scale(.95)}}
+        .orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:var(--orb-opacity);animation:orb-float 25s ease-in-out infinite}
+        .orb-1{width:600px;height:600px;background:var(--orb1);top:-10%;left:-5%}
+        .orb-2{width:500px;height:500px;background:var(--orb2);bottom:-10%;right:-5%;animation-delay:-8s}
+        .orb-3{width:400px;height:400px;background:var(--orb3);top:40%;left:40%;animation-delay:-16s}
+        @keyframes orb-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
 
-        .header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:clamp(calc(12px*var(--u)),2vh,calc(28px*var(--u))) clamp(calc(20px*var(--u)),3vw,calc(48px*var(--u)));background:var(--header-bg);backdrop-filter:blur(calc(24px*var(--u)));border-bottom:calc(1px*var(--u)) solid var(--header-border);flex-shrink:0}
-        .header-left{display:flex;align-items:center;gap:clamp(calc(12px*var(--u)),1.5vw,calc(24px*var(--u)));flex:1;min-width:0;overflow:hidden}
-        .header-logo{width:clamp(calc(72px*var(--u)),13vh,calc(140px*var(--u)));height:auto;max-height:clamp(calc(72px*var(--u)),13vh,calc(140px*var(--u)));border-radius:0;object-fit:contain;background:none}
-        .header-logo-placeholder{width:clamp(calc(72px*var(--u)),13vh,calc(140px*var(--u)));height:clamp(calc(72px*var(--u)),13vh,calc(140px*var(--u)));border-radius:calc(14px*var(--u));background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent),#8b5cf6));display:flex;align-items:center;justify-content:center;font-size:clamp(calc(28px*var(--u)),5.5vh,calc(52px*var(--u)));font-weight:700;color:#fff}
-        .building-name{font-family:var(--font-heading);font-size:clamp(calc(24px*var(--u)),4.5vh,calc(48px*var(--u)));font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .building-subtitle{font-size:clamp(calc(13px*var(--u)),1.8vh,calc(20px*var(--u)));color:var(--text-secondary);margin-top:calc(2px*var(--u))}
-        .header-center{display:flex;align-items:center;gap:clamp(calc(12px*var(--u)),2vw,calc(28px*var(--u)));flex-shrink:1;min-width:0}
-        .weather-widget{display:flex;align-items:center;gap:clamp(calc(8px*var(--u)),1.2vw,calc(20px*var(--u)));padding:clamp(calc(6px*var(--u)),1vh,calc(14px*var(--u))) clamp(calc(10px*var(--u)),1.5vw,calc(28px*var(--u)));background:transparent;border:none;border-radius:calc(14px*var(--u));overflow:hidden;min-width:0}
-        .weather-icon{font-size:clamp(calc(28px*var(--u)),5vh,calc(56px*var(--u)));line-height:1}
-        .weather-temp{font-size:clamp(calc(32px*var(--u)),6vh,calc(60px*var(--u)));font-weight:800;font-variant-numeric:tabular-nums}
-        .weather-details{font-size:clamp(calc(13px*var(--u)),1.8vh,calc(20px*var(--u)));color:var(--text-secondary);line-height:1.4;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .weather-label{font-size:clamp(calc(10px*var(--u)),1.2vh,calc(14px*var(--u)));color:var(--text-secondary);opacity:.6;text-transform:uppercase;letter-spacing:calc(.5px*var(--u));font-weight:600}
-        .forecast-mini{display:flex;gap:clamp(calc(8px*var(--u)),1vw,calc(16px*var(--u)))}
-        .forecast-day{text-align:center;padding:clamp(calc(4px*var(--u)),.8vh,calc(10px*var(--u))) clamp(calc(8px*var(--u)),1vw,calc(14px*var(--u)));background:rgba(255,255,255,.03);border-radius:calc(8px*var(--u));font-size:clamp(calc(10px*var(--u)),1.3vh,calc(14px*var(--u)));color:var(--text-secondary);font-weight:500}
-        .forecast-day-icon{font-size:clamp(calc(16px*var(--u)),2.5vh,calc(26px*var(--u)));margin:clamp(calc(2px*var(--u)),.4vh,calc(6px*var(--u))) 0}
-        .forecast-day-temp{font-size:clamp(calc(10px*var(--u)),1.3vh,calc(15px*var(--u)));font-weight:700;color:var(--text-primary)}
-        .header-right{display:flex;align-items:center;gap:calc(24px*var(--u));flex-shrink:0}
+        .header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:clamp(12px,2vh,28px) clamp(20px,3vw,48px);background:var(--header-bg);backdrop-filter:blur(24px);border-bottom:1px solid var(--header-border);flex-shrink:0}
+        .header-left{display:flex;align-items:center;gap:clamp(12px,1.5vw,24px);flex:1;min-width:0;overflow:hidden}
+        .header-logo{width:clamp(72px,13vh,140px);height:auto;max-height:clamp(72px,13vh,140px);border-radius:0;object-fit:contain;background:none}
+        .header-logo-placeholder{width:clamp(72px,13vh,140px);height:clamp(72px,13vh,140px);border-radius:14px;background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent),#8b5cf6));display:flex;align-items:center;justify-content:center;font-size:clamp(28px,5.5vh,52px);font-weight:700;color:#fff}
+        .building-name{font-family:var(--font-heading);font-size:clamp(24px,4.5vh,48px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .building-subtitle{font-size:clamp(13px,1.8vh,20px);color:var(--text-secondary);margin-top:2px}
+        .header-center{display:flex;align-items:center;gap:clamp(12px,2vw,28px);flex-shrink:1;min-width:0}
+        .weather-widget{display:flex;align-items:center;gap:clamp(8px,1.2vw,20px);padding:clamp(6px,1vh,14px) clamp(10px,1.5vw,28px);background:transparent;border:none;border-radius:14px;overflow:hidden;min-width:0}
+        .weather-icon{font-size:clamp(28px,5vh,56px);line-height:1}
+        .weather-temp{font-size:clamp(32px,6vh,60px);font-weight:800;font-variant-numeric:tabular-nums}
+        .weather-details{font-size:clamp(13px,1.8vh,20px);color:var(--text-secondary);line-height:1.4;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .weather-label{font-size:clamp(10px,1.2vh,14px);color:var(--text-secondary);opacity:.6;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+        .forecast-mini{display:flex;gap:clamp(8px,1vw,16px)}
+        .forecast-day{text-align:center;padding:clamp(4px,.8vh,10px) clamp(8px,1vw,14px);background:rgba(255,255,255,.03);border-radius:8px;font-size:clamp(10px,1.3vh,14px);color:var(--text-secondary);font-weight:500}
+        .forecast-day-icon{font-size:clamp(16px,2.5vh,26px);margin:clamp(2px,.4vh,6px) 0}
+        .forecast-day-temp{font-size:clamp(10px,1.3vh,15px);font-weight:700;color:var(--text-primary)}
+        .header-right{display:flex;align-items:center;gap:24px;flex-shrink:0}
         .datetime-block{text-align:right}
-        .clock{font-size:clamp(calc(32px*var(--u)),6vh,calc(60px*var(--u)));font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:calc(-1px*var(--u))}
-        .date-display{font-size:clamp(calc(13px*var(--u)),1.8vh,calc(20px*var(--u)));color:var(--text-secondary);margin-top:calc(2px*var(--u));font-weight:500}
+        .clock{font-size:clamp(32px,6vh,60px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+        .date-display{font-size:clamp(13px,1.8vh,20px);color:var(--text-secondary);margin-top:2px;font-weight:500}
 
         /* Widget Grid */
-        .widget-grid{position:relative;z-index:5;flex:1;min-height:0;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr);padding:clamp(calc(8px*var(--u)),1.2vmin,calc(20px*var(--u))) clamp(calc(12px*var(--u)),2vmin,calc(28px*var(--u)));gap:clamp(calc(6px*var(--u)),1vmin,calc(14px*var(--u)));overflow:hidden}
-        .widget{position:relative;overflow:hidden;border-radius:clamp(calc(10px*var(--u)),1.2vmin,calc(18px*var(--u)));min-width:0;min-height:0}
+        .widget-grid{position:relative;z-index:5;flex:1;min-height:0;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(8,1fr);padding:clamp(8px,1.2vmin,20px) clamp(12px,2vmin,28px);gap:clamp(6px,1vmin,14px);overflow:hidden}
+        .widget{position:relative;overflow:hidden;border-radius:clamp(10px,1.2vmin,18px);min-width:0;min-height:0}
 
         /* Notice Slideshow */
-        .w-notices{background:var(--bg-card);border:calc(1px*var(--u)) solid var(--border)}
-        .w-notices .slide-area{position:absolute;inset:0;overflow:hidden;border-radius:clamp(calc(10px*var(--u)),1.2vmin,calc(18px*var(--u)))}
+        .w-notices{background:var(--bg-card);border:1px solid var(--border)}
+        .w-notices .slide-area{position:absolute;inset:0;overflow:hidden;border-radius:clamp(10px,1.2vmin,18px)}
         .slide{position:absolute;inset:0;opacity:0;transform:scale(.97);transition:opacity var(--transition-speed) ease,transform var(--transition-speed) ease;pointer-events:none}
         .slide.active{opacity:1;transform:scale(1);pointer-events:auto}
-        .slide-qr{position:absolute;bottom:calc(24px*var(--u));right:calc(24px*var(--u));background:#fff;border-radius:calc(12px*var(--u));padding:calc(10px*var(--u)) calc(10px*var(--u)) calc(6px*var(--u));box-shadow:0 calc(8px*var(--u)) calc(24px*var(--u)) rgba(0,0,0,.35);text-align:center;z-index:5}
-        .slide-qr img{display:block;width:calc(130px*var(--u));height:calc(130px*var(--u))}
-        .slide-qr-label{font-size:calc(12px*var(--u));font-weight:700;color:#1a1a2e;margin-top:calc(4px*var(--u));letter-spacing:calc(.3px*var(--u))}
         .notice-card{height:100%;display:flex;flex-direction:column;overflow:hidden}
         .notice-card.has-media-side{flex-direction:row}
         .notice-card.media-only{position:relative}
@@ -99,144 +94,134 @@
         .media-fullscreen:has(.pdf-embed){background:#fff}
         .media-fullscreen img,.media-fullscreen video,.media-fullscreen iframe{width:100%;height:100%;object-fit:contain}
         .media-fullscreen iframe.pdf-embed{background:#fff}
-        .media-overlay-text{position:absolute;bottom:0;left:0;right:0;padding:clamp(calc(16px*var(--u)),3vh,calc(40px*var(--u))) clamp(calc(20px*var(--u)),3vw,calc(48px*var(--u)));background:linear-gradient(transparent,rgba(0,0,0,.85))}
-        .media-overlay-text .notice-title{font-size:clamp(calc(20px*var(--u)),4vh,calc(42px*var(--u)));text-shadow:0 calc(2px*var(--u)) calc(8px*var(--u)) rgba(0,0,0,.5)}
+        .media-overlay-text{position:absolute;bottom:0;left:0;right:0;padding:clamp(16px,3vh,40px) clamp(20px,3vw,48px);background:linear-gradient(transparent,rgba(0,0,0,.85))}
+        .media-overlay-text .notice-title{font-size:clamp(20px,4vh,42px);text-shadow:0 2px 8px rgba(0,0,0,.5)}
         .media-side{flex:0 0 48%;position:relative;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
         .media-side img,.media-side video,.media-side iframe{width:100%;height:100%;object-fit:contain}
         .media-side iframe.pdf-embed{background:#fff}
         .pdf-embed{width:100%;height:100%;border:none;background:#fff}
-        .notice-content{flex:1;padding:clamp(calc(20px*var(--u)),4vh,calc(56px*var(--u))) clamp(calc(20px*var(--u)),3vw,calc(56px*var(--u)));display:flex;flex-direction:column;justify-content:center;overflow:hidden}
-        .notice-category{display:inline-flex;align-items:center;gap:clamp(calc(4px*var(--u)),.6vmin,calc(8px*var(--u)));font-size:clamp(calc(9px*var(--u)),1.3vh,calc(14px*var(--u)));font-weight:600;text-transform:uppercase;letter-spacing:calc(1.5px*var(--u));color:var(--accent);margin-bottom:clamp(calc(8px*var(--u)),2vh,calc(20px*var(--u)))}
-        .notice-category .dot{width:clamp(calc(5px*var(--u)),.8vh,calc(9px*var(--u)));height:clamp(calc(5px*var(--u)),.8vh,calc(9px*var(--u)));border-radius:50%;background:var(--accent)}
+        .notice-content{flex:1;padding:clamp(20px,4vh,56px) clamp(20px,3vw,56px);display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+        .notice-category{display:inline-flex;align-items:center;gap:clamp(4px,.6vmin,8px);font-size:clamp(9px,1.3vh,14px);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:clamp(8px,2vh,20px)}
+        .notice-category .dot{width:clamp(5px,.8vh,9px);height:clamp(5px,.8vh,9px);border-radius:50%;background:var(--accent)}
         .priority-urgent .notice-category{color:var(--urgent)}
-        .priority-urgent .notice-category .dot{background:var(--urgent);box-shadow:0 0 calc(10px*var(--u)) var(--urgent-glow)}
+        .priority-urgent .notice-category .dot{background:var(--urgent);box-shadow:0 0 10px var(--urgent-glow)}
         .priority-important .notice-category{color:var(--important)}
         .priority-important .notice-category .dot{background:var(--important)}
-        .notice-title{font-family:var(--font-heading);font-size:clamp(calc(22px*var(--u)),4.5vh,calc(52px*var(--u)));font-weight:700;line-height:1.15;margin-bottom:clamp(calc(10px*var(--u)),2.5vh,calc(24px*var(--u)));letter-spacing:calc(-.5px*var(--u))}
-        .notice-body{font-size:clamp(calc(14px*var(--u)),2.5vh,calc(28px*var(--u)));line-height:1.65;color:var(--text-secondary);overflow:hidden}
-        .notice-meta{margin-top:auto;padding-top:clamp(calc(10px*var(--u)),2vh,calc(24px*var(--u)));border-top:calc(1px*var(--u)) solid var(--border);display:flex;gap:clamp(calc(8px*var(--u)),1vw,calc(16px*var(--u)));font-size:clamp(calc(10px*var(--u)),1.3vh,calc(14px*var(--u)));color:var(--text-secondary)}
-        .progress-bar{position:absolute;bottom:0;left:0;height:calc(3px*var(--u));background:linear-gradient(90deg,var(--accent),#8b5cf6);border-radius:calc(2px*var(--u));z-index:20;transition:width linear}
+        .notice-title{font-family:var(--font-heading);font-size:clamp(22px,4.5vh,52px);font-weight:700;line-height:1.15;margin-bottom:clamp(10px,2.5vh,24px);letter-spacing:-.5px}
+        .notice-body{font-size:clamp(14px,2.5vh,28px);line-height:1.65;color:var(--text-secondary);overflow:hidden}
+        .notice-meta{margin-top:auto;padding-top:clamp(10px,2vh,24px);border-top:1px solid var(--border);display:flex;gap:clamp(8px,1vw,16px);font-size:clamp(10px,1.3vh,14px);color:var(--text-secondary)}
+        .progress-bar{position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),#8b5cf6);border-radius:2px;z-index:20;transition:width linear}
 
         /* Notice List */
-        .w-notice-list{background:var(--bg-card);border:calc(1px*var(--u)) solid var(--border);display:flex;flex-direction:column;padding:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)))}
-        .w-notice-list .wt{font-size:clamp(calc(9px*var(--u)),1.1vh,calc(13px*var(--u)));font-weight:600;text-transform:uppercase;letter-spacing:calc(1.5px*var(--u));color:var(--text-secondary);margin-bottom:clamp(calc(6px*var(--u)),1vh,calc(12px*var(--u)));padding:0 calc(4px*var(--u))}
-        .w-notice-list .list{flex:1;display:flex;flex-direction:column;gap:clamp(calc(4px*var(--u)),.7vmin,calc(10px*var(--u)));overflow:hidden}
-        .sidebar-card{background:var(--bg-card-hover);border:calc(1px*var(--u)) solid var(--border);border-radius:clamp(calc(8px*var(--u)),1vmin,calc(14px*var(--u)));padding:clamp(calc(8px*var(--u)),1.2vmin,calc(14px*var(--u)));transition:all .3s;display:flex;align-items:center;gap:clamp(calc(6px*var(--u)),1vmin,calc(12px*var(--u)))}
-        .sidebar-card.current{border-color:var(--accent);box-shadow:0 0 calc(12px*var(--u)) var(--accent-glow)}
-        .sidebar-card-thumb{width:clamp(calc(28px*var(--u)),4vh,calc(48px*var(--u)));height:clamp(calc(28px*var(--u)),4vh,calc(48px*var(--u)));border-radius:clamp(calc(6px*var(--u)),.8vmin,calc(10px*var(--u)));background:rgba(255,255,255,.04);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:clamp(calc(14px*var(--u)),2vh,calc(22px*var(--u)))}
+        .w-notice-list{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;padding:clamp(8px,1.2vmin,16px)}
+        .w-notice-list .wt{font-size:clamp(9px,1.1vh,13px);font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:clamp(6px,1vh,12px);padding:0 4px}
+        .w-notice-list .list{flex:1;display:flex;flex-direction:column;gap:clamp(4px,.7vmin,10px);overflow:hidden}
+        .sidebar-card{background:var(--bg-card-hover);border:1px solid var(--border);border-radius:clamp(8px,1vmin,14px);padding:clamp(8px,1.2vmin,14px);transition:all .3s;display:flex;align-items:center;gap:clamp(6px,1vmin,12px)}
+        .sidebar-card.current{border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+        .sidebar-card-thumb{width:clamp(28px,4vh,48px);height:clamp(28px,4vh,48px);border-radius:clamp(6px,.8vmin,10px);background:rgba(255,255,255,.04);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,2vh,22px)}
         .sidebar-card-thumb img,.sidebar-card-thumb video{width:100%;height:100%;object-fit:cover}
         .sidebar-card-info{flex:1;min-width:0}
-        .sidebar-card-cat{font-size:clamp(calc(9px*var(--u)),1.2vh,calc(14px*var(--u)));font-weight:600;text-transform:uppercase;letter-spacing:calc(.8px*var(--u));color:var(--accent);margin-bottom:calc(2px*var(--u))}
-        .sidebar-card-title{font-size:clamp(calc(13px*var(--u)),1.8vh,calc(20px*var(--u)));font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .sidebar-card-cat{font-size:clamp(9px,1.2vh,14px);font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:2px}
+        .sidebar-card-title{font-size:clamp(13px,1.8vh,20px);font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
         /* News Widget */
-        .w-news{background:var(--bg-card);border:calc(1px*var(--u)) solid var(--border);display:flex;flex-direction:column;padding:clamp(calc(6px*var(--u)),1vmin,calc(12px*var(--u))) clamp(calc(6px*var(--u)),1vmin,calc(12px*var(--u))) clamp(calc(4px*var(--u)),.6vmin,calc(8px*var(--u)))}
-        .w-news .wt{font-size:clamp(calc(10px*var(--u)),1.3vh,calc(16px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(1.5px*var(--u));color:var(--text-secondary);margin-bottom:clamp(calc(4px*var(--u)),.6vmin,calc(8px*var(--u)));padding:0 calc(4px*var(--u))}
-        .w-news .carousel{position:relative;flex:1;overflow:hidden;border-radius:clamp(calc(6px*var(--u)),.8vmin,calc(12px*var(--u)))}
-        .news-card{position:absolute;inset:0;opacity:0;transform:translateY(calc(8px*var(--u)));transition:opacity .6s ease,transform .6s ease;display:flex;flex-direction:column;overflow:hidden}
+        .w-news{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;padding:clamp(6px,1vmin,12px) clamp(6px,1vmin,12px) clamp(4px,.6vmin,8px)}
+        .w-news .wt{font-size:clamp(8px,1vh,12px);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:clamp(4px,.6vmin,8px);padding:0 4px}
+        .w-news .carousel{position:relative;flex:1;overflow:hidden;border-radius:clamp(6px,.8vmin,12px)}
+        .news-card{position:absolute;inset:0;opacity:0;transform:translateY(8px);transition:opacity .6s ease,transform .6s ease;display:flex;flex-direction:column;overflow:hidden}
         .news-card.active{opacity:1;transform:translateY(0)}
         .news-card-primary{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
-        .fit-hide{display:none!important}
         .news-card-img{width:35%;height:100%;object-fit:cover;background:rgba(255,255,255,.03);flex-shrink:0}
-        .news-card-body{flex:1;padding:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)));display:flex;flex-direction:column;overflow:hidden}
-        .news-card-source{font-size:clamp(calc(11px*var(--u)),1.5vh,calc(18px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(.8px*var(--u));color:var(--accent);margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)));display:flex;align-items:center;gap:calc(5px*var(--u))}
-        .news-card-source .live-dot{width:calc(5px*var(--u));height:calc(5px*var(--u));border-radius:50%;background:var(--urgent);animation:pulse-dot 2s ease infinite}
-        .news-card-title{flex-shrink:0;font-size:clamp(calc(17px*var(--u)),2.8vh,calc(34px*var(--u)));font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)))}
-        .news-card-desc{flex-shrink:0;font-size:clamp(calc(14px*var(--u)),2.1vh,calc(24px*var(--u)));line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-        .news-card-time{margin-top:auto;font-size:clamp(calc(11px*var(--u)),1.5vh,calc(18px*var(--u)));color:var(--text-secondary);opacity:.7;padding-top:calc(4px*var(--u))}
-        .news-card-footer{flex-shrink:0;margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:calc(8px*var(--u));padding-top:calc(4px*var(--u))}
+        .news-card-body{flex:1;padding:clamp(8px,1.2vmin,16px);display:flex;flex-direction:column;overflow:hidden}
+        .news-card-source{font-size:clamp(9px,1.2vh,14px);font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:clamp(3px,.5vmin,8px);display:flex;align-items:center;gap:5px}
+        .news-card-source .live-dot{width:5px;height:5px;border-radius:50%;background:var(--urgent);animation:pulse-dot 2s ease infinite}
+        .news-card-title{font-size:clamp(15px,2.2vh,26px);font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(3px,.5vmin,8px)}
+        .news-card-desc{font-size:clamp(12px,1.6vh,18px);line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .news-card-time{margin-top:auto;font-size:clamp(9px,1.2vh,14px);color:var(--text-secondary);opacity:.7;padding-top:4px}
+        .news-card-footer{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding-top:4px}
         .news-card-footer .news-card-time{margin-top:0;padding-top:0}
-        /* QR width: 100px floor on purpose (not scaled by --u) — below that, small screens can't draw the squares and phones can't scan */
-        .news-card-qr{width:max(100px,min(8vmin,calc(96px*var(--u))));align-self:flex-end;flex-shrink:0;margin:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)));border-radius:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)));background:#fff;padding:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)))}
-        .news-card-qr img{display:block;width:100%;height:auto}  /* smooth scaling of a 400px code — 'pixelated' dropped rows when shrinking */
-        .news-card-qr-label{font-size:clamp(calc(5px*var(--u)),.7vh,calc(8px*var(--u)));text-align:center;color:var(--text-secondary);opacity:.5;margin-top:calc(1px*var(--u))}
-        .news-card-secondary{border-top:calc(1px*var(--u)) solid var(--border);flex:1;display:flex;align-items:stretch;gap:0;min-height:0;overflow:hidden}
+        .news-card-qr{width:clamp(36px,5vmin,60px);height:clamp(36px,5vmin,60px);border-radius:clamp(3px,.4vmin,6px);background:#fff;padding:clamp(2px,.3vmin,4px);flex-shrink:0;opacity:.8;transition:opacity .3s}
+        .news-card-qr img{width:100%;height:100%;image-rendering:pixelated}
+        .news-card-qr-label{font-size:clamp(5px,.7vh,8px);text-align:center;color:var(--text-secondary);opacity:.5;margin-top:1px}
+        .news-card-secondary{border-top:1px solid var(--border);flex:1;display:flex;align-items:stretch;gap:0;min-height:0;overflow:hidden}
         .news-card-secondary .sec-img{width:35%;height:100%;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.03)}
-        .news-card-secondary .sec-body{flex:1;padding:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)));display:flex;flex-direction:column;overflow:hidden;min-width:0}
-        .news-card-secondary .sec-source{font-size:clamp(calc(10px*var(--u)),1.3vh,calc(16px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(.6px*var(--u));color:var(--accent);margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)));display:flex;align-items:center;gap:calc(4px*var(--u))}
-        .news-card-secondary .sec-title{flex-shrink:0;font-size:clamp(calc(17px*var(--u)),2.8vh,calc(34px*var(--u)));font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(calc(3px*var(--u)),.5vmin,calc(8px*var(--u)))}
-        .news-card-secondary .sec-desc{flex-shrink:0;font-size:clamp(calc(12px*var(--u)),1.8vh,calc(21px*var(--u)));line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-        .news-card-secondary .sec-time{margin-top:auto;font-size:clamp(calc(8px*var(--u)),1vh,calc(12px*var(--u)));color:var(--text-secondary);opacity:.6;padding-top:calc(4px*var(--u))}
-        .news-card-secondary .sec-qr{width:max(100px,min(8vmin,calc(96px*var(--u))));align-self:flex-end;padding:0;flex-shrink:0;margin:clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)))}
-        .news-card-secondary .sec-qr img{display:block;width:100%;height:auto;box-sizing:border-box;background:#fff;border-radius:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)));padding:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)))}
-        .news-badge{display:inline-flex;align-items:center;gap:calc(4px*var(--u));font-size:clamp(calc(7px*var(--u)),.9vh,calc(10px*var(--u)));font-weight:800;text-transform:uppercase;letter-spacing:calc(1px*var(--u));padding:clamp(calc(1px*var(--u)),.2vmin,calc(3px*var(--u))) clamp(calc(4px*var(--u)),.6vmin,calc(8px*var(--u)));border-radius:calc(3px*var(--u));margin-left:calc(6px*var(--u));animation:badge-pulse 2s ease infinite}
+        .news-card-secondary .sec-body{flex:1;padding:clamp(8px,1.2vmin,16px);display:flex;flex-direction:column;overflow:hidden;min-width:0}
+        .news-card-secondary .sec-source{font-size:clamp(8px,1vh,12px);font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-bottom:clamp(3px,.5vmin,8px);display:flex;align-items:center;gap:4px}
+        .news-card-secondary .sec-title{font-size:clamp(15px,2.2vh,26px);font-weight:800;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:clamp(3px,.5vmin,8px)}
+        .news-card-secondary .sec-desc{font-size:clamp(10px,1.3vh,15px);line-height:1.45;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        .news-card-secondary .sec-time{margin-top:auto;font-size:clamp(8px,1vh,12px);color:var(--text-secondary);opacity:.6;padding-top:4px}
+        .news-card-secondary .sec-qr{width:clamp(36px,5vmin,60px);align-self:flex-end;padding:clamp(2px,.3vmin,4px);flex-shrink:0;opacity:.7;margin:clamp(8px,1.2vmin,16px)}
+        .news-card-secondary .sec-qr img{width:100%;image-rendering:pixelated;background:#fff;border-radius:4px;padding:2px}
+        .news-badge{display:inline-flex;align-items:center;gap:4px;font-size:clamp(7px,.9vh,10px);font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:clamp(1px,.2vmin,3px) clamp(4px,.6vmin,8px);border-radius:3px;margin-left:6px;animation:badge-pulse 2s ease infinite}
         .news-badge.breaking{background:var(--urgent);color:#fff}
         .news-badge.trending{background:var(--important);color:#1a1a1a}
         .news-badge.local{background:var(--success);color:#fff}
         @keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.7}}
-        .news-card.breaking-card{border-left:calc(3px*var(--u)) solid var(--urgent)}
+        .news-card.breaking-card{border-left:3px solid var(--urgent)}
         .ticker-breaking{color:var(--urgent)!important;font-weight:700}
         .ticker-breaking .news-item-source{background:rgba(239,68,68,.2)!important;color:var(--urgent)!important}
-        .news-dots{display:flex;justify-content:center;gap:clamp(calc(3px*var(--u)),.4vmin,calc(6px*var(--u)));padding:clamp(calc(2px*var(--u)),.4vmin,calc(6px*var(--u))) 0;flex-shrink:0}
-        .news-dot{width:clamp(calc(4px*var(--u)),.6vmin,calc(8px*var(--u)));height:clamp(calc(4px*var(--u)),.6vmin,calc(8px*var(--u)));border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s}
-        .news-dot.active{background:var(--accent);width:clamp(calc(10px*var(--u)),1.5vmin,calc(20px*var(--u)));border-radius:calc(3px*var(--u))}
+        .news-dots{display:flex;justify-content:center;gap:clamp(3px,.4vmin,6px);padding:clamp(2px,.4vmin,6px) 0;flex-shrink:0}
+        .news-dot{width:clamp(4px,.6vmin,8px);height:clamp(4px,.6vmin,8px);border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s}
+        .news-dot.active{background:var(--accent);width:clamp(10px,1.5vmin,20px);border-radius:3px}
         @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 
         /* Contacts */
-        .w-contacts{background:var(--bg-card);border:calc(1px*var(--u)) solid var(--border);display:flex;flex-direction:column}
-        .ec-header{display:flex;align-items:center;gap:clamp(calc(4px*var(--u)),.6vmin,calc(10px*var(--u)));padding:clamp(calc(6px*var(--u)),1vmin,calc(12px*var(--u))) clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)));background:rgba(239,68,68,.08);border-bottom:calc(1px*var(--u)) solid var(--border);flex-shrink:0}
-        .ec-icon{font-size:clamp(calc(13px*var(--u)),1.8vh,calc(21px*var(--u)))}.ec-title{font-size:clamp(calc(12px*var(--u)),1.7vh,calc(20px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(1px*var(--u));color:var(--urgent)}
-        .ec-list{flex:1;padding:clamp(calc(2px*var(--u)),.3vmin,calc(6px*var(--u))) 0;overflow:hidden}.ec-item{display:flex;justify-content:space-between;align-items:center;padding:clamp(calc(3px*var(--u)),.5vmin,calc(7px*var(--u))) clamp(calc(8px*var(--u)),1.2vmin,calc(16px*var(--u)))}
-        .ec-label{font-size:clamp(calc(14px*var(--u)),2.0vh,calc(23px*var(--u)));color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .ec-number{font-size:clamp(calc(15px*var(--u)),2.3vh,calc(26px*var(--u)));font-weight:600;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:clamp(calc(8px*var(--u)),1vmin,calc(14px*var(--u)))}
+        .w-contacts{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column}
+        .ec-header{display:flex;align-items:center;gap:clamp(4px,.6vmin,10px);padding:clamp(6px,1vmin,12px) clamp(8px,1.2vmin,16px);background:rgba(239,68,68,.08);border-bottom:1px solid var(--border);flex-shrink:0}
+        .ec-icon{font-size:clamp(11px,1.4vh,16px)}.ec-title{font-size:clamp(10px,1.3vh,15px);font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--urgent)}
+        .ec-list{flex:1;padding:clamp(2px,.3vmin,6px) 0;overflow:hidden}.ec-item{display:flex;justify-content:space-between;align-items:center;padding:clamp(3px,.5vmin,7px) clamp(8px,1.2vmin,16px)}
+        .ec-label{font-size:clamp(12px,1.6vh,18px);color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ec-number{font-size:clamp(13px,1.8vh,20px);font-weight:600;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:clamp(8px,1vmin,14px)}
 
         /* Weather Widget (standalone) */
-        .w-weather{background:var(--bg-card);border:calc(1px*var(--u)) solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(calc(12px*var(--u)),2vmin,calc(24px*var(--u)));text-align:center}
-        .w-weather .wi{font-size:clamp(calc(32px*var(--u)),5.5vh,calc(64px*var(--u)));margin-bottom:clamp(calc(4px*var(--u)),.6vmin,calc(10px*var(--u)))}
-        .w-weather .wtemp{font-size:clamp(calc(36px*var(--u)),6vh,calc(68px*var(--u)));font-weight:700}
-        .w-weather .wdesc{font-size:clamp(calc(11px*var(--u)),1.4vh,calc(16px*var(--u)));color:var(--text-secondary);margin-top:calc(4px*var(--u))}
-        .w-weather .wloc{font-size:clamp(calc(10px*var(--u)),1.2vh,calc(14px*var(--u)));color:var(--text-secondary);opacity:.7;margin-top:clamp(calc(4px*var(--u)),.8vmin,calc(10px*var(--u)));text-transform:uppercase;letter-spacing:calc(.5px*var(--u))}
-        .w-weather .wfc{display:flex;gap:clamp(calc(8px*var(--u)),1.2vmin,calc(18px*var(--u)));margin-top:clamp(calc(8px*var(--u)),1.5vmin,calc(20px*var(--u)))}
-        .w-weather .wfc-d{text-align:center;padding:clamp(calc(4px*var(--u)),.6vmin,calc(10px*var(--u)));background:rgba(255,255,255,.03);border-radius:calc(8px*var(--u))}
-        .w-weather .wfc-d .fn{font-size:clamp(calc(9px*var(--u)),1vh,calc(13px*var(--u)));color:var(--text-secondary)}
-        .w-weather .wfc-d .fi{font-size:clamp(calc(16px*var(--u)),2.5vh,calc(28px*var(--u)));margin:clamp(calc(2px*var(--u)),.3vmin,calc(6px*var(--u))) 0}
-        .w-weather .wfc-d .ft{font-size:clamp(calc(10px*var(--u)),1.2vh,calc(14px*var(--u)));font-weight:600}
+        .w-weather{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(12px,2vmin,24px);text-align:center}
+        .w-weather .wi{font-size:clamp(32px,5.5vh,64px);margin-bottom:clamp(4px,.6vmin,10px)}
+        .w-weather .wtemp{font-size:clamp(36px,6vh,68px);font-weight:700}
+        .w-weather .wdesc{font-size:clamp(11px,1.4vh,16px);color:var(--text-secondary);margin-top:4px}
+        .w-weather .wloc{font-size:clamp(10px,1.2vh,14px);color:var(--text-secondary);opacity:.7;margin-top:clamp(4px,.8vmin,10px);text-transform:uppercase;letter-spacing:.5px}
+        .w-weather .wfc{display:flex;gap:clamp(8px,1.2vmin,18px);margin-top:clamp(8px,1.5vmin,20px)}
+        .w-weather .wfc-d{text-align:center;padding:clamp(4px,.6vmin,10px);background:rgba(255,255,255,.03);border-radius:8px}
+        .w-weather .wfc-d .fn{font-size:clamp(9px,1vh,13px);color:var(--text-secondary)}
+        .w-weather .wfc-d .fi{font-size:clamp(16px,2.5vh,28px);margin:clamp(2px,.3vmin,6px) 0}
+        .w-weather .wfc-d .ft{font-size:clamp(10px,1.2vh,14px);font-weight:600}
 
         /* Clock Widget (standalone) */
-        .w-clock{background:var(--bg-card);border:calc(1px*var(--u)) solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(calc(12px*var(--u)),2vmin,calc(24px*var(--u)))}
-        .w-clock .wc-time{font-size:clamp(calc(40px*var(--u)),8vh,calc(84px*var(--u)));font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:calc(-2px*var(--u))}
-        .w-clock .wc-date{font-size:clamp(calc(12px*var(--u)),2vh,calc(20px*var(--u)));color:var(--text-secondary);margin-top:clamp(calc(4px*var(--u)),.8vmin,calc(10px*var(--u)))}
+        .w-clock{background:var(--bg-card);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(12px,2vmin,24px)}
+        .w-clock .wc-time{font-size:clamp(40px,8vh,84px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+        .w-clock .wc-date{font-size:clamp(12px,2vh,20px);color:var(--text-secondary);margin-top:clamp(4px,.8vmin,10px)}
 
         /* Ticker */
-        .news-ticker{position:relative;z-index:10;height:clamp(calc(40px*var(--u)),6vh,calc(64px*var(--u)));background:var(--ticker-bg);backdrop-filter:blur(calc(16px*var(--u)));border-top:calc(1px*var(--u)) solid var(--border);display:flex;align-items:center;overflow:hidden;flex-shrink:0}
+        .news-ticker{position:relative;z-index:10;height:clamp(40px,6vh,64px);background:var(--ticker-bg);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;align-items:center;overflow:hidden;flex-shrink:0}
         .news-ticker.hidden{display:none}
-        .bottom-bar-info{display:none;align-items:center;gap:clamp(calc(10px*var(--u)),1.2vw,calc(20px*var(--u)));padding:0 clamp(calc(12px*var(--u)),2vw,calc(28px*var(--u)));flex-shrink:0;height:100%;border-right:calc(1px*var(--u)) solid rgba(255,255,255,.12)}
-        .bottom-bar-clock{font-size:clamp(calc(18px*var(--u)),3vh,calc(32px*var(--u)));font-weight:700;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
-        .bottom-bar-divider{width:calc(1px*var(--u));height:clamp(calc(20px*var(--u)),3vh,calc(32px*var(--u)));background:rgba(255,255,255,.2)}
-        .bottom-bar-brand{display:flex;align-items:center;gap:clamp(calc(6px*var(--u)),1vw,calc(12px*var(--u)))}
-        .bottom-bar-logo{width:clamp(calc(24px*var(--u)),3.5vh,calc(40px*var(--u)));height:clamp(calc(24px*var(--u)),3.5vh,calc(40px*var(--u)));border-radius:calc(6px*var(--u));object-fit:cover}
-        .bottom-bar-logo-placeholder{width:clamp(calc(24px*var(--u)),3.5vh,calc(40px*var(--u)));height:clamp(calc(24px*var(--u)),3.5vh,calc(40px*var(--u)));border-radius:calc(6px*var(--u));background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:clamp(calc(10px*var(--u)),1.5vh,calc(16px*var(--u)));font-weight:700;color:#fff}
-        .bottom-bar-name{font-size:clamp(calc(13px*var(--u)),2vh,calc(22px*var(--u)));font-weight:600;color:#fff;white-space:nowrap}
+        .bottom-bar-info{display:none;align-items:center;gap:clamp(10px,1.2vw,20px);padding:0 clamp(12px,2vw,28px);flex-shrink:0;height:100%;border-right:1px solid rgba(255,255,255,.12)}
+        .bottom-bar-clock{font-size:clamp(18px,3vh,32px);font-weight:700;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+        .bottom-bar-divider{width:1px;height:clamp(20px,3vh,32px);background:rgba(255,255,255,.2)}
+        .bottom-bar-brand{display:flex;align-items:center;gap:clamp(6px,1vw,12px)}
+        .bottom-bar-logo{width:clamp(24px,3.5vh,40px);height:clamp(24px,3.5vh,40px);border-radius:6px;object-fit:cover}
+        .bottom-bar-logo-placeholder{width:clamp(24px,3.5vh,40px);height:clamp(24px,3.5vh,40px);border-radius:6px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:clamp(10px,1.5vh,16px);font-weight:700;color:#fff}
+        .bottom-bar-name{font-size:clamp(13px,2vh,22px);font-weight:600;color:#fff;white-space:nowrap}
         .wfc-hourly{display:none}
         .weather-top{display:flex;flex-direction:column;align-items:center}
-        [data-theme="waterview-classic"] .w-weather .weather-top{flex-direction:row;gap:clamp(calc(8px*var(--u)),1vmin,calc(16px*var(--u)));padding:clamp(calc(2px*var(--u)),.5vh,calc(8px*var(--u))) clamp(calc(8px*var(--u)),1.5vw,calc(20px*var(--u))) clamp(calc(4px*var(--u)),1vh,calc(12px*var(--u)))}
-        .news-ticker-label{flex-shrink:0;padding:0 clamp(calc(12px*var(--u)),1.5vw,calc(24px*var(--u)));height:100%;display:flex;align-items:center;gap:calc(8px*var(--u));background:var(--accent);color:#fff;font-size:clamp(calc(11px*var(--u)),1.5vh,calc(16px*var(--u)));font-weight:700;text-transform:uppercase;letter-spacing:calc(1px*var(--u))}
-        .news-ticker-label .pulse-dot{width:calc(6px*var(--u));height:calc(6px*var(--u));border-radius:50%;background:#fff;animation:pulse-dot 2s ease infinite}
+        [data-theme="waterview-classic"] .w-weather .weather-top{flex-direction:row;gap:clamp(8px,1vmin,16px);padding:clamp(2px,.5vh,8px) clamp(8px,1.5vw,20px) clamp(4px,1vh,12px)}
+        .news-ticker-label{flex-shrink:0;padding:0 clamp(12px,1.5vw,24px);height:100%;display:flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-size:clamp(11px,1.5vh,16px);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+        .news-ticker-label .pulse-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse-dot 2s ease infinite}
         .news-ticker-track{flex:1;overflow:hidden;position:relative;height:100%;display:flex;align-items:center}
         .news-ticker-content{display:flex;white-space:nowrap;animation:ticker-scroll linear infinite}
-        .news-item{display:inline-flex;align-items:center;gap:calc(8px*var(--u));padding:0 clamp(calc(16px*var(--u)),2.5vw,calc(40px*var(--u)));font-size:clamp(calc(14px*var(--u)),2vh,calc(22px*var(--u)));color:var(--text-secondary)}
-        .news-item-source{font-size:clamp(calc(9px*var(--u)),1.2vh,calc(14px*var(--u)));font-weight:700;text-transform:uppercase;color:var(--accent);letter-spacing:calc(.5px*var(--u));padding:calc(2px*var(--u)) calc(8px*var(--u));background:rgba(59,130,246,.1);border-radius:calc(4px*var(--u))}
+        .news-item{display:inline-flex;align-items:center;gap:8px;padding:0 clamp(16px,2.5vw,40px);font-size:clamp(14px,2vh,22px);color:var(--text-secondary)}
+        .news-item-source{font-size:clamp(9px,1.2vh,14px);font-weight:700;text-transform:uppercase;color:var(--accent);letter-spacing:.5px;padding:2px 8px;background:rgba(59,130,246,.1);border-radius:4px}
         .news-item-dot{color:var(--border-light)}
         @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-        .emergency-overlay{position:fixed;inset:0;z-index:1000;background:#1a0000;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(calc(32px*var(--u)),6vh,calc(80px*var(--u)))}
+        .emergency-overlay{position:fixed;inset:0;z-index:1000;background:#1a0000;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(32px,6vh,80px)}
         .emergency-overlay.active{display:flex}
-        .emergency-icon-big{font-size:clamp(calc(48px*var(--u)),10vh,calc(100px*var(--u)));margin-bottom:clamp(calc(16px*var(--u)),4vh,calc(40px*var(--u)));animation:em-pulse 1.5s ease-in-out infinite}
+        .emergency-icon-big{font-size:clamp(48px,10vh,100px);margin-bottom:clamp(16px,4vh,40px);animation:em-pulse 1.5s ease-in-out infinite}
         @keyframes em-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.1)}}
-        .emergency-title{font-family:var(--font-heading);font-size:clamp(calc(36px*var(--u)),8vh,calc(80px*var(--u)));font-weight:700;color:var(--urgent);margin-bottom:clamp(calc(12px*var(--u)),3vh,calc(28px*var(--u)))}
-        .emergency-text{font-size:clamp(calc(18px*var(--u)),3.5vh,calc(36px*var(--u)));color:var(--text-secondary);max-width:calc(800px*var(--u));line-height:1.6}
+        .emergency-title{font-family:var(--font-heading);font-size:clamp(36px,8vh,80px);font-weight:700;color:var(--urgent);margin-bottom:clamp(12px,3vh,28px)}
+        .emergency-text{font-size:clamp(18px,3.5vh,36px);color:var(--text-secondary);max-width:800px;line-height:1.6}
         .no-notices{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;opacity:.5}
-        .no-notices-icon{font-size:clamp(calc(36px*var(--u)),7vh,calc(72px*var(--u)));margin-bottom:clamp(calc(10px*var(--u)),2.5vh,calc(24px*var(--u)));opacity:.4}
-        .no-notices-text{font-size:clamp(calc(16px*var(--u)),2.8vh,calc(28px*var(--u)));color:var(--text-secondary)}
+        .no-notices-icon{font-size:clamp(36px,7vh,72px);margin-bottom:clamp(10px,2.5vh,24px);opacity:.4}
+        .no-notices-text{font-size:clamp(16px,2.8vh,28px);color:var(--text-secondary)}
     </style>
-    <script>
-        // The display is designed for 1920×1080. Every size scales with the screen so any TV shows the
-        // same proportions: ×2 on 4K, ×1 at 1080p, smaller on 720p or a browser window (never below ×0.5).
-        (function () {
-            const setU = () => document.documentElement.style.setProperty('--u', String(Math.max(0.5, Math.min(innerWidth / 1920, innerHeight / 1080))));
-            setU(); addEventListener('resize', setU);
-        })();
-    </script>
 </head>
 <body>
     <div id="displayRoot" style="display:flex;flex-direction:column;height:100vh;height:100dvh;width:100vw;overflow:hidden;">
@@ -252,7 +237,7 @@
             <div class="weather-widget" id="weatherWidget" style="display:none;">
                 <div class="weather-icon" id="weatherIcon">--</div>
                 <div><div class="weather-temp"><span id="weatherTemp">--</span>°</div><div class="weather-details" id="weatherDetails">Loading...</div></div>
-                <div style="border-left:calc(1px*var(--u)) solid var(--border);padding-left:calc(12px*var(--u));"><div class="weather-label" id="weatherLocation"></div><div class="forecast-mini" id="forecastMini"></div></div>
+                <div style="border-left:1px solid var(--border);padding-left:12px;"><div class="weather-label" id="weatherLocation"></div><div class="forecast-mini" id="forecastMini"></div></div>
             </div>
         </div>
         <div class="header-right"><div class="datetime-block"><div class="date-display" id="dateDisplay"></div><div class="clock" id="clockDisplay"></div></div></div>
@@ -276,71 +261,7 @@
 
     <script src="/js/firebase-config.js"></script>
     <script type="module">
-        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, writeHeartbeat, getDisplayDeviceId, onDisplayCommand, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
-
-        // ═══ Display heartbeat — each TV reports separately ═══
-        // Device id is stable per Pi (localStorage). Friendly name comes from a
-        // ?device=Name (or ?tv=Name) URL param and is remembered afterwards.
-        // Guarded so a transiently stale cached app.js can never break the display.
-        function sendHeartbeat() {
-            try {
-                if (typeof writeHeartbeat !== 'function') return;
-                // Skip when embedded as a preview (admin/notice editor) so it
-                // doesn't register as a phantom TV in the health monitor.
-                if (window.self !== window.top) return;
-                const deviceId = getDisplayDeviceId();
-                const params = new URLSearchParams(location.search);
-                let name = (params.get('device') || params.get('tv') || '').trim();
-                if (name) localStorage.setItem('tv_device_name', name.slice(0, 60));
-                name = name || localStorage.getItem('tv_device_name') || '';
-                const dev = `${screen.width}×${screen.height} · ${navigator.userAgent.slice(0, 120)}`;
-                Promise.resolve(writeHeartbeat(deviceId, name, dev)).catch(() => {});
-            } catch (e) { /* never let the heartbeat break the display */ }
-        }
-        sendHeartbeat();
-        setInterval(sendHeartbeat, 2 * 60 * 1000); // every 2 minutes
-        // Extra beats so a TV shows online promptly after waking / reconnecting
-        document.addEventListener('visibilitychange', () => { if (!document.hidden) sendHeartbeat(); });
-        window.addEventListener('online', sendHeartbeat);
-
-        // ═══ Remote commands from admin (reload) ═══
-        // Admin writes a command to this TV's command doc; we reload when a NEW
-        // one arrives. The first snapshot is recorded without acting, so an old
-        // command can never cause a reload loop on boot.
-        (function listenForCommands() {
-            if (window.self !== window.top || typeof onDisplayCommand !== 'function') return;
-            try {
-                const deviceId = getDisplayDeviceId();
-                let lastCmdTs = null;
-                onDisplayCommand(deviceId, (cmd) => {
-                    if (!cmd || !cmd.ts) return;
-                    if (lastCmdTs === null) { lastCmdTs = cmd.ts; return; } // ignore pre-existing on load
-                    if (cmd.ts > lastCmdTs) {
-                        lastCmdTs = cmd.ts;
-                        // Browser can only reload the page (not OS-reboot); this
-                        // restarts the display app and pulls the latest code.
-                        if (cmd.action === 'reload' || cmd.action === 'reboot') location.reload();
-                    }
-                });
-            } catch (e) { /* never let command listener break the display */ }
-        })();
-
-        // ═══ Self-update: reload every 6 hours ═══
-        // Kiosk Pis load the page once at boot and run for weeks, so they never
-        // pick up new code (or re-establish a fresh connection) on their own.
-        // A periodic reload keeps every TV current without a manual reboot.
-        // Only reloads when the server is actually reachable — otherwise the TV
-        // could end up on a browser error page; retries every 30 min instead.
-        if (window.self === window.top) {
-            const tryReload = async () => {
-                try {
-                    const r = await fetch('/index.html', { method: 'HEAD', cache: 'no-store' });
-                    if (r.ok) { location.reload(); return; }
-                } catch (e) { /* offline — keep showing the current board */ }
-                setTimeout(tryReload, 30 * 60 * 1000);
-            };
-            setTimeout(tryReload, 6 * 60 * 60 * 1000);
-        }
+        import { onSettingsChange, onNoticesChange, fetchWeather, fetchNews, fetchNewsByFeed, getFileType, escapeHtml, formatDate, formatTimeAgo, detectNewsBadge, cleanHeadline, sortNewsByPriority, generateQRUrl, CATEGORIES, WMO_ICONS, WMO_DESC, DAY_NAMES } from '/js/app.js';
 
         let settings = {}, notices = [], currentIndex = 0, slideTimer = null, currentVideoEl = null;
         let newsItems = [], feedGroups = [], newsTimers = [];
@@ -415,6 +336,20 @@
             }
             lastCacheVersion = cv;
 
+            // Check if admin triggered a page reload
+            if (s.reload_requested) {
+                console.log('Reload triggered by admin');
+                // Clear the flag
+                import('/js/app.js').then(m => {
+                    const { getFirestore, doc, updateDoc } = m;
+                }).catch(() => {});
+                fetch('https://firestore.googleapis.com/v1/projects/condo-notice-board/databases/(default)/documents/settings/main?updateMask.fieldPaths=reload_requested', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: { reload_requested: { booleanValue: false } } })
+                }).finally(() => { setTimeout(() => location.reload(), 1000); });
+            }
+
             document.documentElement.setAttribute('data-theme', s.display_theme || 'dark-modern');
             document.getElementById('buildingName').textContent = s.building_name;
             document.getElementById('managementCompany').textContent = s.management_company;
@@ -430,7 +365,7 @@
             const logoScale = (parseInt(s.logo_size) || 100) / 100;
             const logoEl = document.getElementById('logoContainer');
             if (logoEl && logoScale !== 1) {
-                logoEl.style.width = `clamp(calc(72px*var(--u)),${(13 * logoScale).toFixed(1)}vh,calc(${Math.round(140 * logoScale)}px*var(--u)))`;
+                logoEl.style.width = `clamp(72px,${(13 * logoScale).toFixed(1)}vh,${Math.round(140 * logoScale)}px)`;
                 logoEl.style.height = logoEl.tagName === 'IMG' ? 'auto' : logoEl.style.width;
                 logoEl.style.maxHeight = `clamp(72px,${(13 * logoScale).toFixed(1)}vh,${Math.round(140 * logoScale)}px)`;
             }
@@ -442,24 +377,17 @@
             if (oldStyle) oldStyle.remove();
 
             // Display zoom
-            // Each TV can have its own size (set per TV in Admin → TV Displays); otherwise the global Display Zoom.
-            // Previews embedded in the admin always use the global value.
-            const myTvId = window.self === window.top ? getDisplayDeviceId() : null;
-            const tvZoom = parseFloat(myTvId && s.display_overrides?.[myTvId]?.zoom);
-            const globalS = (tvZoom > 0 ? tvZoom : parseFloat(s.display_zoom)) || 1;
+            const globalS = parseFloat(s.display_zoom) || 1;
 
             let css = '';
-            const wrapper = document.getElementById('displayRoot');
-            if (wrapper && globalS !== 1) {
-                wrapper.style.transform = `scale(${globalS})`;
-                wrapper.style.transformOrigin = 'top left';
-                wrapper.style.width = `${100 / globalS}vw`;
-                wrapper.style.height = `${100 / globalS}vh`;
-            } else if (wrapper) {
-                // Back to 100%: undo any earlier zoom without needing a reload
-                wrapper.style.transform = '';
-                wrapper.style.width = '100vw';
-                wrapper.style.height = '100dvh';
+            if (globalS !== 1) {
+                const wrapper = document.getElementById('displayRoot');
+                if (wrapper) {
+                    wrapper.style.transform = `scale(${globalS})`;
+                    wrapper.style.transformOrigin = 'top left';
+                    wrapper.style.width = `${100 / globalS}vw`;
+                    wrapper.style.height = `${100 / globalS}vh`;
+                }
             }
 
             // Simple pixel-based font overrides — what you set is what you get
@@ -510,14 +438,11 @@
             }
 
             if (css) {
-                css = css.replace(/(\d*\.?\d+)px/g, 'calc($1px*var(--u))'); // same resolution scaling as the stylesheet
                 const styleEl = document.createElement('style');
                 styleEl.id = 'fs-overrides';
                 styleEl.textContent = css;
                 document.head.appendChild(styleEl);
             }
-            // Zoom and font sizes just changed the news cards' space — re-fit them
-            scheduleNewsFit(); // timer-based, not requestAnimationFrame: rAF is paused for hidden/background pages
 
             // Bottom bar brand (Waterview Classic)
             document.getElementById('bottomBarName').textContent = s.building_name || '';
@@ -580,19 +505,27 @@
         });
 
         function filterAndRender() {
-            const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD, so notices last until local midnight
+            const now = new Date();
+            // Use LOCAL date, not UTC — so notices expire at local midnight
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${y}-${m}-${d}`; // "2026-03-22" in LOCAL timezone
             notices = allNoticesRaw.filter(n => {
                 if (!n.active) return false;
-                if (n.start_date && n.start_date > today) return false;
-                if (n.end_date && n.end_date < today) return false;
+                // Normalize dates — handle strings, Firestore Timestamps
+                const start = n.start_date ? (n.start_date.toDate ? n.start_date.toDate().toISOString().slice(0,10) : String(n.start_date).slice(0,10)) : '';
+                const end = n.end_date ? (n.end_date.toDate ? n.end_date.toDate().toISOString().slice(0,10) : String(n.end_date).slice(0,10)) : '';
+                if (start && start > todayStr) return false;  // hasn't started yet
+                if (end && end < todayStr) return false;       // expired yesterday or before
                 return true;
             }).sort((a, b) => (b.priority || 0) - (a.priority || 0));
             renderNotices();
             startRotation();
         }
 
-        // Re-check expiry every 5 minutes
-        setInterval(filterAndRender, 5 * 60 * 1000);
+        // Re-check expiry every 1 minute
+        setInterval(filterAndRender, 60 * 1000);
 
         async function loadWeather() {
             try {
@@ -708,14 +641,11 @@
                             secHtml = `<div class="news-card-secondary">${secImg}<div class="sec-body"><div class="sec-source">${escapeHtml(secondary.source)}${secBadgeHtml}</div><div class="sec-title">${escapeHtml(secTitle)}</div><div class="sec-desc">${escapeHtml(secondary.description||'')}</div><div class="sec-time">${formatTimeAgo(secondary.pub_date)}</div></div>${secQr}</div>`;
                         }
 
-                        ch += `<div class="news-card nc-${gi} ${cardIdx===0?'active':''} ${isBreaking?'breaking-card':''}" data-idx="${cardIdx}"><div class="news-card-primary">${img}<div class="news-card-body"><div class="news-card-source"><span class="live-dot"></span>${escapeHtml(primary.source)}${badgeHtml}</div><div class="news-card-title">${escapeHtml(title)}</div><div class="news-card-desc">${escapeHtml(primary.description||'')}</div><div class="news-card-footer"><div class="news-card-time">${formatTimeAgo(primary.pub_date)}</div></div></div>${qrHtml}</div>${secHtml}</div>`;
+                        ch += `<div class="news-card nc-${gi} ${cardIdx===0?'active':''} ${isBreaking?'breaking-card':''}" data-idx="${cardIdx}"><div class="news-card-primary">${img}<div class="news-card-body"><div class="news-card-source"><span class="live-dot"></span>${escapeHtml(primary.source)}${badgeHtml}</div><div class="news-card-title">${escapeHtml(title)}</div><div class="news-card-desc">${escapeHtml(primary.description||'')}</div><div class="news-card-footer"><div class="news-card-time">${formatTimeAgo(primary.pub_date)}</div>${qrHtml}</div></div></div>${secHtml}</div>`;
                         dh += `<div class="news-dot nd-${gi} ${cardIdx===0?'active':''}"></div>`;
                         cardIdx++;
                     }
                     carousel.innerHTML = ch;
-                    fitNewsSummaries();
-                    carousel.querySelectorAll('img').forEach(img => { img.addEventListener('load', () => scheduleNewsFit()); img.addEventListener('error', () => scheduleNewsFit()); });
-                    setTimeout(fitNewsSummaries, 1500); // safety net once photos/fonts have settled
                     if (dotsEl) dotsEl.innerHTML = dh;
                     if (cardIdx > 1) {
                         let idx = 0;
@@ -744,12 +674,7 @@
             if (mode === 'media_only' && hasMedia) { inner = `<div class="notice-card media-only ${pc}"><div class="media-fullscreen">${renderMedia(notice)}</div></div>`; }
             else if (hasMedia && mode !== 'text') { inner = `<div class="notice-card has-media-side ${pc}"><div class="media-side">${renderMedia(notice)}</div><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
             else { inner = `<div class="notice-card ${pc}"><div class="notice-content"><div class="notice-category"><span class="dot"></span>${cat.icon} ${cat.label}${notice.priority>=2?' — URGENT':notice.priority>=1?' — Important':''}</div><div class="notice-title">${escapeHtml(notice.title)}</div><div class="notice-body">${escapeHtml(notice.body||'').replace(/\n/g,'<br>')}</div><div class="notice-meta"><span>Posted ${formatDate(notice.created_at)}</span>${notice.end_date?`<span>· Expires ${formatDate(notice.end_date)}</span>`:''}</div></div></div>`; }
-            let qr = '';
-            if (notice.show_qr && notice.id) {
-                const viewUrl = `${location.origin}/view.html?id=${notice.id}`;
-                qr = `<div class="slide-qr"><img src="${generateQRUrl(viewUrl, 130)}" alt="Scan for full notice"><div class="slide-qr-label">Scan for details</div></div>`;
-            }
-            return `<div class="slide ${index===0?'active':''}" data-index="${index}">${inner}${qr}</div>`;
+            return `<div class="slide ${index===0?'active':''}" data-index="${index}">${inner}</div>`;
         }
 
         function buildSidebarCard(notice, index) {
@@ -802,68 +727,6 @@
         }
 
         // TV auto-fit: scale page to fit viewport if content overflows
-        // Fit each news card: always the full headline (shrinking its text slightly if needed, and on small
-        // screens dropping the photo if that's what it takes), then as many whole summary lines as fit (max 3).
-        function fitNewsSummaries() {
-            // Space used = the parts' own heights (layout sizes, unaffected by zoom). Not scrollHeight: the QR
-            // code pokes ~2px out of its row, which would make every card look full.
-            const used = (body) => {
-                const cs = getComputedStyle(body);
-                let h = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-                for (const c of body.children) {
-                    const ccs = getComputedStyle(c);
-                    if (ccs.display === 'none') continue;
-                    const autoTop = c.matches('.news-card-footer, .news-card-time, .sec-time'); // margin-top:auto just fills leftover space
-                    h += c.offsetHeight + parseFloat(ccs.marginBottom) + (autoTop ? 0 : parseFloat(ccs.marginTop));
-                }
-                return h;
-            };
-            const fits = (body) => used(body) <= body.clientHeight + 0.5;
-            document.querySelectorAll('.news-card-body, .sec-body').forEach(body => {
-                const title = body.querySelector('.news-card-title, .sec-title');
-                const desc = body.querySelector('.news-card-desc, .sec-desc');
-                if (!title) return;
-                if (desc) desc.style.display = 'none';
-                // 1. The FULL headline, as many lines as it needs. If it doesn't fit, shrink this headline's
-                //    text a little at a time (down to 70%); only as a last resort cut it with "…".
-                const photo = body.parentElement.querySelector(':scope > .news-card-img, :scope > .sec-img');
-                photo?.classList.remove('fit-hide');
-                title.style.webkitLineClamp = 'unset';
-                const shrinkToFit = () => {
-                    title.style.removeProperty('font-size');
-                    const base = parseFloat(getComputedStyle(title).fontSize);
-                    let size = base;
-                    while (!fits(body) && size > base * 0.7) {
-                        size = Math.max(base * 0.7, size - Math.max(1, base * 0.04));
-                        title.style.setProperty('font-size', size + 'px', 'important'); // beats the admin font override
-                    }
-                };
-                shrinkToFit();
-                // Still too long on a small screen: a full headline matters more than the photo — drop the photo
-                if (!fits(body) && photo && getComputedStyle(photo).display !== 'none') {
-                    photo.classList.add('fit-hide');
-                    shrinkToFit();
-                }
-                if (!fits(body)) {
-                    for (let n = 6; n >= 1; n--) { title.style.webkitLineClamp = String(n); if (fits(body)) break; }
-                }
-                // 2. The summary only with whatever room is left — whole lines, up to 3
-                if (desc && desc.textContent.trim()) {
-                    desc.style.display = '';
-                    let shown = false;
-                    for (let n = 3; n >= 1; n--) { desc.style.webkitLineClamp = String(n); if (fits(body)) { shown = true; break; } }
-                    if (!shown) desc.style.display = 'none';
-                }
-            });
-        }
-        // Re-fit whenever something can change a card's layout after it was drawn: settings, window size,
-        // late-loading fonts, and news photos loading or failing (a failed photo is hidden, widening the text).
-        let newsFitTimer = null;
-        function scheduleNewsFit(delay = 60) { clearTimeout(newsFitTimer); newsFitTimer = setTimeout(fitNewsSummaries, delay); }
-        window.addEventListener('resize', () => scheduleNewsFit());
-        document.fonts?.ready.then(() => scheduleNewsFit());
-        document.fonts?.addEventListener?.('loadingdone', () => scheduleNewsFit());
-
         function fitDisplay() {
             const b = document.body;
             b.style.transform = '';

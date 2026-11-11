@@ -1,0 +1,15 @@
+[Unit]
+Description=Condo Notice Board - Remote Reboot Watcher
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/condo-notice-board/reboot-watcher.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

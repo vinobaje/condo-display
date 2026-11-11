@@ -11,40 +11,6 @@
     <style>
         .ai-spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
         @keyframes spin{to{transform:rotate(360deg)}}
-        /* ═══ Live TV preview ═══ */
-        #livePreviewPanel{position:fixed;bottom:16px;right:16px;width:340px;max-width:calc(100vw - 32px);z-index:150;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.34);overflow:hidden;transition:width .2s;}
-        #livePreviewPanel.full-mode{width:560px;}
-        #livePreviewPanel .lp-header{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;font-size:12px;font-weight:700;cursor:pointer;user-select:none;color:var(--text);}
-        #livePreviewPanel .lp-body{padding:0 12px 12px;}
-        #livePreviewPanel.collapsed .lp-body{display:none;}
-        .lp-tabs{display:flex;gap:6px;margin-bottom:10px;}
-        .lp-tab{flex:1;padding:6px 8px;font-size:11px;font-weight:600;border:1px solid var(--border);border-radius:8px;background:var(--bg-dark,rgba(0,0,0,.15));color:var(--text-dim);cursor:pointer;font-family:inherit;transition:all .15s;}
-        .lp-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(124,106,240,.1);}
-        .fulldisplay-wrap{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:3px solid #141414;background:#000;}
-        .fulldisplay-iframe{position:absolute;top:0;left:0;width:1920px;height:1080px;border:0;transform-origin:top left;}
-        .tv-frame{aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:3px solid #141414;position:relative;background:var(--tv-bg);}
-        .tv-frame[data-theme="dark-modern"]{--tv-bg:#0a0e1a;--tv-text:#f0f2f5;--tv-text2:#94a3b8;--tv-accent:#3b82f6;--tv-urgent:#ef4444;--tv-important:#f59e0b;--tv-border:rgba(255,255,255,.1);--tv-fh:'Playfair Display',serif;--tv-fb:'DM Sans',sans-serif;}
-        .tv-frame[data-theme="light-classic"]{--tv-bg:#f0f2f5;--tv-text:#1a1a2e;--tv-text2:#64748b;--tv-accent:#2563eb;--tv-urgent:#dc2626;--tv-important:#d97706;--tv-border:rgba(0,0,0,.1);--tv-fh:'Libre Baskerville',serif;--tv-fb:'Source Sans 3',sans-serif;}
-        .tv-frame[data-theme="warm-luxury"]{--tv-bg:#1a1410;--tv-text:#f5efe6;--tv-text2:#a89880;--tv-accent:#d4a553;--tv-urgent:#e85d4a;--tv-important:#d4a553;--tv-border:rgba(212,165,83,.15);--tv-fh:'Crimson Pro',serif;--tv-fb:'DM Sans',sans-serif;}
-        .tv-frame[data-theme="corporate-navy"]{--tv-bg:#0c1829;--tv-text:#e8edf5;--tv-text2:#8899b0;--tv-accent:#4da6ff;--tv-urgent:#ff6b6b;--tv-important:#ffc857;--tv-border:rgba(77,166,255,.12);--tv-fh:'Outfit',sans-serif;--tv-fb:'Outfit',sans-serif;}
-        .tv-frame[data-theme="nature-green"]{--tv-bg:#0a1a12;--tv-text:#e6f0ea;--tv-text2:#7fa890;--tv-accent:#34d399;--tv-urgent:#f87171;--tv-important:#fbbf24;--tv-border:rgba(52,211,153,.12);--tv-fh:'Playfair Display',serif;--tv-fb:'DM Sans',sans-serif;}
-        .tv-frame[data-theme="waterview-classic"]{--tv-bg:#0a2540;--tv-text:#fff;--tv-text2:#b0c4de;--tv-accent:#2196F3;--tv-urgent:#ef4444;--tv-important:#ffc107;--tv-border:rgba(255,255,255,.15);--tv-fh:'DM Sans',sans-serif;--tv-fb:'DM Sans',sans-serif;}
-        .tv-card{width:100%;height:100%;display:flex;color:var(--tv-text);font-family:var(--tv-fb);}
-        .tv-card.text{flex-direction:column;justify-content:center;padding:14px 16px;}
-        .tv-card.side{flex-direction:row;}
-        .tv-media{flex:0 0 48%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-        .tv-media img,.tv-media video{width:100%;height:100%;object-fit:contain;}
-        .tv-media-only{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;}
-        .tv-media-only img,.tv-media-only video{width:100%;height:100%;object-fit:contain;}
-        .tv-content{flex:1;padding:12px 14px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;}
-        .tv-cat{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--tv-accent);margin-bottom:5px;display:flex;align-items:center;gap:4px;}
-        .tv-card.urgent .tv-cat{color:var(--tv-urgent);}
-        .tv-card.important .tv-cat{color:var(--tv-important);}
-        .tv-cat .dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
-        .tv-title{font-family:var(--tv-fh);font-size:15px;font-weight:700;line-height:1.15;margin-bottom:6px;letter-spacing:-.3px;}
-        .tv-body{font-size:9px;line-height:1.55;color:var(--tv-text2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;}
-        .tv-empty{opacity:.5;font-style:italic;}
-        @media(max-width:640px){ #livePreviewPanel{width:calc(100vw - 24px);bottom:12px;right:12px;} }
         .ai-btn-group{display:flex;gap:8px;}
         .poster-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
         .poster-modal-overlay.active{display:flex;}
@@ -61,26 +27,6 @@
         .poster-tpl-name{font-size:10px;font-weight:600;color:var(--text-dim);}
         .poster-img-btn{transition:all .2s;}
         .poster-img-btn.active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
-        .ai-generate-btn{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;cursor:pointer;text-align:left;box-shadow:0 4px 14px rgba(124,58,237,.35);transition:all .2s;font-family:inherit;}
-        .ai-generate-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.5);filter:brightness(1.08);}
-        .ai-generate-btn:disabled{opacity:.65;cursor:wait;transform:none;}
-        .ai-generate-btn.active{outline:3px solid rgba(168,85,247,.4);outline-offset:2px;}
-        .ai-generate-btn .ai-spinner{width:16px;height:16px;border-color:rgba(255,255,255,.35);border-top-color:#fff;flex-shrink:0;}
-        .poster-img-divider{display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--text-dim);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
-        .poster-img-divider::before,.poster-img-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-        .ai-action-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
-        .ai-action-btn{flex:1;min-width:240px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit;}
-        .ai-action-btn .ai-icon{font-size:22px;line-height:1;flex-shrink:0;}
-        .ai-action-btn .ai-text{flex:1;}
-        .ai-action-btn .ai-title{display:block;font-size:14px;font-weight:700;letter-spacing:.2px;}
-        .ai-action-btn .ai-sub{display:block;font-size:11px;opacity:.8;margin-top:1px;}
-        .ai-action-btn:disabled{opacity:.65;cursor:wait;transform:none;}
-        .ai-write-btn{background:rgba(124,106,240,.07);border:2px solid rgba(124,106,240,.35);color:var(--accent);}
-        .ai-write-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(124,106,240,.12);transform:translateY(-1px);}
-        .ai-poster-btn{background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;color:#fff;box-shadow:0 4px 14px rgba(124,58,237,.3);}
-        .ai-poster-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.45);filter:brightness(1.08);}
-        .ai-action-btn .ai-spinner{width:16px;height:16px;flex-shrink:0;}
-        .ai-poster-btn .ai-spinner{border-color:rgba(255,255,255,.35);border-top-color:#fff;}
         .poster-layout-btn{background:var(--bg-dark);color:var(--text-dim);border:2px solid var(--border);cursor:pointer;transition:all .2s;border-radius:10px;}
         .poster-layout-btn:hover{border-color:var(--border-light);background:var(--bg-card-hover);}
         .poster-layout-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.08);}
@@ -112,15 +58,6 @@
         <div class="flash flash-error" id="errorFlash"></div>
 
         <div class="card">
-            <!-- Templates toolbar -->
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border);">
-                <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);">Templates</span>
-                <select id="templatePicker" class="form-control" style="width:auto;min-width:180px;font-size:13px;padding:6px 10px;" onchange="loadTemplate(this.value)">
-                    <option value="">Start blank…</option>
-                </select>
-                <button type="button" class="btn btn-outline btn-sm" onclick="saveAsTemplate()">💾 Save as Template</button>
-                <button type="button" class="btn btn-outline btn-sm" id="delTemplateBtn" onclick="deleteCurrentTemplate()" style="display:none;color:var(--urgent);">🗑 Delete Template</button>
-            </div>
             <!-- Title -->
             <div class="form-group">
                 <label>Notice Title</label>
@@ -155,43 +92,15 @@
 
             <!-- Body -->
             <div class="form-group">
-                <label>Notice Body</label>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <label style="margin:0;">Notice Body</label>
+                    <div class="ai-btn-group">
+                        <button type="button" class="btn btn-outline btn-sm" id="aiGenerateBtn" onclick="generateWithAI()" style="font-size:12px;">✨ Write with AI</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="aiPosterBtn" onclick="designPoster()" style="font-size:12px;">🎨 Design Poster</button>
+                    </div>
+                </div>
                 <textarea id="body" class="form-control" placeholder="Type a brief description or leave empty — AI will generate a professional notice from your title."></textarea>
-                <div id="bodyDateWarning" style="display:none;margin-top:8px;padding:8px 12px;border-radius:8px;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;font-size:12px;line-height:1.45;"></div>
-                <div class="ai-action-row">
-                    <button type="button" class="ai-action-btn ai-write-btn" id="aiGenerateBtn" onclick="generateWithAI()">
-                        <span class="ai-icon">✨</span>
-                        <span class="ai-text">
-                            <span class="ai-title">Write with AI</span>
-                            <span class="ai-sub">Turn your title or rough notes into a polished notice</span>
-                        </span>
-                    </button>
-                    <button type="button" class="ai-action-btn ai-poster-btn" id="aiPosterBtn" onclick="designPosterAI()">
-                        <span class="ai-icon">🤖</span>
-                        <span class="ai-text">
-                            <span class="ai-title">AI Generate Poster</span>
-                            <span class="ai-sub">One click — AI designs a finished poster you can still customize</span>
-                        </span>
-                        <span style="font-size:16px;opacity:.7;flex-shrink:0;">→</span>
-                    </button>
-                </div>
                 <div id="aiStatus" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);"><span class="ai-spinner"></span> Generating professional notice...</div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;">
-                    <span style="font-size:12px;color:var(--text-dim);">🌐 Add a translation:</span>
-                    <select id="translateLang" class="form-control" style="width:auto;font-size:13px;padding:6px 10px;">
-                        <option value="French">French</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="Simplified Chinese">Chinese (Simplified)</option>
-                        <option value="Punjabi">Punjabi</option>
-                        <option value="Hindi">Hindi</option>
-                        <option value="Tagalog">Tagalog</option>
-                        <option value="Arabic">Arabic</option>
-                        <option value="Portuguese">Portuguese</option>
-                        <option value="Italian">Italian</option>
-                    </select>
-                    <button type="button" class="btn btn-outline btn-sm" id="translateBtn" onclick="translateNotice()">Translate &amp; append</button>
-                    <span id="translateStatus" style="font-size:12px;color:var(--accent);display:none;"><span class="ai-spinner"></span> Translating…</span>
-                </div>
             </div>
 
             <!-- Media Upload -->
@@ -233,15 +142,6 @@
                 <input type="hidden" id="displayMode" value="media_with_text">
             </div>
 
-            <!-- QR code -->
-            <div class="form-group">
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                    <input type="checkbox" id="showQr">
-                    <span>📱 Show a QR code on the display</span>
-                </label>
-                <div style="font-size:12px;color:var(--text-dim);margin-top:4px;margin-left:28px;">Residents can scan it to open the full notice on their phone — handy for long notices or details like dates and phone numbers.</div>
-            </div>
-
             <!-- Scheduling -->
             <div class="form-row">
                 <div class="form-group">
@@ -257,30 +157,6 @@
         </div>
     </div>
 
-    <!-- Live TV Preview -->
-    <div id="livePreviewPanel">
-        <div class="lp-header" onclick="toggleLivePreview()">
-            <span>📺 Live Preview</span>
-            <span id="lpToggle">▾</span>
-        </div>
-        <div class="lp-body">
-            <div class="lp-tabs">
-                <button type="button" class="lp-tab active" id="lpTabNotice" onclick="setPreviewTab('notice')">📄 This Notice</button>
-                <button type="button" class="lp-tab" id="lpTabFull" onclick="setPreviewTab('full')">🖥️ Full Screen</button>
-            </div>
-            <div id="lpNoticeView">
-                <div class="tv-frame" id="tvFrame" data-theme="dark-modern">
-                    <div id="tvCard"></div>
-                </div>
-                <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-top:6px;">How this notice will look on the TV</div>
-            </div>
-            <div id="lpFullView" style="display:none;">
-                <div class="fulldisplay-wrap"><iframe id="fullDisplayFrame" class="fulldisplay-iframe" title="Full display preview"></iframe></div>
-                <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-top:6px;">The whole TV screen, live — shows published notices (not this draft)</div>
-            </div>
-        </div>
-    </div>
-
     <!-- Poster Preview Modal -->
     <div class="poster-modal-overlay" id="posterModal">
         <div class="poster-modal">
@@ -290,7 +166,6 @@
             <div style="display:flex;gap:8px;margin-bottom:16px;">
                 <button class="btn btn-sm poster-layout-btn active" data-layout="detailed" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">📋 Detailed</button>
                 <button class="btn btn-sm poster-layout-btn" data-layout="visual" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">🎨 Visual / Bold</button>
-                <button class="btn btn-sm poster-layout-btn" data-layout="schedule" onclick="switchPosterLayout(this)" style="flex:1;text-align:center;">🗓️ Schedule</button>
             </div>
 
             <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
@@ -364,18 +239,10 @@
                             📤 Upload Photo
                             <input type="file" id="posterImageUpload" accept="image/*" onchange="handlePosterImageUpload(this.files[0])" style="display:none;">
                         </label>
-                        <button class="btn btn-outline btn-sm poster-img-btn" id="btnStockSearch" onclick="searchPixabayPhotos()" style="font-size:11px;">📷 Stock Photos</button>
+                        <button class="btn btn-primary btn-sm poster-img-btn" id="btnStockSearch" onclick="searchPixabayPhotos()" style="font-size:11px;">📷 Stock Photos</button>
                         <button class="btn btn-outline btn-sm poster-img-btn" id="btnAiImage" onclick="generateAiIllustration()" style="font-size:11px;">🎨 Illustrations</button>
+                        <button class="btn btn-outline btn-sm poster-img-btn" id="btnAiGenerate" onclick="generateAiPosterImage()" style="font-size:11px;background:#7c3aed;color:#fff;border-color:#7c3aed;">🤖 AI Generate</button>
                     </div>
-                    <div class="poster-img-divider">or let AI design it</div>
-                    <button class="ai-generate-btn poster-img-btn" id="btnAiGenerate" onclick="generateAiPosterImage()">
-                        <span style="font-size:22px;line-height:1;flex-shrink:0;">🤖</span>
-                        <span style="flex:1;">
-                            <span data-ai-title style="display:block;font-size:14px;font-weight:700;letter-spacing:.2px;">AI Generate Poster</span>
-                            <span data-ai-sub style="display:block;font-size:11px;opacity:.85;margin-top:1px;">AI paints the artwork, your exact text goes on top — pick or upload a photo first to feature it (~20 sec)</span>
-                        </span>
-                        <span style="font-size:16px;opacity:.7;flex-shrink:0;">→</span>
-                    </button>
                     <div id="posterImagePreview" style="display:none;margin-top:8px;">
                         <div style="display:flex;align-items:center;gap:8px;">
                             <img id="posterImgThumb" style="width:60px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
@@ -396,16 +263,6 @@
                 </div>
             </div>
 
-            <!-- Font Size Slider (detailed layout only) -->
-            <div id="posterFontSliderWrap" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
-                <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);white-space:nowrap;">Font Size</label>
-                <span style="font-size:16px;">A</span>
-                <input type="range" id="posterFontSlider" min="80" max="160" value="100" step="5" oninput="updatePosterFontScale(this.value)" style="flex:1;accent-color:#7c6af0;">
-                <span style="font-size:22px;font-weight:700;">A</span>
-                <span id="posterFontScaleLabel" style="font-size:12px;color:var(--text-dim);min-width:36px;text-align:center;">100%</span>
-            </div>
-
-            <div id="posterDateWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;font-size:13px;line-height:1.45;"></div>
             <div class="poster-preview-wrap">
                 <div class="poster-canvas" id="posterCanvas"></div>
             </div>
@@ -435,8 +292,7 @@
     </script>
     <script type="module">
         import {
-            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, getSecrets,
-            getTemplates, saveTemplate, deleteTemplate, db
+            onAuthChange, createNotice, updateNotice, uploadMedia, getFileType, escapeHtml, db
         } from '/js/app.js';
         import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -450,19 +306,20 @@
         // Load AI settings from Firestore
         async function loadAISettings() {
             try {
-                // Provider preference lives in public settings; API keys live in the auth-gated secrets doc
-                const mainSnap = await getDoc(doc(db, 'settings', 'main'));
-                if (mainSnap.exists()) aiConfig.provider = mainSnap.data().ai_provider || 'gemini';
-                const sec = await getSecrets();
-                aiConfig.gemini = sec.gemini_api_key || '';
-                aiConfig.groq = sec.groq_api_key || '';
-                aiConfig.openai = sec.openai_api_key || '';
-                aiConfig.deepseek = sec.deepseek_api_key || '';
-                aiConfig.pixabay = sec.pixabay_api_key || '';
-                const activeKey = aiConfig[aiConfig.provider];
-                if (!activeKey) {
-                    document.getElementById('aiGenerateBtn').title = 'Add an API key in Admin → Settings → AI Integration';
-                    document.getElementById('aiGenerateBtn').style.opacity = '0.5';
+                const snap = await getDoc(doc(db, 'settings', 'main'));
+                if (snap.exists()) {
+                    const s = snap.data();
+                    aiConfig.provider = s.ai_provider || 'gemini';
+                    aiConfig.gemini = s.gemini_api_key || '';
+                    aiConfig.groq = s.groq_api_key || '';
+                    aiConfig.openai = s.openai_api_key || '';
+                    aiConfig.deepseek = s.deepseek_api_key || '';
+                    aiConfig.pixabay = s.pixabay_api_key || '';
+                    const activeKey = aiConfig[aiConfig.provider];
+                    if (!activeKey) {
+                        document.getElementById('aiGenerateBtn').title = 'Add an API key in Admin → Settings → AI Integration';
+                        document.getElementById('aiGenerateBtn').style.opacity = '0.5';
+                    }
                 }
             } catch (e) { console.warn('Could not load AI settings'); }
         }
@@ -549,12 +406,7 @@
             statusEl.style.display = '';
             statusEl.innerHTML = `<span class="ai-spinner"></span> Writing with ${providerNames[provider]}...`;
             btn.disabled = true;
-            const origWriteHtml = btn.innerHTML;
-            btn.innerHTML = `<span class="ai-spinner"></span>
-                <span class="ai-text">
-                    <span class="ai-title">Writing your notice…</span>
-                    <span class="ai-sub">${providerNames[provider]} is drafting the text</span>
-                </span>`;
+            btn.textContent = '⏳ Generating...';
 
             const prompt = `You are a professional property management assistant writing a notice for a condominium building's digital display board.
 
@@ -587,57 +439,15 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             } finally {
                 statusEl.style.display = 'none';
                 btn.disabled = false;
-                btn.innerHTML = origWriteHtml;
+                btn.textContent = '✨ Write with AI';
             }
         };
 
         // ═══ AI POSTER DESIGNER ═══
         let posterData = null;
-
-        // ═══ Poster text helpers (shared by the Schedule layout and the AI-artwork overlay) ═══
-        // Buildings/units, dates and times — highlighted so residents spot their day at a glance
-        const POSTER_KEY_RE = /\b(?:(?:Building|Bldg|Unit|Suite|Floor|Tower)s?\s+\d+[A-Za-z]?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?|\d{1,2}(?::\d{2})?\s?[AaPp]\.?[Mm]\.?)/g;
-        const escP = (s) => escapeHtml(String(s ?? ''));
-        const hlP = (s, color) => escP(s).replace(POSTER_KEY_RE, m => `<b style="color:${color};font-weight:800;">${m}</b>`);
-        // Safety net: numbers (dates, building/unit numbers, times) in the notice that the AI's
-        // restructured text lost. Leading zeros ignored so "9:00 AM" vs "9 AM" doesn't false-alarm.
-        const numberSet = (s) => new Set((String(s || '').match(/\d+/g) || []).map(n => n.replace(/^0+/, '')).filter(Boolean));
-        const missingNumbers = (source, shown) => { const have = numberSet(shown); return [...numberSet(source)].filter(n => !have.has(n)); };
-
-        // Date typo check: "Friday, November 27th, 2025" — Nov 27 2025 is a Thursday, so the year is probably wrong
-        const WEEKDAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        const MONTH_ABBR = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-        function findDateTypos(text) {
-            const W = '(Sun|Mon|Tues|Wednes|Thurs|Fri|Satur)day,?', M = '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\\.?', D = '(\\d{1,2})(?:st|nd|rd|th)?', Y = '(\\d{4})';
-            const forms = [
-                { re: new RegExp(`\\b${W}\\s+${M}\\s+${D},?\\s+${Y}\\b`, 'gi'), wd: 1, mo: 2, d: 3, y: 4 },   // Friday, November 27th, 2025
-                { re: new RegExp(`\\b${W}\\s+${D}\\s+${M},?\\s+${Y}\\b`, 'gi'), wd: 1, d: 2, mo: 3, y: 4 },   // Friday 27th November 2025
-            ];
-            const out = [];
-            for (const f of forms) for (const m of String(text || '').matchAll(f.re)) {
-                const wd = WEEKDAYS.findIndex(w => w.toLowerCase().startsWith(m[f.wd].toLowerCase()));
-                const mo = MONTH_ABBR.indexOf(m[f.mo].slice(0, 3).toLowerCase());
-                const day = +m[f.d], yr = +m[f.y];
-                const dt = new Date(yr, mo, day);
-                if (wd < 0 || mo < 0 || dt.getMonth() !== mo || dt.getDay() === wd) continue;
-                const fix = [yr + 1, yr - 1].find(y => new Date(y, mo, day).getDay() === wd);
-                out.push(`"${m[0]}" — that date is a ${WEEKDAYS[dt.getDay()]}${fix ? `; did you mean ${fix}?` : '.'}`);
-            }
-            return out;
-        }
-        function updateDateWarnings() {
-            const typos = findDateTypos(document.getElementById('body')?.value || '');
-            const html = typos.length ? '⚠️ <b>Please check the date' + (typos.length > 1 ? 's' : '') + ' in your notice:</b><br>' + typos.map(escP).join('<br>') : '';
-            ['bodyDateWarning', 'posterDateWarning'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) { el.innerHTML = html; el.style.display = html ? '' : 'none'; }
-            });
-        }
-        document.getElementById('body')?.addEventListener('input', updateDateWarnings);
         let currentPosterStyle = 'corporate';
         let currentPosterLayout = 'detailed'; // 'detailed' or 'visual'
         let posterImageMode = 'icons'; // 'none', 'icons', 'photo'
-        let posterFontScale = 1.0; // 0.8 to 1.6 range
         let posterImageUrl = null;
         let posterImageSearchTerms = '';
 
@@ -779,25 +589,17 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             paint: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="6" rx="2"/><path d="M6 10v8a2 2 0 002 2h0a2 2 0 002-2v-3"/></svg>`,
         };
 
-        function renderForLayout() {
-            if (!posterData) return;
-            updateDateWarnings();
-            if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
-            else if (currentPosterLayout === 'schedule') renderSchedulePoster(posterData, currentPosterStyle);
-            else renderPoster(posterData, currentPosterStyle);
-        }
-
         function renderCurrentPoster() {
             if (!posterData) return;
             if (posterImageMode === 'ai_full') return; // AI-generated full image — don't override
-            renderForLayout();
+            if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+            else renderPoster(posterData, currentPosterStyle);
         }
 
         function renderPoster(data, style) {
             const s = POSTER_STYLES[style] || POSTER_STYLES.corporate;
             const canvas = document.getElementById('posterCanvas');
             const bgIsGrad = s.bg.includes('gradient');
-            const f = (px) => Math.round(px * posterFontScale); // scaled font size
 
             // Pick icons
             const icons = (data.icons || []).slice(0, 2);
@@ -818,39 +620,38 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
                 let content = '';
                 if (sec.type === 'highlight') {
                     content = `<div style="background:${s.highlightBg};border-left:6px solid ${s.highlightBorder};padding:20px 28px;border-radius:0 10px 10px 0;margin:10px 0;">
-                        <div style="font-family:'Montserrat',sans-serif;font-size:${f(26)}px;font-weight:700;color:${s.heading};margin-bottom:8px;">${sec.heading || ''}</div>
-                        <div style="font-family:'DM Sans',sans-serif;font-size:${f(22)}px;color:${s.sub};line-height:1.5;">${sec.text || ''}</div>
+                        <div style="font-family:'Montserrat',sans-serif;font-size:26px;font-weight:700;color:${s.heading};margin-bottom:8px;">${sec.heading || ''}</div>
+                        <div style="font-family:'DM Sans',sans-serif;font-size:22px;color:${s.sub};line-height:1.5;">${sec.text || ''}</div>
                     </div>`;
                 } else if (sec.type === 'bullets') {
                     const bullets = (sec.items || []).map(item =>
                         `<div style="display:flex;gap:14px;align-items:baseline;margin-bottom:8px;">
-                            <span style="color:${s.bulletColor};font-size:${f(14)}px;margin-top:6px;">●</span>
-                            <span style="font-family:'DM Sans',sans-serif;font-size:${f(21)}px;color:${s.sub};line-height:1.5;">${item}</span>
+                            <span style="color:${s.bulletColor};font-size:14px;margin-top:6px;">●</span>
+                            <span style="font-family:'DM Sans',sans-serif;font-size:21px;color:${s.sub};line-height:1.5;">${item}</span>
                         </div>`
                     ).join('');
-                    content = `${sec.heading ? `<div style="font-family:'Montserrat',sans-serif;font-size:${f(24)}px;font-weight:700;color:${s.heading};margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">${sec.heading}</div>` : ''}${bullets}`;
+                    content = `${sec.heading ? `<div style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:700;color:${s.heading};margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">${sec.heading}</div>` : ''}${bullets}`;
                 } else {
-                    content = `${sec.heading ? `<div style="font-family:'Montserrat',sans-serif;font-size:${f(24)}px;font-weight:700;color:${s.heading};margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">${sec.heading}</div>` : ''}
-                    <div style="font-family:'DM Sans',sans-serif;font-size:${f(21)}px;color:${s.sub};line-height:1.6;">${sec.text || ''}</div>`;
+                    content = `${sec.heading ? `<div style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:700;color:${s.heading};margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">${sec.heading}</div>` : ''}
+                    <div style="font-family:'DM Sans',sans-serif;font-size:21px;color:${s.sub};line-height:1.6;">${sec.text || ''}</div>`;
                 }
-                sectionsHtml += `<div style="margin-bottom:${f(18)}px;">${content}</div>`;
+                sectionsHtml += `<div style="margin-bottom:18px;">${content}</div>`;
             });
 
             const hasPhoto = posterImageMode === 'photo' && posterImageUrl;
-            const headlineBase = data.headline.length > 25 ? (hasPhoto ? 48 : 60) : (hasPhoto ? 56 : 72);
 
             canvas.innerHTML = `
                 <div style="width:1920px;height:1080px;background:${s.bg};display:flex;position:relative;overflow:hidden;${!bgIsGrad ? 'border:2px solid ' + s.sectionBorder + ';' : ''}">
                     <!-- Text Side -->
                     <div style="width:${hasPhoto ? '60%' : '100%'};display:flex;flex-direction:column;position:relative;overflow:hidden;">
                         ${!hasPhoto ? iconHtml : ''}
-                        ${data.badge ? `<div style="position:absolute;top:36px;${hasPhoto ? 'right:36px' : 'right:36px'};background:${s.badgeBg};color:${s.badgeText};padding:12px 28px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:${f(20)}px;font-weight:700;text-transform:uppercase;letter-spacing:2px;z-index:2;">${data.badge}</div>` : ''}
+                        ${data.badge ? `<div style="position:absolute;top:36px;${hasPhoto ? 'right:36px' : 'right:36px'};background:${s.badgeBg};color:${s.badgeText};padding:12px 28px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:2px;z-index:2;">${data.badge}</div>` : ''}
 
                         <!-- Header -->
                         <div style="padding:48px ${hasPhoto ? '48px' : '64px'} 36px;background:${s.headerBg};position:relative;z-index:2;">
-                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:${f(20)}px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:${s.accent};margin-bottom:10px;">${data.tag}</div>` : ''}
-                            <div style="font-family:'Montserrat',sans-serif;font-size:${f(headlineBase)}px;font-weight:800;line-height:1.1;color:${s.heading};text-transform:uppercase;letter-spacing:-1px;">${data.headline}</div>
-                            ${data.subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:${f(hasPhoto ? 22 : 26)}px;color:${s.sub};margin-top:14px;line-height:1.4;">${data.subtitle}</div>` : ''}
+                            ${data.tag ? `<div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:${s.accent};margin-bottom:10px;">${data.tag}</div>` : ''}
+                            <div style="font-family:'Montserrat',sans-serif;font-size:${data.headline.length > 25 ? (hasPhoto ? '48' : '60') : (hasPhoto ? '56' : '72')}px;font-weight:800;line-height:1.1;color:${s.heading};text-transform:uppercase;letter-spacing:-1px;">${data.headline}</div>
+                            ${data.subtitle ? `<div style="font-family:'DM Sans',sans-serif;font-size:${hasPhoto ? '22' : '26'}px;color:${s.sub};margin-top:14px;line-height:1.4;">${data.subtitle}</div>` : ''}
                             <div style="width:80px;height:4px;background:${s.accent};margin-top:20px;border-radius:2px;"></div>
                         </div>
 
@@ -860,8 +661,8 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
                         </div>
 
                         <!-- Footer -->
-                        ${data.footer ? `<div style="padding:18px ${hasPhoto ? '48px' : '64px'};border-top:1px solid ${s.divider};position:relative;z-index:2;"><div style="font-family:'DM Sans',sans-serif;font-size:${f(hasPhoto ? 18 : 20)}px;color:${s.dim};line-height:1.4;font-style:italic;">${data.footer}</div></div>` : ''}
-                        ${data.signoff ? `<div style="padding:12px ${hasPhoto ? '48px' : '64px'} 28px;position:relative;z-index:2;"><div style="font-family:'Montserrat',sans-serif;font-size:${f(hasPhoto ? 18 : 20)}px;font-weight:600;color:${s.accent};">${data.signoff}</div></div>` : ''}
+                        ${data.footer ? `<div style="padding:18px ${hasPhoto ? '48px' : '64px'};border-top:1px solid ${s.divider};position:relative;z-index:2;"><div style="font-family:'DM Sans',sans-serif;font-size:${hasPhoto ? '18' : '20'}px;color:${s.dim};line-height:1.4;font-style:italic;">${data.footer}</div></div>` : ''}
+                        ${data.signoff ? `<div style="padding:12px ${hasPhoto ? '48px' : '64px'} 28px;position:relative;z-index:2;"><div style="font-family:'Montserrat',sans-serif;font-size:${hasPhoto ? '18' : '20'}px;font-weight:600;color:${s.accent};">${data.signoff}</div></div>` : ''}
                     </div>
 
                     ${hasPhoto ? `<!-- Photo Side -->
@@ -873,18 +674,13 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             `;
         }
 
-        window.updatePosterFontScale = (val) => {
-            posterFontScale = val / 100;
-            document.getElementById('posterFontScaleLabel').textContent = val + '%';
-            if (posterData && currentPosterLayout === 'detailed') renderPoster(posterData, currentPosterStyle);
-        };
-
         window.switchPosterStyle = (el) => {
             document.querySelectorAll('.poster-tpl').forEach(t => t.classList.remove('selected'));
             el.classList.add('selected');
             currentPosterStyle = el.dataset.style;
             if (posterData) {
-                renderForLayout();
+                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+                else renderPoster(posterData, currentPosterStyle);
             }
         };
 
@@ -892,19 +688,6 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             document.querySelectorAll('.poster-layout-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             currentPosterLayout = el.dataset.layout;
-
-            // The AI button adds a header picture in Schedule layout, full artwork otherwise
-            const aiBtn = document.getElementById('btnAiGenerate');
-            if (aiBtn && !aiBtn.disabled) {
-                const sched = currentPosterLayout === 'schedule';
-                aiBtn.querySelector('[data-ai-title]').textContent = sched ? 'AI Picture for this Poster' : 'AI Generate Poster';
-                aiBtn.querySelector('[data-ai-sub]').textContent = sched
-                    ? 'Adds an AI-made picture to the poster header — the Schedule layout stays as it is (~20 sec)'
-                    : 'AI paints the artwork, your exact text goes on top — pick or upload a photo first to feature it (~20 sec)';
-            }
-
-            // Show/hide font size slider (detailed only)
-            document.getElementById('posterFontSliderWrap').style.display = currentPosterLayout === 'detailed' ? 'flex' : 'none';
 
             // Show/hide visual-only styles
             document.querySelectorAll('.visual-style-only').forEach(s => {
@@ -921,90 +704,10 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             }
 
             if (posterData) {
-                renderForLayout();
+                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+                else renderPoster(posterData, currentPosterStyle);
             }
         };
-
-        // ═══ Schedule / Info layout ═══
-        // Information-first poster: header band, one card per building/unit with its dates,
-        // instructions grouped under short headings. All real text, so nothing can go missing.
-        const SCHEDULE_PALETTES = {
-            corporate: { hFrom:'#0B1F36', hTo:'#163D60', hInk:'#FFFFFF', hMuted:'rgba(255,255,255,.85)', tag:'#F5B14C', bg:'#EEF2F7', card:'#FFFFFF', cardBorder:'#D9E1EB', ink:'#0B1F36', muted:'#4A5B70', accent:'#E35D44', heads:['#163D60','#E35D44','#0F7C7A','#B7791F'], foot:'#F5B14C', footInk:'#0B1F36', key:'#B45309' },
-            bold:      { hFrom:'#B91C1C', hTo:'#EA580C', hInk:'#FFFFFF', hMuted:'rgba(255,255,255,.9)', tag:'#FFE08A', bg:'#FFF7ED', card:'#FFFFFF', cardBorder:'#F2D7C2', ink:'#431407', muted:'#7C2D12', accent:'#EA580C', heads:['#B91C1C','#EA580C','#9A3412','#C2410C'], foot:'#431407', footInk:'#FFE08A', key:'#C2410C' },
-            minimal:   { hFrom:'#F8FAFC', hTo:'#E2E8F0', hInk:'#0F172A', hMuted:'#475569', tag:'#2563EB', bg:'#FFFFFF', card:'#F8FAFC', cardBorder:'#E2E8F0', ink:'#0F172A', muted:'#475569', accent:'#2563EB', heads:['#1E293B','#2563EB','#0F766E','#7C3AED'], foot:'#0F172A', footInk:'#FFFFFF', key:'#1D4ED8' },
-            dark:      { hFrom:'#020617', hTo:'#111827', hInk:'#F8FAFC', hMuted:'#94A3B8', tag:'#38BDF8', bg:'#0B1220', card:'#111827', cardBorder:'#243247', ink:'#E5E7EB', muted:'#94A3B8', accent:'#38BDF8', heads:['#1D4ED8','#0E7490','#7C3AED','#B45309'], foot:'#38BDF8', footInk:'#0B1220', key:'#38BDF8' },
-        };
-
-        function renderSchedulePoster(data, style) {
-            const p = SCHEDULE_PALETTES[style] || SCHEDULE_PALETTES.corporate;
-            const canvas = document.getElementById('posterCanvas');
-            const headline = data.headline || data.visual_headline || document.getElementById('title').value.trim();
-            const tag = data.tag || 'NOTICE';
-            let intro = data.intro || '';
-            let hours = data.hours || '';
-            let schedule = (data.schedule || []).filter(s => s && (s.label || s.when));
-            let groups = (data.groups || []).map(g => ({ heading: g.heading || '', items: (g.items || []).filter(Boolean) })).filter(g => g.items.length);
-            let thanks = [data.footer, data.signoff].filter(Boolean).join(' — ');
-
-            // Safety net: if any number from the notice didn't make it into the structured version,
-            // show the notice text exactly as written instead.
-            const bodyText = document.getElementById('body').value.trim();
-            const shownText = [headline, intro, hours, thanks, ...schedule.flatMap(s => [s.label, s.when]), ...groups.flatMap(g => g.items)].join(' ');
-            if (bodyText && (!groups.length || missingNumbers(bodyText, shownText).length)) {
-                intro = ''; hours = ''; thanks = ''; schedule = [];
-                groups = [{ heading: 'Details', items: bodyText.split(/\n+/).map(t => t.trim()).filter(Boolean), plain: true }];
-            }
-
-            const H = (s) => hlP(s, p.key);
-            const photo = posterImageMode === 'photo' && posterImageUrl ? posterImageUrl : '';
-            const sectionTitle = (t) => `<div style="font-size:.88em;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${p.ink};">${escP(t)}</div><div style="width:2.8em;height:.2em;border-radius:1em;background:${p.accent};margin:.35em 0 .8em;"></div>`;
-            const cardStyle = `background:${p.card};border:2px solid ${p.cardBorder};border-radius:.8em;`; // no box-shadow: html2canvas renders it as grey blocks
-
-            const header = `<div style="flex:none;display:flex;align-items:center;gap:2em;padding:1.5em 2.4em 1.4em;background:linear-gradient(90deg,${p.hFrom},${p.hTo});color:${p.hInk};">
-                <div style="flex:1;min-width:0;">
-                    <div style="width:3.2em;height:.26em;border-radius:1em;background:${p.tag};margin-bottom:.75em;"></div>
-                    <div style="font-size:.85em;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:${p.tag};">${escP(tag)}${data.badge ? `<span style="display:inline-block;margin-left:.9em;padding:.2em .7em;border-radius:.4em;background:${p.accent};color:#fff;">${escP(data.badge)}</span>` : ''}</div>
-                    <div style="font-size:2.45em;font-weight:900;line-height:1.05;text-transform:uppercase;margin:.25em 0 .3em;">${escP(headline)}</div>
-                    ${intro ? `<div style="font-size:1.05em;font-weight:500;color:${p.hMuted};">${hlP(intro, p.tag)}</div>` : ''}
-                </div>
-                ${photo ? `<div style="flex:none;width:11em;align-self:stretch;min-height:6.5em;border-radius:.8em;background:url('${photo}') center/cover no-repeat;border:3px solid rgba(255,255,255,.85);"></div>` : ''}
-            </div>`;
-
-            // Hours as a clear box — as important as the dates for an entry notice
-            const hoursHtml = hours ? `<div style="text-align:center;"><div style="margin-top:.85em;display:inline-flex;align-items:stretch;border-radius:.7em;overflow:hidden;border:3px solid ${p.heads[0]};font-size:1.3em;font-weight:800;"><span style="background:${p.heads[0]};color:#fff;padding:.45em .95em;letter-spacing:.08em;text-transform:uppercase;">Hours</span><span style="background:${p.card};color:${p.ink};padding:.45em 1.2em;">${H(hours)}</span></div></div>` : '';
-            const scheduleHtml = schedule.length ? `<div style="margin-bottom:1.1em;">
-                    ${sectionTitle('Schedule')}
-                    <div style="display:flex;flex-wrap:wrap;gap:1em;">
-                        ${schedule.map((s, i) => `<div style="flex:1 1 0;min-width:22%;overflow:hidden;${cardStyle}">
-                            ${s.label ? `<div style="background:${p.heads[i % p.heads.length]};color:#fff;font-weight:900;font-size:1.2em;letter-spacing:.04em;text-transform:uppercase;padding:.42em .9em;">${escP(s.label)}</div>` : ''}
-                            <div style="padding:.6em 1em .7em;font-weight:800;font-size:1.4em;line-height:1.25;color:${p.ink};">${escP(s.when || '')}</div>
-                        </div>`).join('')}
-                    </div>
-                    ${hoursHtml}
-                </div>`
-                : (hours ? `<div style="margin-bottom:1em;">${hoursHtml}</div>` : '');
-
-            const groupsHtml = groups.length ? `<div style="display:flex;flex-wrap:wrap;gap:1em;">
-                ${groups.map(g => `<div style="flex:1 1 0;min-width:30%;padding:1em 1.2em .6em;${cardStyle}">
-                    ${g.heading ? sectionTitle(g.heading) : ''}
-                    ${g.items.map(it => g.plain
-                        ? `<div style="line-height:1.42;color:${p.ink};margin-bottom:.55em;">${H(it)}</div>`
-                        : `<div style="display:flex;gap:.6em;line-height:1.36;color:${p.ink};margin-bottom:.5em;"><span style="color:${p.accent};flex:none;">●</span><span>${H(it)}</span></div>`).join('')}
-                </div>`).join('')}
-            </div>` : '';
-
-            const footer = thanks ? `<div style="flex:none;margin:0 2.4em 1.1em;padding:.6em 1.2em;border-radius:.8em;background:${p.foot};color:${p.footInk};font-weight:900;text-align:center;">${escP(thanks)}</div>` : '';
-
-            canvas.innerHTML = `<div id="schedPoster" style="width:1920px;height:1080px;overflow:hidden;display:flex;flex-direction:column;background:${p.bg};font-family:'Montserrat','DM Sans',sans-serif;font-size:34px;">
-                ${header}
-                <div style="flex:1 0 auto;display:flex;flex-direction:column;justify-content:center;padding:1em 2.4em;">${scheduleHtml}${groupsHtml}</div>
-                ${footer}
-            </div>`;
-            // Shrink everything until it fits on the poster — never cut anything off
-            const poster = document.getElementById('schedPoster');
-            let fs = 34;
-            while (poster.scrollHeight > poster.clientHeight && fs > 13) { fs -= 1; poster.style.fontSize = fs + 'px'; }
-        }
 
         function renderVisualPoster(data, style) {
             const s = POSTER_STYLES[style] || POSTER_STYLES['teal-fun'];
@@ -1325,33 +1028,10 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
                 return;
             }
 
-            // In the Schedule layout the AI only makes a header picture; the layout itself stays
-            const pictureOnly = currentPosterLayout === 'schedule';
-            updateDateWarnings();
-
-            // If a photo is selected (uploaded or stock), attach it so Gemini builds the poster around it
-            let photoPart = null;
-            if (!pictureOnly && posterImageMode === 'photo' && posterImageUrl) {
-                try {
-                    const blob = await fetch(posterImageUrl).then(r => r.blob());
-                    const b64 = await new Promise((resolve, reject) => {
-                        const fr = new FileReader();
-                        fr.onload = () => resolve(fr.result.split(',')[1]);
-                        fr.onerror = reject;
-                        fr.readAsDataURL(blob);
-                    });
-                    photoPart = { inlineData: { mimeType: blob.type || 'image/jpeg', data: b64 } };
-                } catch (e) { console.warn('Could not attach selected photo, generating without it:', e); }
-            }
-
             const btn = document.getElementById('btnAiGenerate');
-            const origHtml = btn.innerHTML;
+            const origText = btn.textContent;
             btn.disabled = true;
-            btn.innerHTML = `<span class="ai-spinner"></span>
-                <span style="flex:1;">
-                    <span style="display:block;font-size:14px;font-weight:700;">${pictureOnly ? 'Creating a picture for your poster…' : 'Generating your poster…'}</span>
-                    <span style="display:block;font-size:11px;opacity:.85;margin-top:1px;">${pictureOnly ? 'Gemini is drawing it' : photoPart ? 'Designing around your photo' : 'Gemini is designing it'} — this takes about 20 seconds</span>
-                </span>`;
+            btn.textContent = '⏳ Generating image...';
 
             const title = posterData.visual_headline || posterData.headline || '';
             const subtitle = posterData.visual_subtitle || posterData.subtitle || '';
@@ -1360,79 +1040,51 @@ ${!title ? 'Also suggest a short, clear title on the first line prefixed with "T
             const tag = posterData.tag || '';
             const category = document.getElementById('category')?.value || 'general';
 
-            // Collect poster text, skipping lines that duplicate info already shown
-            const seenLines = new Set();
-            const addLine = (arr, text) => {
-                const norm = (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
-                if (!norm || seenLines.has(norm)) return;
-                seenLines.add(norm);
-                arr.push(text.trim());
-            };
-            const textLines = [];
-            addLine(textLines, title);
-            addLine(textLines, subtitle);
-            addLine(textLines, details);
-            (posterData.sections || []).forEach(s => {
-                if (s.type === 'bullets') (s.items || []).forEach(i => addLine(textLines, i));
-                else addLine(textLines, s.text);
-            });
+            const prompt = `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
 
-            // Schedule layout: the AI only draws a header picture (no text) — the layout stays as is
-            const prompt = pictureOnly
-                ? `Create one high-quality picture that illustrates this condominium building notice: "${title}" (category: ${category}). Realistic photo style, bright, clean and professional, suitable as the header image of a notice on a lobby TV.
+ALL of the following text MUST appear on the poster, clearly readable:
 
-ABSOLUTELY NO TEXT: the image must not contain any words, letters, numbers, labels, signs, captions, logos or watermarks anywhere.`
-                : `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
+HEADLINE (large, bold): ${title}
+${subtitle ? `SUBTITLE: ${subtitle}` : ''}
+${details ? `KEY DETAIL: ${details}` : ''}
+${tag ? `CATEGORY TAG (small, top corner): ${tag}` : ''}
+${signoff ? `SIGNED BY (bottom): ${signoff}` : ''}
 
-The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Do not add any words of your own, do not print any field labels or headings that are not listed, and do not show the same information twice.
+ADDITIONAL TEXT that MUST be included on the poster:
+${(posterData.sections || []).map(s => {
+    if (s.type === 'highlight') return `• ${s.text}`;
+    if (s.type === 'bullets') return (s.items || []).map(i => `• ${i}`).join('\n');
+    if (s.type === 'text') return `• ${s.text}`;
+    return '';
+}).filter(Boolean).join('\n')}
 
-===POSTER TEXT START===
-${tag ? `${tag} (small badge, top corner)` : ''}
-${textLines[0] ? `${textLines[0]} (main headline, largest text)` : ''}
-${textLines.slice(1).map(l => `${l}`).join('\n')}
-${signoff ? `${signoff} (small, at the bottom)` : ''}
-===POSTER TEXT END===
-
-The notes in parentheses describe placement only — NEVER print the parenthetical notes, the === markers, or any label on the poster.
-${photoPart ? `
-A REAL PHOTOGRAPH IS ATTACHED. It shows the actual location or subject of this notice, so residents must be able to recognize it in real life. PHOTO RULES:
-- Feature the attached photograph prominently, covering roughly 40-50% of the poster (for example as a full-height panel on one side, or a large framed region)
-- Keep the photograph exactly as it is — do NOT redraw, repaint, alter, or replace its content. Only mild color grading to blend with the design is allowed
-- Design the poster's colors and layout to complement the photo
-` : ''}
 DESIGN RULES:
 - MUST be WIDE LANDSCAPE layout (16:9 ratio, like a widescreen TV)
 - Professional, modern graphic design for a building lobby TV
 - Bold colors, eye-catching layout with relevant imagery for "${category}" category
-- ALL listed text must be included exactly once and perfectly legible
-- Include relevant visual elements (icons, shapes${photoPart ? '' : ', photos'}) matching the topic — imagery only, no extra words
+- ALL text above must be included and perfectly legible
+- Include relevant visual elements (icons, shapes, photos) matching the topic
 - Text must be perfectly spelled with no errors
 - Use visual hierarchy: headline largest, details medium, fine print smaller
 - Fill the entire wide landscape canvas — no blank space or borders`;
 
             try {
-                // Best text rendering first, then fall back if quota/deprecation hits
-                const imageModels = ['gemini-3-pro-image', 'gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
-                let data = null, lastError = null;
-                for (const model of imageModels) {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiConfig.gemini}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: photoPart ? [{ text: prompt }, photoPart] : [{ text: prompt }] }],
-                            generationConfig: {
-                                responseModalities: ['TEXT', 'IMAGE'],
-                                imageConfig: {
-                                    aspectRatio: pictureOnly ? '4:3' : '16:9'
-                                }
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${aiConfig.gemini}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            responseModalities: ['TEXT', 'IMAGE'],
+                            imageGenerationConfig: {
+                                aspectRatio: '16:9'
                             }
-                        })
-                    });
-                    data = await res.json();
-                    if (!data.error) break;
-                    lastError = data.error.message || 'API error';
-                }
-                if (data.error) throw new Error(lastError);
+                        }
+                    })
+                });
+
+                const data = await res.json();
+                if (data.error) throw new Error(data.error.message || 'API error');
 
                 const parts = data.candidates?.[0]?.content?.parts || [];
                 let imageData = null;
@@ -1451,18 +1103,6 @@ DESIGN RULES:
                 for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
                 const blob = new Blob([byteArray], { type: imageData.mimeType });
                 const blobUrl = URL.createObjectURL(blob);
-
-                if (pictureOnly) {
-                    posterImageUrl = blobUrl;
-                    posterImageMode = 'photo';
-                    renderSchedulePoster(posterData, currentPosterStyle);
-                    document.querySelectorAll('.poster-img-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    document.getElementById('posterImagePreview').style.display = '';
-                    document.getElementById('posterImgThumb').src = blobUrl;
-                    document.getElementById('posterImgLabel').textContent = 'AI picture (poster header)';
-                    return;
-                }
 
                 // Display directly in the poster canvas as a full poster image
                 const canvas = document.getElementById('posterCanvas');
@@ -1485,7 +1125,7 @@ DESIGN RULES:
                 alert(`AI image generation failed: ${e.message}`);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = origHtml;
+                btn.textContent = origText;
             }
         };
 
@@ -1575,28 +1215,6 @@ DESIGN RULES:
             await designPoster();
         };
 
-        // One-click flow from the notice form: design the poster content, then
-        // immediately AI-generate the final image. The modal stays open for tweaks.
-        window.designPosterAI = async () => {
-            const prevData = posterData;
-            await designPoster();
-            const gotNewData = posterData && posterData !== prevData;
-            if (!gotNewData) return;
-            const words = document.getElementById('body').value.trim().split(/\s+/).filter(Boolean).length;
-            if (words >= 50 || (posterData.schedule || []).length >= 2) {
-                // Long or multi-building notices read best as an information layout — instant, no image AI
-                const btn = document.querySelector('.poster-layout-btn[data-layout="schedule"]');
-                if (btn) switchPosterLayout(btn);
-            } else if (aiConfig.gemini) {
-                // Artwork poster — don't leave the Schedule button showing as selected from an earlier poster
-                if (currentPosterLayout === 'schedule') {
-                    const detailed = document.querySelector('.poster-layout-btn[data-layout="detailed"]');
-                    if (detailed) switchPosterLayout(detailed);
-                }
-                await generateAiPosterImage();
-            }
-        };
-
         window.usePoster = async () => {
             const btn = document.querySelector('.poster-actions .btn-primary');
             btn.textContent = '⏳ Converting...';
@@ -1668,12 +1286,7 @@ DESIGN RULES:
             statusEl.style.display = '';
             statusEl.innerHTML = `<span class="ai-spinner"></span> Designing poster with ${providerNames[provider]}...`;
             btn.disabled = true;
-            const origPosterHtml = btn.innerHTML;
-            btn.innerHTML = `<span class="ai-spinner"></span>
-                <span class="ai-text">
-                    <span class="ai-title">Designing your poster…</span>
-                    <span class="ai-sub">Laying out headlines, dates and sections</span>
-                </span>`;
+            btn.textContent = '⏳ Designing...';
 
             const prompt = `You are a graphic designer formatting a notice for a condominium building's digital display board.
 
@@ -1684,16 +1297,12 @@ Category: ${category}
 
 IMPORTANT: Include ALL information from the notice. Do not summarize or remove content. Structure it visually.
 
-CRITICAL — BE FAITHFUL TO THE ORIGINAL TEXT:
-- Use ONLY words and facts that appear in the notice above. NEVER invent or add words, dates, or descriptions that are not in the original (e.g. do not add "Annual", "Testing", "Mandatory" or similar unless the original says so).
-- Do NOT repeat the same date, time, or fact in more than one field. Each piece of information should appear exactly once across headline, subtitle, detail, and sections.
-
 Available icons for decoration (pick 1-2 that best match the topic):
 wrench, car, water, flame, elevator, pool, building, shield, clock, alert, trash, leaf, mail, calendar, megaphone, key, window, power, wifi, party, dog, snowflake, sun, paint
 
 Return ONLY valid JSON (no markdown, no backticks, no extra text):
 {
-  "headline": "MAIN TITLE IN CAPS (2-5 words taken from the original title/text — do not add words that are not in the original)",
+  "headline": "MAIN TITLE IN CAPS (keep from original or create one, 2-5 words)",
   "tag": "Category label like MAINTENANCE NOTICE, PARKING NOTICE, etc.",
   "subtitle": "Optional 1-line intro if the notice has a greeting or opening line, or empty string",
   "badge": "IMPORTANT or URGENT or REMINDER or empty string — only if warranted",
@@ -1702,10 +1311,6 @@ Return ONLY valid JSON (no markdown, no backticks, no extra text):
   "visual_headline": "SHORT PUNCHY VERSION OF THE MESSAGE for a big bold visual poster (5-12 words max, like a billboard, e.g. PLEASE DRIVE WITH CARE IN THE PARKING AREA)",
   "visual_subtitle": "One short sentence with key details (date, time, or action needed), or empty string",
   "visual_detail": "Optional: one critical detail like a date or time that must be shown, or empty string",
-  "intro": "One short sentence with who/what and the daily hours if given, using only the notice's facts (e.g. MC Mechanical will be on-site 9:00 AM to 5:00 PM daily.), or empty string",
-  "schedule": [{"label": "Building 550", "when": "Monday, November 23rd to Wednesday, November 25th, 2026"}],
-  "hours": "The daily time window if stated (e.g. 9:00 AM to 5:00 PM daily), or empty string",
-  "groups": [{"heading": "BEFORE THE VISIT", "items": ["Short sentence", "Short sentence"]}],
   "sections": [
     {"type": "highlight", "heading": "SECTION HEADING", "text": "Key info like dates, times, critical details"},
     {"type": "text", "heading": "OPTIONAL HEADING", "text": "Regular paragraph text"},
@@ -1717,14 +1322,12 @@ Return ONLY valid JSON (no markdown, no backticks, no extra text):
 
 Rules:
 - icons: Pick exactly 2 icons from the available list that relate to the notice topic
-- visual_headline: Write this like a BILLBOARD — short, bold, direct, action-oriented. Like "NO PARKING FRIDAY" or "ELEVATOR CLOSED MONDAY" — but built ONLY from words/facts in the original notice
+- visual_headline: Write this like a BILLBOARD — short, bold, direct, action-oriented. Like "NO PARKING FRIDAY" or "FIRE ALARM TESTING TODAY" or "KEEP YOUR DOORS CLOSED"
 - Use "highlight" for critical info (dates, closures, deadlines) — these get a colored left border
 - Use "text" for regular paragraphs
 - Use "bullets" for lists of items or expectations
 - Include ALL dates, times, details from the original text in sections
 - Keep the original tone and wording as much as possible
-- schedule: one entry PER building/unit/floor/group that has its own dates — "label" is the group name exactly as written, "when" is exactly its dates (keep the years as written). If there is a single date or period with no groups, use one entry with label "When". Use [] if the notice has no dates.
-- groups: put EVERY instruction, requirement and other piece of information into 1–3 groups, each with a SHORT uppercase heading of 2–4 words (e.g. BEFORE THE VISIT, ACCESS & ATTENDANCE, IMPORTANT). Items are short sentences that use only the notice's own facts and wording. Together, intro + schedule + hours + groups + footer must cover everything in the notice. Do not repeat the schedule dates inside groups.
 - Return ONLY the JSON`;
 
             try {
@@ -1788,199 +1391,23 @@ Rules:
                     } catch (e) { console.warn('Auto photo fetch failed:', e); }
                 }
 
-                renderForLayout();
+                if (currentPosterLayout === 'visual') renderVisualPoster(posterData, currentPosterStyle);
+                else renderPoster(posterData, currentPosterStyle);
                 document.getElementById('posterModal').classList.add('active');
             } catch (e) {
                 alert(`Poster design failed (${providerNames[provider]}): ${e.message}`);
             } finally {
                 statusEl.style.display = 'none';
                 btn.disabled = false;
-                btn.innerHTML = origPosterHtml;
+                btn.textContent = '🎨 Design Poster';
             }
         };
         onAuthChange(user => {
             if (!user) { window.location.href = '/login.html'; return; }
             document.getElementById('loadingOverlay').style.display = 'none';
             loadAISettings();
-            loadTemplatesList();
             checkEdit();
-            initLivePreview();
         });
-
-        // ═══ Live TV Preview ═══
-        window.toggleLivePreview = () => {
-            const p = document.getElementById('livePreviewPanel');
-            p.classList.toggle('collapsed');
-            document.getElementById('lpToggle').textContent = p.classList.contains('collapsed') ? '▸' : '▾';
-        };
-
-        let fullDisplayLoaded = false;
-        function scaleFullDisplay() {
-            const wrap = document.querySelector('.fulldisplay-wrap');
-            const frame = document.getElementById('fullDisplayFrame');
-            if (!wrap || !frame || !wrap.clientWidth) return;
-            frame.style.transform = `scale(${wrap.clientWidth / 1920})`;
-        }
-        // Re-scale whenever the frame's container changes size (panel widen, window resize)
-        const _fdWrap = document.querySelector('.fulldisplay-wrap');
-        if (_fdWrap && window.ResizeObserver) new ResizeObserver(scaleFullDisplay).observe(_fdWrap);
-
-        window.setPreviewTab = (tab) => {
-            const full = tab === 'full';
-            document.getElementById('lpTabNotice').classList.toggle('active', !full);
-            document.getElementById('lpTabFull').classList.toggle('active', full);
-            document.getElementById('lpNoticeView').style.display = full ? 'none' : '';
-            document.getElementById('lpFullView').style.display = full ? '' : 'none';
-            document.getElementById('livePreviewPanel').classList.toggle('full-mode', full);
-            if (full) {
-                const frame = document.getElementById('fullDisplayFrame');
-                if (!fullDisplayLoaded) { frame.src = '/index.html'; fullDisplayLoaded = true; }
-                scaleFullDisplay();
-            }
-        };
-
-        function previewMediaSrc() {
-            const img = document.getElementById('imagePreview');
-            const vid = document.getElementById('videoPreview');
-            const pdf = document.getElementById('pdfPreview');
-            if (img && img.style.display !== 'none' && img.getAttribute('src')) return { type: 'image', src: img.src };
-            if (vid && vid.style.display !== 'none' && vid.getAttribute('src')) return { type: 'video', src: vid.src };
-            if (pdf && pdf.style.display !== 'none') return { type: 'pdf' };
-            return null;
-        }
-
-        let _lastPreviewHtml = '';
-        window.updateNoticePreview = () => {
-            const title = document.getElementById('title').value.trim();
-            const body = document.getElementById('body').value.trim();
-            const catSel = document.getElementById('category');
-            const catLabel = catSel.options[catSel.selectedIndex]?.text || 'General';
-            const priority = parseInt(document.getElementById('priority').value) || 0;
-            const mode = document.getElementById('displayMode').value;
-            const media = previewMediaSrc();
-            const pc = priority >= 2 ? 'urgent' : priority >= 1 ? 'important' : '';
-            const prio = priority >= 2 ? ' · URGENT' : priority >= 1 ? ' · Important' : '';
-            const mediaEl = (m) => m.type === 'video' ? `<video src="${m.src}" muted></video>`
-                : m.type === 'pdf' ? `<div style="color:#fff;font-size:24px;">📄</div>` : `<img src="${m.src}">`;
-            const titleHtml = title ? escapeHtml(title) : '<span class="tv-empty">Notice title</span>';
-            const bodyHtml = body ? escapeHtml(body).replace(/\n/g, '<br>') : '<span class="tv-empty">Notice text will appear here…</span>';
-            const content = `<div class="tv-content"><div class="tv-cat"><span class="dot"></span>${escapeHtml(catLabel)}${prio}</div><div class="tv-title">${titleHtml}</div><div class="tv-body">${bodyHtml}</div></div>`;
-
-            let html;
-            if (media && mode === 'media_only') html = `<div class="tv-card"><div class="tv-media-only">${mediaEl(media)}</div></div>`;
-            else if (media && mode !== 'text') html = `<div class="tv-card side ${pc}"><div class="tv-media">${mediaEl(media)}</div>${content}</div>`;
-            else html = `<div class="tv-card text ${pc}">${content}</div>`;
-
-            if (html !== _lastPreviewHtml) {
-                document.getElementById('tvCard').innerHTML = html;
-                _lastPreviewHtml = html;
-            }
-        };
-
-        async function initLivePreview() {
-            try {
-                const snap = await getDoc(doc(db, 'settings', 'main'));
-                if (snap.exists()) {
-                    const theme = snap.data().display_theme || 'dark-modern';
-                    document.getElementById('tvFrame').setAttribute('data-theme', theme);
-                }
-            } catch (e) { /* keep default theme */ }
-            document.getElementById('title').addEventListener('input', updateNoticePreview);
-            document.getElementById('body').addEventListener('input', updateNoticePreview);
-            document.getElementById('category').addEventListener('change', updateNoticePreview);
-            updateNoticePreview();
-            // Poll for changes driven by buttons/functions (priority, display mode, media, templates)
-            setInterval(updateNoticePreview, 500);
-        }
-
-        // ═══ Notice Templates ═══
-        let templatesCache = [];
-        async function loadTemplatesList() {
-            try {
-                templatesCache = await getTemplates();
-                const picker = document.getElementById('templatePicker');
-                picker.innerHTML = '<option value="">Start blank…</option>' +
-                    templatesCache.map(t => `<option value="${t.id}">${escapeHtml(t.name || t.title || 'Untitled')}</option>`).join('');
-            } catch (e) { console.warn('Could not load templates:', e); }
-        }
-
-        window.loadTemplate = (id) => {
-            document.getElementById('delTemplateBtn').style.display = id ? '' : 'none';
-            if (!id) return;
-            const t = templatesCache.find(x => x.id === id);
-            if (!t) return;
-            document.getElementById('title').value = t.title || '';
-            document.getElementById('body').value = t.body || '';
-            document.getElementById('category').value = t.category || 'general';
-            document.getElementById('priority').value = t.priority || 0;
-            document.querySelectorAll('.priority-option').forEach(el => el.classList.toggle('selected', el.dataset.value == (t.priority || 0)));
-        };
-
-        window.saveAsTemplate = async () => {
-            const title = document.getElementById('title').value.trim();
-            const body = document.getElementById('body').value.trim();
-            if (!title && !body) { alert('Add a title or body before saving a template.'); return; }
-            const name = prompt('Name this template:', title || 'Untitled template');
-            if (name === null) return;
-            try {
-                await saveTemplate({
-                    name: name.trim() || title || 'Untitled',
-                    title, body,
-                    category: document.getElementById('category').value,
-                    priority: parseInt(document.getElementById('priority').value) || 0,
-                });
-                await loadTemplatesList();
-                showFlash('Template saved', 'success');
-            } catch (e) { showFlash('Could not save template: ' + e.message, 'error'); }
-        };
-
-        window.deleteCurrentTemplate = async () => {
-            const id = document.getElementById('templatePicker').value;
-            if (!id) return;
-            const t = templatesCache.find(x => x.id === id);
-            if (!confirm(`Delete template "${t?.name || 'this template'}"?`)) return;
-            try {
-                await deleteTemplate(id);
-                await loadTemplatesList();
-                document.getElementById('templatePicker').value = '';
-                document.getElementById('delTemplateBtn').style.display = 'none';
-                showFlash('Template deleted', 'success');
-            } catch (e) { showFlash('Could not delete template', 'error'); }
-        };
-
-        // ═══ AI Translation ═══
-        window.translateNotice = async () => {
-            const body = document.getElementById('body').value.trim();
-            const title = document.getElementById('title').value.trim();
-            if (!body && !title) { alert('Write the notice first, then translate it.'); return; }
-            const provider = aiConfig.provider;
-            const apiKey = aiConfig[provider];
-            if (!apiKey) { alert(`No API key set for ${providerNames[provider]}. Add one in Admin → Settings.`); return; }
-            const lang = document.getElementById('translateLang').value;
-            const btn = document.getElementById('translateBtn');
-            const status = document.getElementById('translateStatus');
-            btn.disabled = true;
-            status.style.display = '';
-            const prompt = `Translate the following condominium notice into ${lang}. Keep it natural and professional. Preserve dates, names, phone numbers, and building identifiers exactly. Return ONLY the translation, no preamble, no notes.
-
-${title ? 'TITLE: ' + title + '\n\n' : ''}${body}`;
-            try {
-                let text = '';
-                if (provider === 'gemini') text = await callGemini(prompt, apiKey);
-                else if (provider === 'groq') text = await callGroq(prompt, apiKey);
-                else if (provider === 'openai') text = await callOpenAI(prompt, apiKey);
-                else if (provider === 'deepseek') text = await callDeepSeek(prompt, apiKey);
-                if (!text) throw new Error('No response from AI');
-                const bodyEl = document.getElementById('body');
-                bodyEl.value = bodyEl.value.trim() + `\n\n———  ${lang}  ———\n` + text.trim();
-                showFlash(`${lang} translation added below the notice`, 'success');
-            } catch (e) {
-                alert('Translation failed: ' + e.message);
-            } finally {
-                btn.disabled = false;
-                status.style.display = 'none';
-            }
-        };
 
         async function checkEdit() {
             const params = new URLSearchParams(window.location.search);
@@ -1997,8 +1424,6 @@ ${title ? 'TITLE: ' + title + '\n\n' : ''}${body}`;
                 document.getElementById('title').value = n.title || '';
                 document.getElementById('category').value = n.category || 'general';
                 document.getElementById('body').value = n.body || '';
-            updateDateWarnings();
-                document.getElementById('showQr').checked = !!n.show_qr;
                 document.getElementById('startDate').value = n.start_date || '';
                 document.getElementById('endDate').value = n.end_date || '';
 
@@ -2125,7 +1550,6 @@ ${title ? 'TITLE: ' + title + '\n\n' : ''}${body}`;
                     media_path: mediaPath,
                     file_type: fileType,
                     display_mode: document.getElementById('displayMode').value,
-                    show_qr: document.getElementById('showQr').checked,
                     start_date: document.getElementById('startDate').value || '',
                     end_date: document.getElementById('endDate').value || '',
                 };

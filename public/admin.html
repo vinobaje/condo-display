@@ -114,8 +114,6 @@
 
         <!-- TAB: Notices -->
         <div class="tab-panel active" id="panel-notices">
-            <!-- Display health (one row per TV) -->
-            <div id="displayStatusPanel" style="margin-bottom:14px;"></div>
             <!-- Stats -->
             <div class="stats">
                 <div class="stat-card"><div class="stat-label">Total Notices</div><div class="stat-value accent" id="statTotal">0</div></div>
@@ -127,10 +125,7 @@
             <div class="section">
                 <div class="section-header">
                     <div class="section-title">All Notices</div>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn btn-outline btn-sm" onclick="openScheduleImport()">📅 Import Schedule</button>
-                        <a href="/notice.html" class="btn btn-primary btn-sm">+ New Notice</a>
-                    </div>
+                    <a href="/notice.html" class="btn btn-primary btn-sm">+ New Notice</a>
                 </div>
                 <div class="notice-list" id="noticeList">
                     <div style="text-align:center;padding:40px;color:var(--text-dim);">Loading notices...</div>
@@ -314,19 +309,20 @@
                             </div>
                             <button type="button" class="btn btn-outline btn-sm" onclick="clearDisplayCache()">Clear Cache</button>
                         </div>
-                    </div>
-                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
                             <div>
-                                <div style="font-size:13px;font-weight:600;">💾 Backup &amp; Restore</div>
-                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Download all notices &amp; settings as a file (API keys excluded)</div>
+                                <div style="font-size:13px;font-weight:600;">🔄 Remote Pi Reboot</div>
+                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Remotely restart the Raspberry Pi display unit</div>
+                                <div id="lastRebootTime" style="font-size:10px;color:var(--text-dim);margin-top:4px;"></div>
                             </div>
-                            <div style="display:flex;gap:8px;">
-                                <button type="button" class="btn btn-outline btn-sm" onclick="exportBackupFile()">⬇️ Export</button>
-                                <label class="btn btn-outline btn-sm" style="cursor:pointer;">⬆️ Restore
-                                    <input type="file" accept="application/json" onchange="importBackupFile(this.files[0])" style="display:none;">
-                                </label>
+                            <button type="button" class="btn btn-sm" id="btnRebootPi" onclick="rebootPi()" style="background:#ef4444;color:#fff;border-color:#ef4444;">⚡ Reboot Pi</button>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;">🔃 Reload Display</div>
+                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Force the browser to reload the page (no Pi restart)</div>
                             </div>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="reloadDisplay()">Reload Page</button>
                         </div>
                     </div>
                 </div>
@@ -487,43 +483,6 @@
         </div>
     </div>
 
-    <!-- Schedule Import Modal -->
-    <div class="modal-overlay" id="scheduleModal">
-        <div class="modal" style="max-width:640px;max-height:88vh;overflow-y:auto;">
-            <h3>📅 Import Yearly Schedule</h3>
-            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;">Upload any service schedule — fire alarm testing, generator testing, window cleaning, anything with dates — and AI will create a pre-scheduled notice for every date. Each notice publishes itself before the service date and expires automatically afterwards — no monthly work needed. You can import as many different schedules as you like.</p>
-            <div class="form-group">
-                <label>Schedule Document</label>
-                <input type="file" id="scheduleFile" class="form-control" accept=".docx,.pdf,.txt,image/*" onchange="scheduleFileChanged()">
-                <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">Word, PDF, photo, or text file — or paste the text below instead</div>
-            </div>
-            <div class="form-group">
-                <label>Or Paste Schedule Text</label>
-                <textarea id="scheduleText" class="form-control" rows="3" placeholder="Paste the schedule here if you don't have the file…"></textarea>
-            </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:10px;">
-                <label style="margin:0;">Show each notice</label>
-                <input type="number" id="scheduleDaysBefore" class="form-control" value="7" min="1" max="30" style="width:70px;text-align:center;">
-                <span style="font-size:13px;color:var(--text-dim);">days before its date</span>
-            </div>
-            <div class="form-group">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;">
-                    <input type="checkbox" id="schedulePosters" checked>
-                    <span>🎨 AI-generate a poster image for each notice</span>
-                </label>
-                <div style="font-size:11px;color:var(--text-dim);margin-top:4px;margin-left:24px;">Each date gets its own designed poster (~30 sec each — keep this tab open while they generate). Unchecked = clean text notices.</div>
-            </div>
-            <div style="font-size:11px;color:var(--text-dim);background:var(--bg-dark);border-radius:8px;padding:8px 10px;margin-bottom:4px;">🧹 Imported notices clean up after themselves: once a date has passed, the notice (and its poster) is deleted automatically.</div>
-            <div id="scheduleParseStatus" style="display:none;margin:10px 0;font-size:13px;color:var(--accent);"><span class="ai-spinner" style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;"></span> <span id="scheduleParseStatusText">Reading schedule with AI…</span></div>
-            <div id="schedulePreview" style="display:none;"></div>
-            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
-                <button class="btn btn-outline" onclick="document.getElementById('scheduleModal').classList.remove('active')">Cancel</button>
-                <button class="btn btn-primary" id="scheduleParseBtn" onclick="parseSchedule()">✨ Read Schedule with AI</button>
-                <button class="btn btn-primary" id="scheduleCreateBtn" onclick="createScheduleNotices()" style="display:none;">📅 Create Notices</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Emergency Modal -->
     <div class="modal-overlay" id="emergencyModal">
         <div class="modal">
@@ -541,12 +500,11 @@
     </div>
 
     <script src="/js/firebase-config.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
     <script type="module">
         import {
-            onAuthChange, logout, getSettings, saveSettings, getSecrets, saveSecrets, migrateSecrets, onNoticesChange,
-            deleteNotice, toggleNotice, createNotice, uploadMedia, uploadLogo, geocodeLocation, onDisplayStatuses, deleteDisplayStatus, sendDisplayCommand,
-            exportBackup, escapeHtml, formatDate, formatTimeAgo, getFileType, CATEGORIES, db
+            onAuthChange, logout, getSettings, saveSettings, onNoticesChange,
+            deleteNotice, toggleNotice, uploadLogo, geocodeLocation,
+            escapeHtml, formatDate, getFileType, CATEGORIES, db
         } from '/js/app.js';
         import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -702,25 +660,19 @@
                 return;
             }
             document.getElementById('loadingOverlay').style.display = 'none';
-            // init() runs the secrets migration first; wait for it so the super-admin
-            // check reads super_admin_emails from its final location (secrets doc)
-            init().then(() => checkSuperAdmin(user)).catch(e => {
+            init().catch(e => {
                 console.error('Init failed:', e);
                 alert('Error loading admin panel: ' + e.message);
             });
-        });
-
-        async function checkSuperAdmin(user) {
-            let sec = {};
-            try { sec = await getSecrets(); } catch (e) { console.warn('Could not read secrets for super-admin check:', e); }
-            {
-                const saEmailsRaw = sec.super_admin_emails || '';
+            // Check super admin role after settings load
+            getSettings().then(s => {
+                const saEmailsRaw = s.super_admin_emails || '';
                 const saEmails = saEmailsRaw.toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
                 const userEmail = (user.email || '').toLowerCase();
                 // Bootstrap: if no super admins set yet, first user becomes super admin
                 if (saEmails.length === 0) {
                     isSuperAdmin = true;
-                    saveSecrets({ super_admin_emails: user.email });
+                    saveSettings({ super_admin_emails: user.email });
                 } else {
                     isSuperAdmin = saEmails.includes(userEmail);
                 }
@@ -728,8 +680,8 @@
                 const btn = document.getElementById('saToggleBtn');
                 btn.textContent = isSuperAdmin ? '🔓 Super Admin' : '👤 Admin';
                 btn.title = user.email;
-            }
-        }
+            });
+        });
 
         window.handleLogout = async () => { await logout(); window.location.href = '/login.html'; };
 
@@ -785,129 +737,14 @@
 
         // ═══ Init ═══
         async function init() {
-            try { await migrateSecrets(); } catch (e) { console.warn('Secret migration skipped:', e); }
             settings = await getSettings();
-            try { Object.assign(settings, await getSecrets()); } catch (e) { console.warn('Could not load secrets:', e); }
             populateSettings(settings);
 
             onNoticesChange((notices) => {
                 allNotices = notices;
-                autoDeactivateExpired();
                 renderNoticeList();
                 updateStats();
             });
-            // Re-check every 5 minutes so notices expire even if the tab stays open
-            setInterval(() => { autoDeactivateExpired(); renderNoticeList(); updateStats(); }, 5 * 60 * 1000);
-
-            // Live display-health panel (one row per TV)
-            onDisplayStatuses(list => { displayStatuses = list; renderDisplayStatuses(); });
-            setInterval(renderDisplayStatuses, 30 * 1000); // refresh "last seen" text
-        }
-
-        // ═══ Display health — multiple TVs ═══
-        let displayStatuses = [];
-        const isDisplayOnline = (s) => s.last_seen && (Date.now() - new Date(s.last_seen).getTime()) / 60000 < 6;
-
-        function renderDisplayStatuses() {
-            const panel = document.getElementById('displayStatusPanel');
-            if (panel.contains(document.activeElement) && document.activeElement.tagName === 'SELECT') return;
-            if (!displayStatuses.length) {
-                panel.innerHTML = `<div style="padding:12px 18px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);font-size:13px;color:var(--text-dim);">📺 No TV displays have checked in yet. Open the display URL on each Pi (add <code>?device=Lobby</code> to name it).</div>`;
-                return;
-            }
-            const online = displayStatuses.filter(isDisplayOnline).length;
-            const rows = displayStatuses.slice().sort((a, b) => {
-                // online first, then by name/id
-                const ao = isDisplayOnline(a) ? 0 : 1, bo = isDisplayOnline(b) ? 0 : 1;
-                if (ao !== bo) return ao - bo;
-                return (a.name || a.id).localeCompare(b.name || b.id);
-            }).map(s => {
-                const on = isDisplayOnline(s);
-                const label = s.name || (s.device ? s.device.split(' · ')[0] : '') || s.id;
-                const screenInfo = s.device ? s.device.split(' · ')[0] : '';
-                return `<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border);">
-                    <span style="width:10px;height:10px;border-radius:50%;background:${on ? '#10b981' : '#ef4444'};box-shadow:${on ? '0 0 8px rgba(16,185,129,.6)' : 'none'};flex-shrink:0;"></span>
-                    <span style="font-weight:600;min-width:110px;">${escapeHtml(label)}</span>
-                    <span style="font-size:12px;font-weight:600;color:${on ? 'var(--success)' : 'var(--urgent)'};min-width:54px;">${on ? 'Online' : 'Offline'}</span>
-                    <span style="font-size:12px;color:var(--text-dim);flex:1;">last seen ${s.last_seen ? formatTimeAgo(s.last_seen) : 'never'}${screenInfo && s.name ? ' · ' + escapeHtml(screenInfo) : ''}</span>
-                    ${displaySizeSelect(s.id)}
-                    <button class="btn btn-outline btn-sm" onclick="reloadDisplay('${s.id}', this)" title="Restart the display (refreshes the screen remotely)" style="font-size:11px;padding:2px 9px;">↻ Reload</button>
-                    <button class="btn btn-outline btn-sm" onclick="removeDisplay('${s.id}')" title="Remove this display from the list" style="font-size:11px;padding:2px 9px;">✕</button>
-                </div>`;
-            }).join('');
-            panel.innerHTML = `<div style="border:1px solid var(--border);border-radius:12px;background:var(--bg-card);overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;font-weight:700;font-size:14px;">📺 TV Displays
-                    <span style="font-size:12px;font-weight:500;color:${online === displayStatuses.length ? 'var(--success)' : 'var(--important)'};">${online} of ${displayStatuses.length} online</span>
-                </div>
-                ${rows}
-            </div>`;
-        }
-
-        // ═══ Per-TV size ═══
-        // A browser can tell a TV's resolution but not its physical size or viewing distance,
-        // so each TV gets its own size here (stored in settings/main display_overrides).
-        const TV_SIZES = [0.8, 0.9, 1, 1.1, 1.25, 1.4, 1.5, 1.75];
-        function displaySizeSelect(id) {
-            const current = settings.display_overrides?.[id]?.zoom || '';
-            const globalPct = Math.round((parseFloat(settings.display_zoom) || 1) * 100);
-            return `<select class="form-control" title="Size of everything on this TV — bigger for large TVs or ones read from far away" onchange="setDisplaySize('${id}', this.value)" style="width:auto;font-size:11px;padding:3px 6px;">
-                <option value=""${current ? '' : ' selected'}>Size: default (${globalPct}%)</option>
-                ${TV_SIZES.map(z => `<option value="${z}"${parseFloat(current) === z ? ' selected' : ''}>Size: ${Math.round(z * 100)}%</option>`).join('')}
-            </select>`;
-        }
-
-        window.setDisplaySize = async (id, value) => {
-            const zoom = value ? parseFloat(value) : null;
-            settings.display_overrides = { ...(settings.display_overrides || {}), [id]: { zoom } };
-            try {
-                await saveSettings({ display_overrides: { [id]: { zoom } } });
-                showFlash(zoom ? `TV size set to ${Math.round(zoom * 100)}% — it updates within a few seconds.` : 'TV set back to the default size.', 'success');
-            } catch (e) { showFlash('Could not save TV size: ' + e.message, 'error'); }
-            document.activeElement?.blur?.();
-            renderDisplayStatuses();
-        };
-
-        window.reloadDisplay = async (id, btn) => {
-            const orig = btn.textContent;
-            btn.disabled = true; btn.textContent = '↻ Sending…';
-            try {
-                await sendDisplayCommand(id, 'reload');
-                showFlash('Reload sent — the TV will refresh within a few seconds (if it\'s online).', 'success');
-            } catch (e) { showFlash('Could not send reload: ' + e.message, 'error'); }
-            finally { setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 2500); }
-        };
-
-        window.removeDisplay = async (id) => {
-            if (!confirm('Remove this display from the list?\n\nIf the TV is still running, it will reappear on its next check-in (within ~2 minutes). Use this to clear out a TV you\'ve decommissioned.')) return;
-            try { await deleteDisplayStatus(id); }
-            catch (e) { showFlash('Could not remove display: ' + e.message, 'error'); }
-        };
-
-        // ═══ Auto-deactivate expired notices ═══
-        const localToday = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
-        const deactivating = new Set();
-        async function autoDeactivateExpired() {
-            const today = localToday();
-            for (const n of allNotices) {
-                if (!n.end_date || n.end_date >= today || deactivating.has(n.id)) continue;
-                if (n.auto_delete) {
-                    // Schedule-imported notices delete themselves (media included) once expired
-                    deactivating.add(n.id);
-                    try {
-                        await deleteNotice(n.id);
-                    } catch (e) {
-                        console.warn('Auto-delete failed for notice', n.id, e);
-                    }
-                } else if (n.active) {
-                    deactivating.add(n.id);
-                    try {
-                        await updateDoc(doc(db, 'notices', n.id), { active: false, updated_at: new Date().toISOString() });
-                    } catch (e) {
-                        // Keep the id in the set — one attempt per session, no retry loop
-                        console.warn('Auto-deactivate failed for notice', n.id, e);
-                    }
-                }
-            }
         }
 
         // ═══ Populate Settings ═══
@@ -925,6 +762,11 @@
             document.getElementById('sSlideDuration').value = s.slide_duration || 12;
             document.getElementById('sVideoDuration').value = s.video_slide_duration || 0;
             document.getElementById('sDisplayZoom').value = s.display_zoom || '1';
+            // Show last reboot time
+            if (s.last_reboot_at) {
+                const d = new Date(s.last_reboot_at);
+                document.getElementById('lastRebootTime').textContent = 'Last reboot: ' + d.toLocaleString();
+            }
             // Populate pixel font sliders
             const hpx = s.fs_header_px || 0; document.getElementById('sFsHeaderPx').value = hpx; document.getElementById('fsHeaderVal').textContent = hpx ? hpx+'px' : 'Auto';
             const npx = s.fs_notice_px || 0; document.getElementById('sFsNoticePx').value = npx; document.getElementById('fsNoticeVal').textContent = npx ? npx+'px' : 'Auto';
@@ -990,136 +832,48 @@
         }
 
         // ═══ Notice List ═══
-        const expandedGroups = new Set();
-
-        function noticeRowHtml(n, today) {
-            const cat = CATEGORIES[n.category] || CATEGORIES.general;
-            const expired = n.end_date && n.end_date < today;
-            const upcoming = n.active && n.start_date && n.start_date > today;
-            const ft = n.file_type || getFileType(n.media_url || '');
-            const priorityBadge = n.priority >= 2 ? '<span class="badge badge-urgent">Urgent</span>'
-                : n.priority >= 1 ? '<span class="badge badge-important">Important</span>'
-                : '<span class="badge badge-normal">Normal</span>';
-            const typeBadge = ft === 'video' ? '<span class="badge badge-video">Video</span>'
-                : ft === 'image' ? '<span class="badge badge-image">Image</span>'
-                : ft === 'pdf' ? '<span class="badge badge-image">PDF</span>' : '';
-            let thumb = cat.icon;
-            if (n.media_url) thumb = ft === 'video'
-                ? `<video src="${n.media_url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
-                : ft === 'pdf' ? '📄'
-                : `<img src="${n.media_url}" style="width:100%;height:100%;object-fit:cover">`;
-            return `
-            <div class="notice-item ${n.active && !expired ? '' : 'inactive'}">
-                <div class="notice-thumb ${n.media_url ? 'clickable' : ''}" ${n.media_url ? `onclick="window.previewMedia('${n.id}')" title="Click to preview"` : ''}>${thumb}</div>
-                <div class="notice-info">
-                    <div class="notice-info-title">${escapeHtml(n.title)}</div>
-                    <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${expired ? `<span style="color:var(--urgent)">⏰ Expired ${formatDate(n.end_date)}</span>` : upcoming ? `<span style="color:var(--accent)">📅 Shows ${formatDate(n.start_date)}</span>` : !n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
-                </div>
-                <div class="notice-actions">
-                    <button class="btn btn-outline btn-sm" onclick="window.handleToggle('${n.id}')">${n.active ? '⏸ Pause' : '▶ Activate'}</button>
-                    <a href="/notice.html?id=${n.id}" class="btn btn-outline btn-sm">✏️ Edit</a>
-                    <button class="btn btn-danger btn-sm" onclick="window.handleDelete('${n.id}')">🗑</button>
-                </div>
-            </div>`;
-        }
-
         function renderNoticeList() {
             const list = document.getElementById('noticeList');
             if (allNotices.length === 0) {
                 list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-dim);">No notices yet. <a href="/notice.html" style="color:var(--accent);">Create your first notice →</a></div>`;
                 return;
             }
-            const today = localToday();
-            const singles = [];
-            const expired = [];
-            const groups = new Map();
-            for (const n of allNotices) {
-                if (n.schedule_group) {
-                    // Schedule-imported notices stay in their own group (past dates included)
-                    if (!groups.has(n.schedule_group)) groups.set(n.schedule_group, []);
-                    groups.get(n.schedule_group).push(n);
-                } else if (n.end_date && n.end_date < today) {
-                    expired.push(n); // stand-alone expired notice → Expired group
-                } else singles.push(n);
-            }
-            // Active / upcoming stand-alone notices at the top
-            let html = singles.map(n => noticeRowHtml(n, today)).join('');
-            // Schedule groups
-            for (const [name, items] of groups) {
-                items.sort((a, b) => (a.end_date || '').localeCompare(b.end_date || ''));
-                const next = items.find(n => n.end_date && n.end_date >= today);
-                const open = expandedGroups.has(name);
-                const enc = encodeURIComponent(name);
-                html += `
-                <div class="sched-group">
-                    <div class="sched-group-header" onclick="window.toggleScheduleGroup('${enc}')">
-                        <span class="sched-group-chevron">${open ? '▾' : '▸'}</span>
-                        <span style="font-weight:700;">📅 ${escapeHtml(name)}</span>
-                        <span class="badge badge-normal">${items.length} notices</span>
-                        <span style="font-size:12px;color:var(--text-dim);flex:1;">${next ? `next: ${formatDate(next.end_date)}` : 'all dates passed'}</span>
-                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();window.deleteScheduleGroup('${enc}')" title="Delete every notice in this schedule">🗑 All</button>
+            list.innerHTML = allNotices.map(n => {
+                const cat = CATEGORIES[n.category] || CATEGORIES.general;
+                const ft = n.file_type || getFileType(n.media_url || '');
+                const priorityBadge = n.priority >= 2 ? '<span class="badge badge-urgent">Urgent</span>'
+                    : n.priority >= 1 ? '<span class="badge badge-important">Important</span>'
+                    : '<span class="badge badge-normal">Normal</span>';
+                const typeBadge = ft === 'video' ? '<span class="badge badge-video">Video</span>'
+                    : ft === 'image' ? '<span class="badge badge-image">Image</span>'
+                    : ft === 'pdf' ? '<span class="badge badge-image">PDF</span>' : '';
+                let thumb = cat.icon;
+                if (n.media_url) thumb = ft === 'video'
+                    ? `<video src="${n.media_url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
+                    : ft === 'pdf' ? '📄'
+                    : `<img src="${n.media_url}" style="width:100%;height:100%;object-fit:cover">`;
+                return `
+                <div class="notice-item ${n.active ? '' : 'inactive'}">
+                    <div class="notice-thumb">${thumb}</div>
+                    <div class="notice-info">
+                        <div class="notice-info-title">${escapeHtml(n.title)}</div>
+                        <div class="notice-info-meta">${priorityBadge}${typeBadge}<span>${cat.icon} ${cat.label}</span><span>${formatDate(n.created_at)}</span>${!n.active ? '<span style="color:var(--urgent)">Inactive</span>' : ''}</div>
                     </div>
-                    ${open ? `<div class="sched-group-body">${items.map(n => noticeRowHtml(n, today)).join('')}</div>` : ''}
-                </div>`;
-            }
-            // Expired stand-alone notices in a collapsible group at the bottom
-            if (expired.length) {
-                expired.sort((a, b) => (b.end_date || '').localeCompare(a.end_date || '')); // most recently expired first
-                const open = expandedGroups.has(EXPIRED_KEY);
-                html += `
-                <div class="sched-group">
-                    <div class="sched-group-header" onclick="window.toggleScheduleGroup('${EXPIRED_KEY}')">
-                        <span class="sched-group-chevron">${open ? '▾' : '▸'}</span>
-                        <span style="font-weight:700;">🗄️ Expired</span>
-                        <span class="badge badge-normal">${expired.length} notices</span>
-                        <span style="font-size:12px;color:var(--text-dim);flex:1;">past their end date</span>
-                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();window.clearExpired()" title="Delete all expired notices">🗑 Clear all</button>
+                    <div class="notice-actions">
+                        <button class="btn btn-outline btn-sm" onclick="window.handleToggle('${n.id}')">${n.active ? '⏸ Pause' : '▶ Activate'}</button>
+                        <a href="/notice.html?id=${n.id}" class="btn btn-outline btn-sm">✏️ Edit</a>
+                        <button class="btn btn-danger btn-sm" onclick="window.handleDelete('${n.id}')">🗑</button>
                     </div>
-                    ${open ? `<div class="sched-group-body">${expired.map(n => noticeRowHtml(n, today)).join('')}</div>` : ''}
                 </div>`;
-            }
-            list.innerHTML = html;
+            }).join('');
         }
 
-        const EXPIRED_KEY = '__expired__';
-        window.clearExpired = async () => {
-            const today = localToday();
-            const items = allNotices.filter(n => !n.schedule_group && n.end_date && n.end_date < today);
-            if (!items.length) return;
-            if (!confirm(`Delete all ${items.length} expired notices? This permanently removes them and their media. (Notices you want to reuse later can be re-activated by editing their dates instead.)`)) return;
-            try {
-                for (const n of items) await deleteNotice(n.id);
-                showFlash(`Deleted ${items.length} expired notices`, 'success');
-            } catch (e) {
-                showFlash('Error deleting expired notices', 'error');
-            }
-        };
-
-        window.toggleScheduleGroup = (enc) => {
-            const name = decodeURIComponent(enc);
-            if (expandedGroups.has(name)) expandedGroups.delete(name);
-            else expandedGroups.add(name);
-            renderNoticeList();
-        };
-
-        window.deleteScheduleGroup = async (enc) => {
-            const name = decodeURIComponent(enc);
-            const items = allNotices.filter(n => n.schedule_group === name);
-            if (!confirm(`Delete all ${items.length} notices in "${name}"? This also removes their posters.`)) return;
-            try {
-                for (const n of items) await deleteNotice(n.id);
-                showFlash(`Deleted ${items.length} notices from "${name}"`, 'success');
-            } catch (e) {
-                showFlash('Error deleting schedule notices', 'error');
-            }
-        };
-
         function updateStats() {
-            const today = localToday();
+            const now = new Date().toISOString();
             const active = allNotices.filter(n => {
                 if (!n.active) return false;
-                if (n.start_date && n.start_date > today) return false;
-                if (n.end_date && n.end_date < today) return false;
+                if (n.start_date && n.start_date > now) return false;
+                if (n.end_date && n.end_date < now) return false;
                 return true;
             });
             document.getElementById('statTotal').textContent = allNotices.length;
@@ -1127,258 +881,6 @@
             document.getElementById('statUrgent').textContent = allNotices.filter(n => n.priority >= 2).length;
             document.getElementById('statMedia').textContent = allNotices.filter(n => n.media_url).length;
         }
-
-        // ═══ Schedule Import ═══
-        let parsedSchedule = null;
-
-        window.openScheduleImport = () => {
-            parsedSchedule = null;
-            document.getElementById('scheduleFile').value = '';
-            document.getElementById('scheduleText').value = '';
-            document.getElementById('schedulePreview').style.display = 'none';
-            document.getElementById('schedulePreview').innerHTML = '';
-            document.getElementById('scheduleCreateBtn').style.display = 'none';
-            document.getElementById('scheduleParseBtn').style.display = '';
-            document.getElementById('scheduleModal').classList.add('active');
-        };
-
-        window.scheduleFileChanged = () => {
-            // Reset any previous parse when a new file is picked
-            document.getElementById('schedulePreview').style.display = 'none';
-            document.getElementById('scheduleCreateBtn').style.display = 'none';
-            document.getElementById('scheduleParseBtn').style.display = '';
-        };
-
-        const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
-            const fr = new FileReader();
-            fr.onload = () => resolve(fr.result.split(',')[1]);
-            fr.onerror = reject;
-            fr.readAsDataURL(file);
-        });
-
-        const scheduleLongDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-        const scheduleAddDays = (d, days) => {
-            const dt = new Date(d + 'T00:00:00');
-            dt.setDate(dt.getDate() + days);
-            return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-        };
-
-        window.parseSchedule = async () => {
-            const apiKey = settings.gemini_api_key;
-            if (!apiKey) { alert('Add a Gemini API key in Settings → AI Integration first.'); return; }
-
-            const file = document.getElementById('scheduleFile').files[0];
-            const pasted = document.getElementById('scheduleText').value.trim();
-            if (!file && !pasted) { alert('Choose a schedule file or paste the schedule text.'); return; }
-
-            const statusEl = document.getElementById('scheduleParseStatus');
-            const parseBtn = document.getElementById('scheduleParseBtn');
-            statusEl.style.display = '';
-            parseBtn.disabled = true;
-
-            try {
-                // Get the document content: text for docx/txt/paste, inline data for pdf/images
-                let docText = pasted;
-                let inlinePart = null;
-                if (file) {
-                    const name = file.name.toLowerCase();
-                    if (name.endsWith('.docx')) {
-                        const buf = await file.arrayBuffer();
-                        const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
-                        docText = result.value;
-                    } else if (name.endsWith('.txt')) {
-                        docText = await file.text();
-                    } else {
-                        inlinePart = { inlineData: { mimeType: file.type || 'application/pdf', data: await readFileAsBase64(file) } };
-                    }
-                }
-
-                const prompt = `You are helping a condominium property manager turn a yearly service schedule into monthly display-board notices.
-
-${inlinePart ? 'The schedule document is attached.' : `SCHEDULE DOCUMENT TEXT:\n"""\n${docText}\n"""`}
-
-Extract every scheduled service date. Return ONLY valid JSON (no markdown, no backticks):
-{
-  "schedule_name": "Short name, e.g. Monthly Fire Alarm Testing 2025",
-  "events": [{"date": "YYYY-MM-DD"}],
-  "notice_title": "Notice title containing the placeholder {DATE}, e.g. Fire Alarm Testing – {DATE}",
-  "notice_body": "Professional notice for residents, 2-3 short plain-text paragraphs, containing {DATE} where the service date belongs. Explain what will happen and what residents should expect. Use ONLY facts from the document (company, building, type of work). Do not invent details.",
-  "category": "one of: general|maintenance|safety|event|rules|financial|parking|amenities",
-  "priority": 0
-}
-Rules:
-- One event per scheduled date, in chronological order, with the correct year from the document
-- priority: 1 if residents are directly affected (alarms sounding, water shut-off), otherwise 0
-- Keep the title short; the {DATE} placeholder will be replaced with e.g. "Wednesday, July 16, 2025"`;
-
-                const parts = inlinePart ? [{ text: prompt }, inlinePart] : [{ text: prompt }];
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts }] })
-                });
-                const data = await res.json();
-                if (data.error) throw new Error(data.error.message || 'API error');
-                let text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-                text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-                parsedSchedule = JSON.parse(text);
-                if (!parsedSchedule.events?.length) throw new Error('No dates found in the document.');
-                renderSchedulePreview();
-            } catch (e) {
-                alert('Could not read the schedule: ' + e.message);
-            } finally {
-                statusEl.style.display = 'none';
-                parseBtn.disabled = false;
-            }
-        };
-
-        function renderSchedulePreview() {
-            const daysBefore = parseInt(document.getElementById('scheduleDaysBefore').value) || 7;
-            const today = localToday();
-            const rows = parsedSchedule.events.map((ev, i) => {
-                const past = ev.date < today;
-                const publishDate = scheduleAddDays(ev.date, -daysBefore);
-                return `<label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--border);cursor:pointer;${past ? 'opacity:.45;' : ''}">
-                    <input type="checkbox" class="sched-ev" data-i="${i}" ${past ? '' : 'checked'}>
-                    <span style="font-weight:600;min-width:150px;">${scheduleLongDate(ev.date)}</span>
-                    <span style="font-size:12px;color:var(--text-dim);">${past ? 'already passed' : `shows ${formatDate(publishDate)} → expires ${formatDate(ev.date)}`}</span>
-                </label>`;
-            }).join('');
-            document.getElementById('schedulePreview').innerHTML = `
-                <div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:6px;">
-                    <div style="font-weight:700;margin-bottom:10px;">${escapeHtml(parsedSchedule.schedule_name || 'Schedule')}</div>
-                    <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:4px;">Notice Title — edit if you like</label>
-                    <input type="text" id="schedTitleEdit" class="form-control" style="font-size:13px;margin-bottom:10px;">
-                    <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:4px;">Notice Text — edit if you like</label>
-                    <textarea id="schedBodyEdit" class="form-control" rows="6" style="font-size:13px;margin-bottom:4px;"></textarea>
-                    <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;">{DATE} is replaced with each date, e.g. "${scheduleLongDate(parsedSchedule.events[0].date)}"</div>
-                    <div style="max-height:200px;overflow-y:auto;">${rows}</div>
-                </div>`;
-            const titleEl = document.getElementById('schedTitleEdit');
-            const bodyEl = document.getElementById('schedBodyEdit');
-            titleEl.value = parsedSchedule.notice_title || '';
-            bodyEl.value = parsedSchedule.notice_body || '';
-            titleEl.oninput = () => { parsedSchedule.notice_title = titleEl.value; };
-            bodyEl.oninput = () => { parsedSchedule.notice_body = bodyEl.value; };
-            document.getElementById('schedulePreview').style.display = '';
-            document.getElementById('scheduleParseBtn').style.display = 'none';
-            document.getElementById('scheduleCreateBtn').style.display = '';
-        }
-
-        async function generateSchedulePoster(title, body, apiKey) {
-            const prompt = `Create a professional digital signage poster for a condominium building's TV notice board. The image MUST be in WIDE LANDSCAPE 16:9 aspect ratio (wider than tall, like a TV screen).
-
-The poster must display EXACTLY the text between the markers below — word for word, perfectly spelled. Do not add any words of your own, do not print any field labels, and do not show the same information twice.
-
-===POSTER TEXT START===
-${title} (main headline, largest text — make the date very prominent)
-${body}
-===POSTER TEXT END===
-
-The note in parentheses describes placement only — NEVER print it or the === markers on the poster.
-
-DESIGN RULES:
-- MUST be WIDE LANDSCAPE layout (16:9 ratio, like a widescreen TV)
-- Professional, modern graphic design for a building lobby TV
-- ALL listed text must be included exactly once and perfectly legible
-- Include relevant visual elements (icons, shapes) matching the topic — imagery only, no extra words
-- Text must be perfectly spelled with no errors
-- Use visual hierarchy: headline and date largest, details smaller
-- Fill the entire wide landscape canvas — no blank space or borders`;
-            const models = ['gemini-3-pro-image', 'gemini-3.1-flash-image', 'gemini-2.5-flash-image'];
-            let data = null, lastError = null;
-            for (const model of models) {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { responseModalities: ['TEXT', 'IMAGE'], imageConfig: { aspectRatio: '16:9' } }
-                    })
-                });
-                data = await res.json();
-                if (!data.error) break;
-                lastError = data.error.message || 'API error';
-            }
-            if (data.error) throw new Error(lastError);
-            const part = (data.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.mimeType?.startsWith('image/'));
-            if (!part) throw new Error('No image generated');
-            const byteChars = atob(part.inlineData.data);
-            const bytes = new Uint8Array(byteChars.length);
-            for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
-            const ext = part.inlineData.mimeType.includes('png') ? 'png' : 'jpg';
-            return new File([bytes], `schedule_poster.${ext}`, { type: part.inlineData.mimeType });
-        }
-
-        window.createScheduleNotices = async () => {
-            const daysBefore = parseInt(document.getElementById('scheduleDaysBefore').value) || 7;
-            const wantPosters = document.getElementById('schedulePosters').checked;
-            const checked = [...document.querySelectorAll('.sched-ev:checked')].map(cb => parsedSchedule.events[+cb.dataset.i]);
-            if (!checked.length) { alert('Select at least one date.'); return; }
-            const btn = document.getElementById('scheduleCreateBtn');
-            btn.disabled = true;
-            let created = 0, postersFailed = 0;
-            try {
-                for (const ev of checked) {
-                    const dateLong = scheduleLongDate(ev.date);
-                    const title = (parsedSchedule.notice_title || 'Scheduled Notice – {DATE}').replaceAll('{DATE}', dateLong);
-                    const body = (parsedSchedule.notice_body || '').replaceAll('{DATE}', dateLong);
-                    let media = { media_url: null, media_path: null, file_type: null };
-                    let displayMode = 'text';
-                    if (wantPosters) {
-                        btn.textContent = `🎨 Poster ${created + 1} of ${checked.length}…`;
-                        try {
-                            const posterFile = await generateSchedulePoster(title, body, settings.gemini_api_key);
-                            const up = await uploadMedia(posterFile);
-                            media = { media_url: up.url, media_path: up.path, file_type: 'image' };
-                            displayMode = 'media_only';
-                        } catch (e) {
-                            console.warn('Poster generation failed for', ev.date, '- creating text notice instead:', e);
-                            postersFailed++;
-                        }
-                    }
-                    btn.textContent = `⏳ Creating ${created + 1} of ${checked.length}…`;
-                    await createNotice({
-                        title, body,
-                        category: parsedSchedule.category || 'general',
-                        priority: parsedSchedule.priority === 1 ? 1 : 0,
-                        display_mode: displayMode,
-                        ...media,
-                        start_date: scheduleAddDays(ev.date, -daysBefore),
-                        end_date: ev.date,
-                        auto_delete: true,
-                        schedule_group: parsedSchedule.schedule_name || 'Imported Schedule',
-                    });
-                    created++;
-                }
-                let msg = `Created ${created} scheduled notices — they'll appear on the display automatically`;
-                if (postersFailed) msg += ` (${postersFailed} poster${postersFailed > 1 ? 's' : ''} failed, those are text notices)`;
-                showFlash(msg, 'success');
-                document.getElementById('scheduleModal').classList.remove('active');
-            } catch (e) {
-                alert(`Created ${created} notices, then failed: ${e.message}`);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '📅 Create Notices';
-            }
-        };
-
-        // ═══ Media Preview Lightbox ═══
-        window.previewMedia = (id) => {
-            const n = allNotices.find(x => x.id === id);
-            if (!n || !n.media_url) return;
-            const ft = n.file_type || getFileType(n.media_url);
-            if (ft === 'pdf') { window.open(n.media_url, '_blank'); return; }
-            const ov = document.createElement('div');
-            ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:flex;align-items:center;justify-content:center;padding:32px;cursor:zoom-out;';
-            ov.innerHTML = ft === 'video'
-                ? `<video src="${n.media_url}" controls autoplay muted style="max-width:100%;max-height:100%;border-radius:12px;"></video>`
-                : `<img src="${n.media_url}" style="max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);">`;
-            ov.onclick = () => ov.remove();
-            const esc = (e) => { if (e.key === 'Escape') { ov.remove(); document.removeEventListener('keydown', esc); } };
-            document.addEventListener('keydown', esc);
-            document.body.appendChild(ov);
-        };
 
         // ═══ Notice Actions ═══
         window.handleDelete = async (id) => {
@@ -1452,23 +954,19 @@ DESIGN RULES:
                 show_notice_list: document.getElementById('sShowNoticeList').checked,
                 show_news_sidebar: document.getElementById('sShowNewsSidebar').checked,
                 display_theme: document.getElementById('sDisplayTheme').value,
-                ai_provider: document.getElementById('sAiProvider').value,
-                emergency_contacts: contacts,
-                layout: currentLayout,
-            };
-            // Secrets go to the auth-gated secrets doc, never the public settings doc
-            const secretsUpdate = {
                 gemini_api_key: document.getElementById('sGeminiApiKey').value.trim(),
                 groq_api_key: document.getElementById('sGroqApiKey').value.trim(),
                 openai_api_key: document.getElementById('sOpenaiApiKey').value.trim(),
                 deepseek_api_key: document.getElementById('sDeepseekApiKey').value.trim(),
                 pixabay_api_key: document.getElementById('sPixabayApiKey').value.trim(),
+                ai_provider: document.getElementById('sAiProvider').value,
                 super_admin_emails: document.getElementById('sSuperAdminEmails').value.trim(),
+                emergency_contacts: contacts,
+                layout: currentLayout,
             };
             try {
                 await saveSettings(updated);
-                await saveSecrets(secretsUpdate);
-                settings = { ...settings, ...updated, ...secretsUpdate };
+                settings = { ...settings, ...updated };
                 showFlash('Settings saved!', 'success');
             } catch (e) { showFlash('Error saving settings: ' + e.message, 'error'); }
         };
@@ -1508,43 +1006,36 @@ DESIGN RULES:
             }
         };
 
-        // ═══ Backup / Restore ═══
-        window.exportBackupFile = async () => {
+        window.rebootPi = async () => {
+            if (!confirm('Are you sure you want to reboot the Raspberry Pi?\n\nThe display will go dark for about 60 seconds while it restarts.')) return;
+            const btn = document.getElementById('btnRebootPi');
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
             try {
-                const backup = await exportBackup();
-                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `condo-notice-board-backup-${localToday()}.json`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-                showFlash(`Exported ${backup.notices.length} notices + settings`, 'success');
-            } catch (e) { showFlash('Export failed: ' + e.message, 'error'); }
+                await updateDoc(doc(db, 'settings', 'main'), {
+                    reboot_requested: true,
+                    reboot_requested_at: new Date().toISOString()
+                });
+                showFlash('Reboot command sent! The Pi will restart within 30 seconds.', 'success');
+                btn.textContent = '✅ Sent';
+                setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Reboot Pi'; }, 10000);
+            } catch (e) {
+                showFlash('Error: ' + e.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '⚡ Reboot Pi';
+            }
         };
 
-        window.importBackupFile = async (file) => {
-            if (!file) return;
-            let backup;
-            try { backup = JSON.parse(await file.text()); }
-            catch { showFlash('That file is not a valid backup (JSON expected).', 'error'); return; }
-            if (!Array.isArray(backup.notices)) { showFlash('This file has no notices to restore.', 'error'); return; }
-            const n = backup.notices.length;
-            if (!confirm(`Restore this backup?\n\n• ${n} notices will be re-created (existing notices are kept, not overwritten)\n• Display settings will be applied\n\nAPI keys are never included in backups. Continue?`)) return;
+        window.reloadDisplay = async () => {
             try {
-                if (backup.settings && Object.keys(backup.settings).length) {
-                    // Never write secret fields back into the public settings doc
-                    const clean = { ...backup.settings };
-                    ['gemini_api_key','groq_api_key','openai_api_key','deepseek_api_key','pixabay_api_key','super_admin_emails'].forEach(k => delete clean[k]);
-                    await saveSettings(clean);
-                }
-                let restored = 0;
-                for (const notice of backup.notices) {
-                    const { id, created_at, updated_at, ...rest } = notice;
-                    await createNotice(rest);
-                    restored++;
-                }
-                showFlash(`Restored ${restored} notices and settings`, 'success');
-            } catch (e) { showFlash('Restore failed: ' + e.message, 'error'); }
+                await updateDoc(doc(db, 'settings', 'main'), {
+                    reload_requested: true,
+                    reload_requested_at: new Date().toISOString()
+                });
+                showFlash('Reload command sent! The display will refresh within a few seconds.', 'success');
+            } catch (e) {
+                showFlash('Error: ' + e.message, 'error');
+            }
         };
 
         window.addTickerMessage = (text = '') => {

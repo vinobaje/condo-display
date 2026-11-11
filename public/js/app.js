@@ -4,7 +4,7 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot, query, orderBy, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 // ── Init Firebase ──
@@ -81,35 +81,6 @@ export async function saveSettings(settings) {
     await setDoc(doc(db, 'settings', 'main'), settings, { merge: true });
 }
 
-// ═══ Secrets (auth-gated doc — API keys, super-admin list) ═══
-const SECRET_FIELDS = ['gemini_api_key', 'groq_api_key', 'openai_api_key', 'deepseek_api_key', 'pixabay_api_key', 'pexels_api_key', 'pollinations_api_key', 'super_admin_emails'];
-
-export async function getSecrets() {
-    const snap = await getDoc(doc(db, 'secrets', 'main'));
-    return snap.exists() ? snap.data() : {};
-}
-
-export async function saveSecrets(secrets) {
-    await setDoc(doc(db, 'secrets', 'main'), secrets, { merge: true });
-}
-
-// One-time migration: move any secret fields still in the public settings/main
-// doc into the auth-gated secrets/main doc, then strip them from main.
-export async function migrateSecrets() {
-    const mainSnap = await getDoc(doc(db, 'settings', 'main'));
-    if (!mainSnap.exists()) return;
-    const main = mainSnap.data();
-    const found = {};
-    for (const f of SECRET_FIELDS) {
-        if (main[f] !== undefined) found[f] = main[f];
-    }
-    if (Object.keys(found).length === 0) return;
-    await setDoc(doc(db, 'secrets', 'main'), found, { merge: true });
-    const strip = {};
-    for (const f of Object.keys(found)) strip[f] = deleteField();
-    await updateDoc(doc(db, 'settings', 'main'), strip);
-}
-
 export function onSettingsChange(callback) {
     return onSnapshot(doc(db, 'settings', 'main'), (snap) => {
         if (snap.exists()) {
@@ -129,11 +100,17 @@ export async function getNotices() {
 
 export async function getActiveNotices() {
     const all = await getNotices();
-    const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${y}-${m}-${d}`;
     return all.filter(n => {
         if (!n.active) return false;
-        if (n.start_date && n.start_date > today) return false;
-        if (n.end_date && n.end_date < today) return false;
+        const start = n.start_date ? (n.start_date.toDate ? n.start_date.toDate().toISOString().slice(0,10) : String(n.start_date).slice(0,10)) : '';
+        const end = n.end_date ? (n.end_date.toDate ? n.end_date.toDate().toISOString().slice(0,10) : String(n.end_date).slice(0,10)) : '';
+        if (start && start > todayStr) return false;
+        if (end && end < todayStr) return false;
         return true;
     }).sort((a, b) => (b.priority || 0) - (a.priority || 0));
 }
@@ -401,10 +378,7 @@ export function escapeHtml(text) {
 
 export function formatDate(d) {
     if (!d) return '';
-    // Parse date-only strings (YYYY-MM-DD) as local dates, not UTC midnight,
-    // so they don't display as the previous day in western timezones
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d + 'T00:00:00') : new Date(d);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function formatTimeAgo(dateStr) {
@@ -525,85 +499,5 @@ export function sortNewsByPriority(items) {
 
 export function generateQRUrl(url, size) {
     if (!url) return '';
-    // Always fetch a high-resolution code (with a 2-module white quiet zone) and let CSS shrink it smoothly:
-    // small source images scaled to odd sizes lost or distorted rows of squares and wouldn't scan.
-    return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&qzone=2&margin=0&data=${encodeURIComponent(url)}`;
-}
-
-// ═══ Display heartbeat — one doc per physical TV ═════════════
-// Each Pi gets a stable random id in its own localStorage, so multiple
-// displays each report separately. An optional ?device=Name URL param
-// sets a friendly label (remembered per device).
-export function getDisplayDeviceId() {
-    let id = localStorage.getItem('tv_device_id');
-    if (!id) {
-        id = 'tv_' + Math.random().toString(36).slice(2, 10);
-        localStorage.setItem('tv_device_id', id);
-    }
-    return id;
-}
-
-export async function writeHeartbeat(deviceId, name, device) {
-    // Fields must match firestore.rules allowlist: last_seen, name, device
-    await setDoc(doc(db, 'status', deviceId || 'display'), {
-        last_seen: new Date().toISOString(),
-        name: (name || '').slice(0, 60),
-        device: (device || '').slice(0, 180)
-    });
-}
-
-// Live list of every TV that has checked in
-export function onDisplayStatuses(callback) {
-    return onSnapshot(collection(db, 'status'), (snap) => {
-        callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-}
-
-// Remove a display from the list (auth-gated) — for decommissioned TVs
-export async function deleteDisplayStatus(id) {
-    await deleteDoc(doc(db, 'status', id));
-}
-
-// ═══ Remote display commands (reload / reboot) ═══════════════
-// Admin issues a command; the TV listens on its own command doc and acts.
-export async function sendDisplayCommand(deviceId, action) {
-    await setDoc(doc(db, 'commands', deviceId), { action, ts: Date.now() });
-}
-
-export function onDisplayCommand(deviceId, callback) {
-    return onSnapshot(doc(db, 'commands', deviceId),
-        (snap) => callback(snap.exists() ? snap.data() : null),
-        () => { /* ignore listener errors (e.g. transient permission) */ }
-    );
-}
-
-// ═══ Notice templates (auth-gated) ═══════════════════════════
-export async function getTemplates() {
-    const snap = await getDocs(query(collection(db, 'templates'), orderBy('created_at', 'desc')));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-export async function saveTemplate(data) {
-    const id = generateId();
-    await setDoc(doc(db, 'templates', id), { ...data, id, created_at: new Date().toISOString() });
-    return id;
-}
-
-export async function deleteTemplate(id) {
-    await deleteDoc(doc(db, 'templates', id));
-}
-
-// ═══ Backup / export ═════════════════════════════════════════
-export async function exportBackup() {
-    const [notices, settingsSnap] = await Promise.all([
-        getNotices(),
-        getDoc(doc(db, 'settings', 'main'))
-    ]);
-    return {
-        exported_at: new Date().toISOString(),
-        version: 1,
-        settings: settingsSnap.exists() ? settingsSnap.data() : {},
-        notices,
-        // Secrets (API keys) are intentionally excluded from backups
-    };
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size || 80}x${size || 80}&data=${encodeURIComponent(url)}&margin=1`;
 }
