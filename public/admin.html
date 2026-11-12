@@ -60,7 +60,8 @@
         body.super-admin .sa-only.admin-tab{display:inline-flex!important}
         body.super-admin div.sa-only{display:block!important}
         /* ═══ Settings: "What do you want to change?" cards + live preview ═══ */
-        .set-wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+        .container:has(#panel-settings.active){max-width:1800px}
+        .set-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,48%);gap:24px;align-items:start}
         .set-search{margin-top:14px;font-size:14px;padding:11px 14px}
         .set-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px}
         .set-tile{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;border:1px solid var(--border-light);border-radius:var(--radius-lg);background:var(--bg-card);cursor:pointer;font-family:inherit;color:var(--text);transition:border-color .15s,transform .15s,box-shadow .15s}
@@ -73,7 +74,7 @@
         body.super-admin .set-tile.sa-only{display:flex!important}
         .set-empty{grid-column:1/-1;padding:24px;color:var(--text-dim);text-align:center}
         .set-preview-card{position:sticky;top:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
-        .set-modal{display:grid;grid-template-columns:minmax(0,1fr) 320px;width:900px;max-width:100%;max-height:calc(100vh - 40px);background:var(--bg-card);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
+        .set-modal{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,46%);width:1240px;max-width:100%;max-height:calc(100vh - 40px);background:var(--bg-card);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
         .set-modal-body{padding:24px;overflow-y:auto}
         .set-modal-side{padding:24px 18px;background:var(--bg-dark);border-left:1px solid var(--border)}
         .set-modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
@@ -87,6 +88,10 @@
         /* mini TV */
         .tvp-frame{background:#111;border-radius:10px;padding:7px}
         .tvp-stand{width:30%;height:6px;background:#333;margin:0 auto;border-radius:0 0 6px 6px}
+        .tvp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+        .tvp-big-btn{flex-shrink:0;padding:6px 10px;font-size:12px}
+        #tvpBig .tvp-frame{width:min(94vw,calc((100vh - 110px)*16/9));padding:10px;border-radius:14px}
+        #tvpBig .tvp-big-bar{position:fixed;top:16px;right:20px;display:flex;gap:10px;align-items:center;color:#fff;font-size:13px}
         .tvp{aspect-ratio:16/9;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;container-type:inline-size;font-family:'Plus Jakarta Sans',sans-serif;line-height:1.25}
         .tvp-hdr{display:flex;align-items:center;gap:2cqw;padding:1.6cqw 2.4cqw;flex-shrink:0}
         .tvp-logo{border-radius:.8cqw;object-fit:contain;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;background:linear-gradient(135deg,#0a3d6b,#0891b2)}
@@ -100,7 +105,7 @@
         .tvp-w.n img{width:100%;height:100%;object-fit:contain}
         .tvp-tick{display:flex;align-items:center;gap:1.6cqw;flex-shrink:0;color:#fff;white-space:nowrap;overflow:hidden;padding:0 2cqw}
         .tvp-tick b{padding:.3cqw 1cqw;border-radius:.6cqw;background:rgba(255,255,255,.18);flex-shrink:0}
-        @media(max-width:1000px){.set-wrap{grid-template-columns:1fr}.set-preview-card{position:static;max-width:520px}}
+        @media(max-width:1000px){.set-wrap{grid-template-columns:1fr}.set-preview-card{position:static;max-width:720px}}
         @media(max-width:760px){.set-modal{grid-template-columns:1fr;max-height:none}.set-modal-side{border-left:0;border-top:1px solid var(--border)}#setModal{align-items:flex-start;overflow-y:auto}}
 
         body.super-admin .sa-only.form-row{display:flex!important}
@@ -192,9 +197,11 @@
                     <div class="set-tiles" id="setTiles"></div>
                 </div>
                 <aside class="set-preview-card">
-                    <div style="font-weight:700;font-size:14px;margin-bottom:2px;">📺 Live preview</div>
-                    <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:10px;">Roughly what the TVs show, using your layout and the first notice</div>
-                    <div class="tvp-frame"><div class="tvp"></div></div><div class="tvp-stand"></div>
+                    <div class="tvp-head"><div>
+                        <div style="font-weight:700;font-size:14px;margin-bottom:2px;">📺 Live preview</div>
+                        <div style="font-size:11.5px;color:var(--text-dim);">Roughly what the TVs show, using your layout and the first notice</div>
+                    </div><button class="btn btn-outline tvp-big-btn" onclick="openBigPreview()">⛶ Full screen</button></div>
+                    <div class="tvp-frame" onclick="openBigPreview()" style="cursor:zoom-in" title="Click for full screen"><div class="tvp"></div></div><div class="tvp-stand"></div>
                 </aside>
             </div>
 
@@ -490,8 +497,8 @@
                     </div>
                 </div>
                 <div class="set-modal-side">
-                    <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📺 Live preview</div>
-                    <div class="tvp-frame"><div class="tvp"></div></div><div class="tvp-stand"></div>
+                    <div class="tvp-head"><div style="font-weight:700;font-size:13px;">📺 Live preview</div><button class="btn btn-outline tvp-big-btn" onclick="openBigPreview()">⛶ Full screen</button></div>
+                    <div class="tvp-frame" onclick="openBigPreview()" style="cursor:zoom-in" title="Click for full screen"><div class="tvp"></div></div><div class="tvp-stand"></div>
                 </div>
             </div>
         </div>
@@ -534,6 +541,10 @@
     </div>
 
     <!-- Schedule Import Modal -->
+    <div class="modal-overlay" id="tvpBig" style="z-index:300;background:rgba(0,0,0,.85)" onclick="closeBigPreview()">
+        <div class="tvp-big-bar"><span>Live preview — click anywhere or press Esc to close</span><button class="btn btn-outline" style="background:#fff" onclick="closeBigPreview()">✕ Close</button></div>
+        <div><div class="tvp-frame"><div class="tvp"></div></div><div class="tvp-stand"></div></div>
+    </div>
     <div class="modal-overlay" id="scheduleModal">
         <div class="modal" style="max-width:640px;max-height:88vh;overflow-y:auto;">
             <h3>📅 Import Yearly Schedule</h3>
@@ -1908,7 +1919,14 @@ DESIGN RULES:
             openSettingId = null; settingSnapshot = null;
             renderSettingTiles(); renderSettingsPreview();
         };
-        document.addEventListener('keydown', e => { if (e.key === 'Escape' && openSettingId) closeSetting(false); });
+        window.openBigPreview = () => { document.getElementById('tvpBig').classList.add('active'); renderSettingsPreview(); };
+        window.closeBigPreview = () => document.getElementById('tvpBig').classList.remove('active');
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            const big = document.getElementById('tvpBig');
+            if (big.classList.contains('active')) { big.classList.remove('active'); return; }
+            if (openSettingId) closeSetting(false);
+        });
 
         function refreshSectionNotes() {
             const isWv = val('sDisplayTheme') === 'waterview-classic';
