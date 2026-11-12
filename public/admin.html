@@ -59,6 +59,50 @@
         body.super-admin .sa-only.settings-card{display:block!important}
         body.super-admin .sa-only.admin-tab{display:inline-flex!important}
         body.super-admin div.sa-only{display:block!important}
+        /* ═══ Settings: "What do you want to change?" cards + live preview ═══ */
+        .set-wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+        .set-search{margin-top:14px;font-size:14px;padding:11px 14px}
+        .set-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px}
+        .set-tile{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;border:1px solid var(--border-light);border-radius:var(--radius-lg);background:var(--bg-card);cursor:pointer;font-family:inherit;color:var(--text);transition:border-color .15s,transform .15s,box-shadow .15s}
+        .set-tile:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow)}
+        .set-tile .st-ic{font-size:26px;line-height:1}
+        .set-tile .st-t{font-weight:700;font-size:14px}
+        .set-tile .st-now{font-size:12px;color:var(--text-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .set-tile .st-now.warn{color:var(--important)}
+        .set-tile.sa-only{border-style:dashed}
+        body.super-admin .set-tile.sa-only{display:flex!important}
+        .set-empty{grid-column:1/-1;padding:24px;color:var(--text-dim);text-align:center}
+        .set-preview-card{position:sticky;top:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+        .set-modal{display:grid;grid-template-columns:minmax(0,1fr) 320px;width:900px;max-width:100%;max-height:calc(100vh - 40px);background:var(--bg-card);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
+        .set-modal-body{padding:24px;overflow-y:auto}
+        .set-modal-side{padding:24px 18px;background:var(--bg-dark);border-left:1px solid var(--border)}
+        .set-modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+        .set-modal .theme-grid{grid-template-columns:repeat(3,1fr)}
+        .set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-top:1px solid var(--border)}
+        .set-row:first-child{border-top:0;padding-top:0}
+        .set-row small{display:block;font-size:11.5px;color:var(--text-dim);margin-top:3px}
+        .set-details summary{cursor:pointer;font-size:12.5px;color:var(--accent);font-weight:600}
+        .set-layout-list{display:flex;flex-wrap:wrap;gap:8px}
+        .set-layout-list span{padding:6px 12px;border-radius:99px;background:var(--bg-dark);border:1px solid var(--border);font-size:12.5px;font-weight:600}
+        /* mini TV */
+        .tvp-frame{background:#111;border-radius:10px;padding:7px}
+        .tvp-stand{width:30%;height:6px;background:#333;margin:0 auto;border-radius:0 0 6px 6px}
+        .tvp{aspect-ratio:16/9;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;container-type:inline-size;font-family:'Plus Jakarta Sans',sans-serif;line-height:1.25}
+        .tvp-hdr{display:flex;align-items:center;gap:2cqw;padding:1.6cqw 2.4cqw;flex-shrink:0}
+        .tvp-logo{border-radius:.8cqw;object-fit:contain;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;background:linear-gradient(135deg,#0a3d6b,#0891b2)}
+        .tvp-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tvp-co{opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tvp-grid{position:relative;flex:1;margin:0 1.6cqw 1.4cqw}
+        .tvp-w{position:absolute;border-radius:1.2cqw;overflow:hidden;padding:1.2cqw;display:flex;flex-direction:column;gap:.6cqw}
+        .tvp-w .wt{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .tvp-w .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.8}
+        .tvp-w.n{padding:0;align-items:center;justify-content:center;text-align:center}
+        .tvp-w.n img{width:100%;height:100%;object-fit:contain}
+        .tvp-tick{display:flex;align-items:center;gap:1.6cqw;flex-shrink:0;color:#fff;white-space:nowrap;overflow:hidden;padding:0 2cqw}
+        .tvp-tick b{padding:.3cqw 1cqw;border-radius:.6cqw;background:rgba(255,255,255,.18);flex-shrink:0}
+        @media(max-width:1000px){.set-wrap{grid-template-columns:1fr}.set-preview-card{position:static;max-width:520px}}
+        @media(max-width:760px){.set-modal{grid-template-columns:1fr;max-height:none}.set-modal-side{border-left:0;border-top:1px solid var(--border)}#setModal{align-items:flex-start;overflow-y:auto}}
+
         body.super-admin .sa-only.form-row{display:flex!important}
         body.super-admin .sa-only.form-group{display:block!important}
     </style>
@@ -140,44 +184,48 @@
 
         <!-- TAB: Settings -->
         <div class="tab-panel" id="panel-settings">
-            <div class="section">
-                <div class="section-header">
-                    <div class="section-title">Display Settings</div>
-                    <button class="btn btn-primary btn-sm" onclick="saveAllSettings()">💾 Save Settings</button>
+            <div class="set-wrap">
+                <div class="set-main">
+                    <div class="section-title">What do you want to change?</div>
+                    <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Pick a card. Changes reach the TVs a few seconds after you press Done.</div>
+                    <input type="search" id="setSearch" class="form-control set-search" placeholder="🔍  Search settings — e.g. phone, ticker, weather, logo" oninput="renderSettingTiles()">
+                    <div class="set-tiles" id="setTiles"></div>
                 </div>
-            <div class="settings-grid" id="settingsGrid">
-                <!-- Building -->
-                <div class="settings-card">
-                    <div class="settings-card-title">🏢 Building Info</div>
-                    <div class="form-group">
-                        <label>Building Name</label>
-                        <input type="text" id="sBuildingName" class="form-control">
+                <aside class="set-preview-card">
+                    <div style="font-weight:700;font-size:14px;margin-bottom:2px;">📺 Live preview</div>
+                    <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:10px;">Roughly what the TVs show, using your layout and the first notice</div>
+                    <div class="tvp-frame"><div class="tvp"></div></div><div class="tvp-stand"></div>
+                </aside>
+            </div>
+
+            <!-- Each settings group lives here and is moved into the window when its card is opened -->
+            <div id="setSections" style="display:none;">
+                <div class="set-sec" data-sec="ticker">
+                    <div class="toggle-row"><span class="toggle-label">Show the scrolling message bar</span><label class="toggle"><input type="checkbox" id="sShowTicker"><span class="toggle-slider"></span></label></div>
+                    <div class="help-text" id="tickerWaterviewNote" style="display:none;margin-bottom:6px;">The Waterview Classic theme always shows this bar.</div>
+                    <div class="form-group" style="margin-top:12px;">
+                        <label>Show</label>
+                        <select id="sTickerMode" class="form-control" onchange="toggleTickerCustom()">
+                            <option value="custom">✏️ My own message</option>
+                            <option value="news">📰 News headlines (from the news sources)</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>Management Company</label>
-                        <input type="text" id="sManagementCompany" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Logo</label>
-                        <div class="file-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
-                            <input type="file" id="logoFile" accept="image/*" onchange="handleLogoUpload(this.files[0])">
-                            <div class="file-upload-icon">🖼️</div>
-                            <div class="file-upload-text">Click to upload logo</div>
-                            <img id="logoPreview" class="preview-media" style="display:none;">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Logo Size <span id="logoSizeVal" style="font-weight:400;color:var(--accent);">100%</span></label>
-                        <input type="range" id="sLogoSize" min="60" max="200" value="100" step="2" class="form-control" oninput="document.getElementById('logoSizeVal').textContent=this.value+'%'">
-                        <div class="help-text">60% = small, 100% = default, 200% = very large</div>
+                    <div class="form-group" id="tickerCustomGroup" style="display:none;">
+                        <label>Messages <span style="font-weight:400;color:var(--text-dim);">(they take turns, separated by a ◆)</span></label>
+                        <div id="tickerMessageList"></div>
+                        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addTickerMessage()">+ Add message</button>
                     </div>
                 </div>
 
-                <!-- Display -->
-                <div class="settings-card">
-                    <div class="settings-card-title">📺 Display Options</div>
+                <div class="set-sec" data-sec="contacts">
+                    <div id="contactList"></div>
+                    <button type="button" class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="addContactRow()">+ Add number</button>
+                    <div class="help-text" id="contactsLayoutNote" style="margin-top:10px;"></div>
+                </div>
+
+                <div class="set-sec" data-sec="look">
                     <div class="form-group">
-                        <label>Display Theme</label>
+                        <label>Theme</label>
                         <div class="theme-grid" id="themeGrid">
                             <div class="theme-option selected" data-theme="dark-modern" onclick="selectTheme(this)">
                                 <div class="theme-preview" style="background:#0a0e1a;border-color:#3b82f6;">
@@ -224,48 +272,8 @@
                         </div>
                         <input type="hidden" id="sDisplayTheme" value="dark-modern">
                     </div>
-                    <div class="toggle-row"><span class="toggle-label">Show Clock</span><label class="toggle"><input type="checkbox" id="sShowClock"><span class="toggle-slider"></span></label></div>
-                    <div class="toggle-row"><span class="toggle-label">Show Weather</span><label class="toggle"><input type="checkbox" id="sShowWeather"><span class="toggle-slider"></span></label></div>
-                    <div class="toggle-row"><span class="toggle-label">Show News Sidebar</span><label class="toggle"><input type="checkbox" id="sShowNews"><span class="toggle-slider"></span></label></div>
-                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-                        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:10px;">Bottom Ticker</div>
-                        <div class="toggle-row"><span class="toggle-label">Show Bottom Ticker</span><label class="toggle"><input type="checkbox" id="sShowTicker"><span class="toggle-slider"></span></label></div>
-                        <div class="form-group" style="margin-top:10px;">
-                            <label>Ticker Content</label>
-                            <select id="sTickerMode" class="form-control" onchange="toggleTickerCustom()">
-                                <option value="news">📰 News Headlines (from RSS)</option>
-                                <option value="custom">✏️ Custom Message</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="tickerCustomGroup" style="display:none;">
-                            <label>Custom Ticker Messages</label>
-                            <div id="tickerMessageList"></div>
-                            <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addTickerMessage()">+ Add Message</button>
-                            <div class="help-text">Messages scroll continuously across the bottom of the display, separated by a ◆ dot</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-                        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:10px;">Sidebar Widgets</div>
-                        <div class="toggle-row"><span class="toggle-label">📋 Notice List</span><label class="toggle"><input type="checkbox" id="sShowNoticeList"><span class="toggle-slider"></span></label></div>
-                        <div class="toggle-row"><span class="toggle-label">📰 News Slideshow</span><label class="toggle"><input type="checkbox" id="sShowNewsSidebar"><span class="toggle-slider"></span></label></div>
-                        <div class="toggle-row"><span class="toggle-label">📞 Contacts</span><label class="toggle"><input type="checkbox" id="sShowContacts"><span class="toggle-slider"></span></label></div>
-                    </div>
-                    <div class="form-row" style="margin-top:16px;">
-                        <div class="form-group">
-                            <label>Slide Duration (sec)</label>
-                            <input type="number" id="sSlideDuration" class="form-control" min="3" max="120">
-                        </div>
-                        <div class="form-group">
-                            <label>Video Duration (0=full)</label>
-                            <input type="number" id="sVideoDuration" class="form-control" min="0" max="300">
-                        </div>
-                    </div>
                     <div class="form-group">
-                        <label>Transition Speed (sec)</label>
-                        <input type="number" id="sTransition" class="form-control" step="0.1" min="0.3" max="5">
-                    </div>
-                    <div class="form-group">
-                        <label>Display Zoom <span style="font-weight:400;color:var(--text-dim);font-size:11px;">(increase for larger TVs or far viewing distance)</span></label>
+                        <label>Size of everything</label>
                         <select id="sDisplayZoom" class="form-control">
                             <option value="1">100% — Default (32"-43" TV)</option>
                             <option value="1.15">115% — Medium (50"-55" TV)</option>
@@ -273,9 +281,169 @@
                             <option value="1.4">140% — Extra Large (65"-75" TV)</option>
                             <option value="1.5">150% — Max (75"+ or far viewing)</option>
                         </select>
+                        <div class="help-text">For all TVs. One TV can be made bigger or smaller on its own: Notices tab → 📺 TV Displays → Size.</div>
                     </div>
-                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-                        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:12px;">🔤 Widget Font Sizes (pixels)</div>
+                </div>
+
+                <div class="set-sec" data-sec="onscreen">
+                    <div class="toggle-row" style="padding-top:0;"><span class="toggle-label">🌤️ Weather in the top bar <span style="display:block;font-size:11px;color:var(--text-dim);font-weight:400;">Temperature and forecast next to the building name (not in the Waterview Classic theme)</span></span><label class="toggle"><input type="checkbox" id="sShowWeather"><span class="toggle-slider"></span></label></div>
+                    <div style="font-size:13px;margin:14px 0 10px;">The boxes on the screen, and where they go, come from the <b>Layout</b>. Right now the TVs show:</div>
+                    <div id="setLayoutSummary" class="set-layout-list"></div>
+                    <button type="button" class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="closeSetting(false);switchTab('layout')">🧩 Change the layout</button>
+                    <div class="help-text" style="margin-top:10px;">Add or remove boxes (clock, weather, news, contacts, notice list) and drag them where you want them.</div>
+                    <!-- Older on/off switches: the TV page decides these boxes from the layout (show_news only turns news loading on). Hidden, and kept so saving doesn't change them. -->
+                    <div style="display:none;">
+                        <input type="checkbox" id="sShowClock"><input type="checkbox" id="sShowNews">
+                        <input type="checkbox" id="sShowNoticeList"><input type="checkbox" id="sShowNewsSidebar"><input type="checkbox" id="sShowContacts">
+                    </div>
+                </div>
+
+                <div class="set-sec" data-sec="timing">
+                    <div class="form-group">
+                        <label>Each notice shows for (seconds)</label>
+                        <input type="number" id="sSlideDuration" class="form-control" min="3" max="120">
+                        <div class="help-text" id="setLoopText"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Videos play for (seconds, 0 = the whole video)</label>
+                        <input type="number" id="sVideoDuration" class="form-control" min="0" max="300">
+                    </div>
+                    <div class="form-group">
+                        <label>Fade between notices (seconds)</label>
+                        <input type="number" id="sTransition" class="form-control" step="0.1" min="0.3" max="5">
+                    </div>
+                </div>
+
+                <div class="set-sec" data-sec="building">
+                    <div class="form-group">
+                        <label>Building name</label>
+                        <input type="text" id="sBuildingName" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Management company</label>
+                        <input type="text" id="sManagementCompany" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Logo <span style="font-weight:400;color:var(--text-dim);">(a new logo is saved as soon as it uploads)</span></label>
+                        <div class="file-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()" style="padding:18px;">
+                            <input type="file" id="logoFile" accept="image/*" onchange="handleLogoUpload(this.files[0])">
+                            <div class="file-upload-text">Click to upload a new logo</div>
+                            <img id="logoPreview" class="preview-media" style="display:none;max-height:90px;margin:8px auto 0;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Logo size <span id="logoSizeVal" style="font-weight:400;color:var(--accent);">100%</span></label>
+                        <input type="range" id="sLogoSize" min="60" max="200" value="100" step="2" class="form-control" oninput="document.getElementById('logoSizeVal').textContent=this.value+'%'">
+                        <div class="help-text">60% = small, 100% = default, 200% = very large</div>
+                    </div>
+                </div>
+
+                <div class="set-sec" data-sec="weather">
+                    <div class="form-group">
+                        <label>Weather for</label>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="sWeatherLocation" class="form-control" placeholder="e.g., Grimsby ON, or a postal code">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="testGeocode()">🔍 Find</button>
+                        </div>
+                        <div id="geoResult" style="display:none;font-size:12px;margin-top:6px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Temperature in</label>
+                        <select id="sWeatherUnits" class="form-control">
+                            <option value="metric">°C (km/h)</option>
+                            <option value="imperial">°F (mph)</option>
+                        </select>
+                    </div>
+                    <details class="set-details">
+                        <summary>Wrong place? Enter it by map coordinates</summary>
+                        <div style="display:flex;gap:8px;margin-top:10px;">
+                            <input type="text" id="sWeatherLat" class="form-control" placeholder="Latitude (e.g. 43.194)">
+                            <input type="text" id="sWeatherLon" class="form-control" placeholder="Longitude (e.g. -79.561)">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="applyManualCoords()">📍 Use</button>
+                        </div>
+                        <div class="help-text">Find coordinates at <a href="https://www.latlong.net/" target="_blank" style="color:var(--accent);">latlong.net</a></div>
+                        <div id="coordsDisplay" style="font-size:11px;color:var(--text-dim);margin-top:6px;">Current coords: --</div>
+                    </details>
+                </div>
+
+                <div class="set-sec" data-sec="news">
+                    <div class="form-group">
+                        <label>News sources</label>
+                        <div id="feedList"></div>
+                        <button type="button" class="btn btn-outline btn-sm" style="margin-top:6px;" onclick="addFeedRow()">+ Add news source</button>
+                        <div class="help-text">A name, plus the news website or RSS link.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Headlines to keep</label>
+                        <input type="number" id="sNewsMaxItems" class="form-control" min="3" max="20">
+                    </div>
+                    <div class="toggle-row"><span class="toggle-label">✨ Smart news <span style="display:block;font-size:11px;color:var(--text-dim);font-weight:400;">Breaking-news badges, tidier headlines, QR codes to the article</span></span><label class="toggle"><input type="checkbox" id="sSmartNews" checked><span class="toggle-slider"></span></label></div>
+                </div>
+
+                <div class="set-sec" data-sec="tvtools">
+                    <div class="set-row">
+                        <div><b>⚡ Restart all TVs</b><small>Use if a TV is frozen or stuck. All TVs go dark for about a minute, then come back on their own. (They also restart automatically every Sunday at 2 AM.)</small><small id="lastRebootRequest"></small></div>
+                        <button type="button" class="btn btn-sm" id="btnRebootPi" onclick="rebootPis()" style="background:#ef4444;color:#fff;border-color:#ef4444;">⚡ Reboot TVs</button>
+                    </div>
+                    <div class="set-row">
+                        <div><b>🗑️ Clear picture cache</b><small>Every TV downloads all pictures, videos and PDFs again (uses Firebase data). Only needed if a TV shows an old picture.</small></div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="clearDisplayCache()">Clear Cache</button>
+                    </div>
+                    <div class="set-row">
+                        <div><b>💾 Backup &amp; restore</b><small>All notices &amp; settings in one file (API keys left out).</small></div>
+                        <div style="display:flex;gap:8px;">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="exportBackupFile()">⬇️ Export</button>
+                            <label class="btn btn-outline btn-sm" style="cursor:pointer;">⬆️ Restore
+                                <input type="file" accept="application/json" onchange="importBackupFile(this.files[0])" style="display:none;">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="set-sec" data-sec="ai">
+                    <div class="form-group">
+                        <label>AI Provider</label>
+                        <select id="sAiProvider" class="form-control" onchange="toggleAiKeyFields()">
+                            <option value="gemini">Google Gemini (Free — 15 req/min)</option>
+                            <option value="groq">Groq (Free — runs Llama 3)</option>
+                            <option value="openai">OpenAI (Paid — GPT-4o)</option>
+                            <option value="deepseek">DeepSeek (Paid — very cheap)</option>
+                        </select>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyGemini">
+                        <label>Gemini API Key</label>
+                        <input type="password" id="sGeminiApiKey" class="form-control" placeholder="Paste your Gemini API key" autocomplete="off">
+                        <div class="help-text">Free — get key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com/apikey</a></div>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyGroq" style="display:none;">
+                        <label>Groq API Key</label>
+                        <input type="password" id="sGroqApiKey" class="form-control" placeholder="Paste your Groq API key" autocomplete="off">
+                        <div class="help-text">Free — get key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent);">console.groq.com/keys</a></div>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyOpenai" style="display:none;">
+                        <label>OpenAI API Key</label>
+                        <input type="password" id="sOpenaiApiKey" class="form-control" placeholder="Paste your OpenAI API key (sk-...)" autocomplete="off">
+                        <div class="help-text">Paid — get key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent);">platform.openai.com/api-keys</a></div>
+                    </div>
+                    <div class="form-group ai-key-field" id="aiKeyDeepseek" style="display:none;">
+                        <label>DeepSeek API Key</label>
+                        <input type="password" id="sDeepseekApiKey" class="form-control" placeholder="Paste your DeepSeek API key" autocomplete="off">
+                        <div class="help-text">Paid (very cheap) — get key at <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--accent);">platform.deepseek.com/api_keys</a></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Pixabay API Key (stock photos in posters)</label>
+                        <input type="password" id="sPixabayApiKey" class="form-control" placeholder="Paste your Pixabay API key" autocomplete="off">
+                        <div class="help-text">Free — get key at <a href="https://pixabay.com/api/docs/" target="_blank" style="color:var(--accent);">pixabay.com/api/docs</a> (100 requests/minute, no credit card)</div>
+                    </div>
+                </div>
+
+                <div class="set-sec" data-sec="admins">
+                    <div class="form-group">
+                        <label>Super admin emails</label>
+                        <input type="text" id="sSuperAdminEmails" class="form-control" placeholder="email1@example.com, email2@example.com">
+                        <div class="help-text">Comma-separated. These people see everything; other admins see a simpler view.</div>
+                    </div>
+                    <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin:18px 0 12px;">🔤 Text sizes (pixels)</div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Header (Building Name) <span id="fsHeaderVal" style="font-weight:400;color:var(--accent);">Auto</span></label>
@@ -305,160 +473,28 @@
                             <div class="form-group"></div>
                         </div>
                         <div class="help-text">Set to 0 for auto-sizing (responsive). Use Display Zoom above for overall scaling.</div>
-                    </div>
-                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;">
-                            <div>
-                                <div style="font-size:13px;font-weight:600;">🗑️ Display Media Cache</div>
-                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Force all displays to re-download images, videos & PDFs</div>
-                            </div>
-                            <button type="button" class="btn btn-outline btn-sm" onclick="clearDisplayCache()">Clear Cache</button>
-                        </div>
-                    </div>
-                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;">
-                            <div>
-                                <div style="font-size:13px;font-weight:600;">⚡ Reboot TVs</div>
-                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Use if a TV is frozen or stuck. All TVs go dark for about a minute, then come back on their own. (They also restart automatically every Sunday at 2 AM.)</div>
-                                <div id="lastRebootRequest" style="font-size:10px;color:var(--text-dim);margin-top:4px;"></div>
-                            </div>
-                            <button type="button" class="btn btn-sm" id="btnRebootPi" onclick="rebootPis()" style="background:#ef4444;color:#fff;border-color:#ef4444;">⚡ Reboot TVs</button>
-                        </div>
-                    </div>
-                    <div class="sa-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                            <div>
-                                <div style="font-size:13px;font-weight:600;">💾 Backup &amp; Restore</div>
-                                <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Download all notices &amp; settings as a file (API keys excluded)</div>
-                            </div>
-                            <div style="display:flex;gap:8px;">
-                                <button type="button" class="btn btn-outline btn-sm" onclick="exportBackupFile()">⬇️ Export</button>
-                                <label class="btn btn-outline btn-sm" style="cursor:pointer;">⬆️ Restore
-                                    <input type="file" accept="application/json" onchange="importBackupFile(this.files[0])" style="display:none;">
-                                </label>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
-                <!-- Weather -->
-                <div class="settings-card">
-                    <div class="settings-card-title">🌤️ Weather Widget</div>
-                    <div class="form-group">
-                        <label>Location</label>
-                        <div style="display:flex;gap:8px;">
-                            <input type="text" id="sWeatherLocation" class="form-control" placeholder="e.g., Toronto, M5V 3L9, Mississauga ON">
-                            <button type="button" class="btn btn-outline btn-sm" onclick="testGeocode()" style="white-space:nowrap;">🔍 Test</button>
-                        </div>
-                        <div id="geoResult" style="margin-top:6px;font-size:12px;display:none;"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>Manual Coordinates <span style="font-weight:400;color:var(--text-dim);font-size:11px;">(use if location search fails)</span></label>
-                        <div style="display:flex;gap:8px;">
-                            <input type="text" id="sWeatherLat" class="form-control" placeholder="Latitude (e.g. 43.194)">
-                            <input type="text" id="sWeatherLon" class="form-control" placeholder="Longitude (e.g. -79.561)">
-                            <button type="button" class="btn btn-outline btn-sm" onclick="applyManualCoords()" style="white-space:nowrap;">📍 Apply</button>
-                        </div>
-                        <div class="help-text">Find coordinates at <a href="https://www.latlong.net/" target="_blank" style="color:var(--accent);">latlong.net</a></div>
-                    </div>
-                    <div class="form-group">
-                        <label>Units</label>
-                        <select id="sWeatherUnits" class="form-control">
-                            <option value="metric">Metric (°C, km/h)</option>
-                            <option value="imperial">Imperial (°F, mph)</option>
-                        </select>
-                    </div>
-                    <div style="font-size:11px;color:var(--text-dim);opacity:.6;" id="coordsDisplay">Current coords: --</div>
-                </div>
-
-                <!-- News -->
-                <div class="settings-card">
-                    <div class="settings-card-title">📰 News (RSS)</div>
-                    <div style="margin-top:4px;">
-                        <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:8px;">RSS Feeds</label>
-                        <div id="feedList"></div>
-                        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addFeedRow()">+ Add Feed</button>
-                    </div>
-                    <div class="form-group" style="margin-top:12px;">
-                        <label>Max News Items</label>
-                        <input type="number" id="sNewsMaxItems" class="form-control" min="3" max="20">
-                    </div>
-                    <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="sSmartNews" checked>
-                            <span>✨ Smart News Features</span>
-                        </label>
-                        <div class="help-text" style="margin-top:4px;">Breaking news badges, headline cleanup, QR codes for articles, and priority sorting</div>
-                    </div>
-                </div>
-
-                <!-- Contacts -->
-                <div class="settings-card" style="grid-column:1/-1;">
-                    <div class="settings-card-title">📞 Contacts</div>
-                    <div style="margin-top:4px;">
-                        <label style="display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:8px;">Contacts</label>
-                        <div id="contactList"></div>
-                        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addContactRow()">+ Add Contact</button>
-                        <div class="help-text" style="margin-top:6px;">These are displayed on the TV screen for all residents to see.</div>
-                    </div>
-                </div>
-
-                <!-- AI Integration -->
-                <!-- Super Admin Emails -->
-                <div class="settings-card sa-only" style="grid-column:1/-1;">
-                    <div class="settings-card-title">🔐 Super Admin Access</div>
-                    <div class="form-group">
-                        <label>Super Admin Emails</label>
-                        <input type="text" id="sSuperAdminEmails" class="form-control" placeholder="email1@example.com, email2@example.com">
-                        <div class="help-text">Comma-separated list of email addresses that get full admin access. Others see a simplified view.</div>
-                    </div>
-                </div>
-
-                <!-- AI Integration -->
-                <div class="settings-card sa-only" style="grid-column:1/-1;">
-                    <div class="settings-card-title">✨ AI Notice Writer</div>
-                    <div class="form-group">
-                        <label>AI Provider</label>
-                        <select id="sAiProvider" class="form-control" onchange="toggleAiKeyFields()">
-                            <option value="gemini">Google Gemini (Free — 15 req/min)</option>
-                            <option value="groq">Groq (Free — runs Llama 3)</option>
-                            <option value="openai">OpenAI (Paid — GPT-4o)</option>
-                            <option value="deepseek">DeepSeek (Paid — very cheap)</option>
-                        </select>
-                    </div>
-                    <div class="form-group ai-key-field" id="aiKeyGemini">
-                        <label>Gemini API Key</label>
-                        <input type="password" id="sGeminiApiKey" class="form-control" placeholder="Paste your Gemini API key">
-                        <div class="help-text">Free — get key at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com/apikey</a></div>
-                    </div>
-                    <div class="form-group ai-key-field" id="aiKeyGroq" style="display:none;">
-                        <label>Groq API Key</label>
-                        <input type="password" id="sGroqApiKey" class="form-control" placeholder="Paste your Groq API key">
-                        <div class="help-text">Free — get key at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent);">console.groq.com/keys</a></div>
-                    </div>
-                    <div class="form-group ai-key-field" id="aiKeyOpenai" style="display:none;">
-                        <label>OpenAI API Key</label>
-                        <input type="password" id="sOpenaiApiKey" class="form-control" placeholder="Paste your OpenAI API key (sk-...)">
-                        <div class="help-text">Paid — get key at <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--accent);">platform.openai.com/api-keys</a></div>
-                    </div>
-                    <div class="form-group ai-key-field" id="aiKeyDeepseek" style="display:none;">
-                        <label>DeepSeek API Key</label>
-                        <input type="password" id="sDeepseekApiKey" class="form-control" placeholder="Paste your DeepSeek API key">
-                        <div class="help-text">Paid (very cheap) — get key at <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--accent);">platform.deepseek.com/api_keys</a></div>
-                    </div>
-                    <div class="form-group" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
-                        <label>Pixabay API Key (for Stock Photos in Posters)</label>
-                        <input type="password" id="sPixabayApiKey" class="form-control" placeholder="Paste your Pixabay API key">
-                        <div class="help-text">Free — get key at <a href="https://pixabay.com/api/docs/" target="_blank" style="color:var(--accent);">pixabay.com/api/docs</a> (100 requests/minute, no credit card)</div>
-                    </div>
-                </div>
-            </div>
-            </div>
-            <div style="margin-top:16px;">
-                <button class="btn btn-primary" onclick="saveAllSettings()">💾 Save Settings</button>
             </div>
         </div>
 
+        <!-- Settings window (opened from a card) -->
+        <div class="modal-overlay" id="setModal" onclick="if(event.target===this)closeSetting(false)">
+            <div class="set-modal">
+                <div class="set-modal-body">
+                    <h3 id="setModalTitle" style="margin:0 0 4px;font-size:18px;font-weight:800;"></h3>
+                    <div id="setModalDesc" style="font-size:13px;color:var(--text-dim);margin-bottom:16px;"></div>
+                    <div id="setModalSlot"></div>
+                    <div class="set-modal-foot">
+                        <button class="btn btn-outline" id="setCancelBtn" onclick="closeSetting(false)">Cancel</button>
+                        <button class="btn btn-primary" id="setDoneBtn" onclick="closeSetting(true)">✓ Done</button>
+                    </div>
+                </div>
+                <div class="set-modal-side">
+                    <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📺 Live preview</div>
+                    <div class="tvp-frame"><div class="tvp"></div></div><div class="tvp-stand"></div>
+                </div>
+            </div>
+        </div>
         <!-- TAB: Layout -->
         <div class="tab-panel" id="panel-layout">
             <div class="section">
@@ -747,6 +783,7 @@
         window.switchTab = (tab) => {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+            if (tab === 'settings') { renderSettingTiles(); renderSettingsPreview(); }
         };
 
         // ═══ Super Admin Mode (auto-detected from login) ═══
@@ -799,9 +836,11 @@
             settings = await getSettings();
             try { Object.assign(settings, await getSecrets()); } catch (e) { console.warn('Could not load secrets:', e); }
             populateSettings(settings);
+            renderSettingTiles(); renderSettingsPreview();
 
             onNoticesChange((notices) => {
                 allNotices = notices;
+                schedulePreview();
                 autoDeactivateExpired();
                 renderNoticeList();
                 updateStats();
@@ -1536,8 +1575,9 @@ DESIGN RULES:
                 await saveSettings(updated);
                 await saveSecrets(secretsUpdate);
                 settings = { ...settings, ...updated, ...secretsUpdate };
-                showFlash('Settings saved!', 'success');
-            } catch (e) { showFlash('Error saving settings: ' + e.message, 'error'); }
+                showFlash('Settings saved! The TVs update in a few seconds.', 'success');
+                return true;
+            } catch (e) { showFlash('Error saving settings: ' + e.message, 'error'); return false; }
         };
 
         // ═══ Logo Upload ═══
@@ -1746,6 +1786,204 @@ DESIGN RULES:
                 <button type="button" class="feed-remove" onclick="this.parentElement.remove()">✕</button>`;
             list.appendChild(row);
         };
+
+
+        // ═══ Settings cards ("What do you want to change?") + live preview ═══
+        // Each card opens a window with one group of the settings form (the same inputs as before, moved
+        // in and out of #setSections). Done = saveAllSettings(); Cancel = put the form back as it was.
+        const val = (id) => document.getElementById(id)?.value ?? '';
+        const checked = (id) => !!document.getElementById(id)?.checked;
+        const THEME_NAMES = { 'dark-modern':'Dark Modern', 'light-classic':'Light Classic', 'warm-luxury':'Warm Luxury', 'corporate-navy':'Corporate Navy', 'nature-green':'Nature Green', 'waterview-classic':'Waterview Classic' };
+        const formRows = (listId) => Array.from(document.querySelectorAll(`#${listId} .feed-row`)).map(r => Array.from(r.querySelectorAll('input')).map(i => i.value.trim())).filter(r => r.some(Boolean));
+        const layoutHas = (prefix) => (currentLayout || []).some(w => w.id === prefix || w.id.startsWith(prefix + '_'));
+        const activeNotices = () => {
+            const today = localToday();
+            return (allNotices || []).filter(n => n.active && !(n.start_date && n.start_date > today) && !(n.end_date && n.end_date < today))
+                .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+        };
+        const loopText = () => {
+            const per = parseInt(val('sSlideDuration')) || 12, n = activeNotices().length, t = per * n;
+            if (!n) return 'No notices are on the TVs right now.';
+            return `${n} notice${n === 1 ? ' is' : 's are'} on the TVs now, so the whole loop takes about ${t >= 60 ? Math.floor(t / 60) + ' min ' : ''}${t % 60 ? t % 60 + ' s' : ''}.`;
+        };
+        const SET_TILES = [
+            { id:'ticker', ic:'📜', t:'Change the scrolling message', d:'The line of text that scrolls along the bottom of the TVs.', k:'ticker scrolling message bottom banner text website info',
+              now: () => { const msgs = getTickerMessages();
+                  if (!checked('sShowTicker') && val('sDisplayTheme') !== 'waterview-classic') return 'Turned off';
+                  if (val('sTickerMode') === 'news') return 'News headlines';
+                  return msgs.length ? `"${msgs[0]}"${msgs.length > 1 ? ` + ${msgs.length - 1} more` : ''}` : 'No message yet'; } },
+            { id:'contacts', ic:'📞', t:'Update phone numbers', d:'The numbers residents see in the Contacts box on the TVs.', k:'phone numbers contacts emergency manager concierge police',
+              now: () => { const r = formRows('contactList'); return `${r.length} number${r.length === 1 ? '' : 's'}${r[0] ? ' · ' + r.map(x => x[0].replace(/:$/, '')).join(', ') : ''}`; },
+              warn: () => !layoutHas('emergency_contacts') ? 'Not on the TVs — the Contacts box isn\'t in the layout' : '' },
+            { id:'look', ic:'🎨', t:'Change colours or size', d:'The theme, and how big everything is on the TVs.', k:'theme colour color look style dark light zoom size bigger smaller',
+              now: () => `${THEME_NAMES[val('sDisplayTheme')] || val('sDisplayTheme')} theme · size ${Math.round((parseFloat(val('sDisplayZoom')) || 1) * 100)}%` },
+            { id:'onscreen', ic:'🧩', t:'Show or hide clock, weather, news', d:'Which boxes are on the screen.', k:'clock weather news contacts notice list widgets show hide layout boxes',
+              now: () => [checked('sShowWeather') && val('sDisplayTheme') !== 'waterview-classic' ? '🌤️ Weather (top bar)' : '', ...layoutLabels()].filter(Boolean).join(', ') || 'Nothing in the layout' },
+            { id:'timing', ic:'⏱️', t:'How long notices stay up', d:'How long each notice is on screen before the next one.', k:'timing seconds duration slide video speed fade how long',
+              now: () => `${parseInt(val('sSlideDuration')) || 12} seconds each · videos ${parseInt(val('sVideoDuration')) ? val('sVideoDuration') + ' s' : 'play in full'}` },
+            { id:'building', ic:'🏢', t:'Building name & logo', d:'Shown at the top of every TV.', k:'building name logo company management',
+              now: () => `${val('sBuildingName') || 'No name'} · logo ${val('sLogoSize')}%` },
+            { id:'weather', ic:'🌤️', t:'Weather location', d:'Where the weather on the TVs is for.', k:'weather location city town temperature celsius fahrenheit',
+              now: () => `${val('sWeatherLocation') || 'Not set'} · ${val('sWeatherUnits') === 'imperial' ? '°F' : '°C'}`,
+              warn: () => !layoutHas('weather') && (!checked('sShowWeather') || val('sDisplayTheme') === 'waterview-classic') ? 'Not on the TVs — turned off, and no Weather box in the layout' : '' },
+            { id:'news', ic:'📰', t:'News sources', d:'Where the news headlines come from.', k:'news rss cbc chch feeds headlines qr sources',
+              now: () => formRows('feedList').map(r => r[0]).join(' + ') || 'No news sources' },
+            { id:'tvtools', ic:'⚡', t:'Restart TVs, cache & backup', d:'These buttons act straight away.', sa:true, instant:true, k:'reboot restart frozen stuck cache backup restore export tv',
+              now: () => document.getElementById('lastRebootRequest')?.textContent || 'Restart all TVs, clear cache, backup' },
+            { id:'ai', ic:'✨', t:'AI writer & photo keys', d:'Keys for writing notices and designing posters with AI.', sa:true, k:'ai gemini groq openai deepseek pixabay keys api poster',
+              now: () => { const p = val('sAiProvider'); const key = { gemini:'sGeminiApiKey', groq:'sGroqApiKey', openai:'sOpenaiApiKey', deepseek:'sDeepseekApiKey' }[p];
+                  return `${document.querySelector('#sAiProvider option:checked')?.textContent.split(' (')[0] || p} · ${val(key) ? '✓ key saved' : 'no key yet'} · Pixabay ${val('sPixabayApiKey') ? '✓' : '—'}`; } },
+            { id:'admins', ic:'🔐', t:'Super admins & text sizes', d:'Who sees everything, and manual text sizes.', sa:true, k:'super admin emails access people font text size pixels',
+              now: () => { const n = val('sSuperAdminEmails').split(',').map(e => e.trim()).filter(Boolean).length;
+                  const custom = ['sFsHeaderPx','sFsNoticePx','sFsNewsPx','sFsContactsPx','sFsTickerPx'].some(id => parseInt(val(id)));
+                  return `${n} super admin${n === 1 ? '' : 's'} · text sizes ${custom ? 'set by hand' : 'automatic'}`; } },
+        ];
+        function layoutLabels() {
+            return (currentLayout || []).map(w => {
+                const def = WIDGET_DEFS[w.id.startsWith('news_') ? 'news' : w.id];
+                if (!def) return '';
+                if (w.id.startsWith('news_')) { const f = formRows('feedList')[parseInt(w.id.split('_')[1])]; return `${def.icon} News${f ? ' (' + f[0] + ')' : ''}`; }
+                return `${def.icon} ${def.label}`;
+            }).filter(Boolean);
+        }
+
+        window.renderSettingTiles = () => {
+            const box = document.getElementById('setTiles');
+            if (!box) return;
+            const q = (document.getElementById('setSearch')?.value || '').toLowerCase().trim();
+            const words = q.split(/\s+/).filter(Boolean);
+            const tiles = SET_TILES.filter(t => !words.length || words.every(w => (t.t + ' ' + t.k).toLowerCase().includes(w)));
+            box.innerHTML = tiles.map(t => {
+                let now = ''; let warn = '';
+                try { now = t.now(); warn = t.warn ? t.warn() : ''; } catch (e) { now = ''; }
+                return `<button type="button" class="set-tile${t.sa ? ' sa-only' : ''}" onclick="openSetting('${t.id}')">
+                    <span class="st-ic">${t.ic}</span><span class="st-t">${t.t}${t.sa ? ' 🔒' : ''}</span>
+                    <span class="st-now${warn ? ' warn' : ''}">${escapeHtml(warn || now)}</span></button>`;
+            }).join('') || '<div class="set-empty">Nothing matches — try another word, like "phone" or "logo".</div>';
+            // only super-admin cards matched → regular admins would see an empty grid
+            if (tiles.length && !isSuperAdmin && tiles.every(t => t.sa)) box.innerHTML += '<div class="set-empty">Nothing matches — try another word, like "phone" or "logo".</div>';
+        };
+
+        let openSettingId = null, settingSnapshot = null;
+        window.openSetting = (id) => {
+            const tile = SET_TILES.find(t => t.id === id);
+            const sec = document.querySelector(`#setSections .set-sec[data-sec="${id}"]`);
+            if (!tile || !sec) return;
+            if (openSettingId) closeSetting(false);
+            openSettingId = id;
+            settingSnapshot = JSON.stringify(settings);
+            document.getElementById('setModalTitle').textContent = `${tile.ic} ${tile.t}`;
+            document.getElementById('setModalDesc').textContent = tile.d;
+            document.getElementById('setModalSlot').appendChild(sec);
+            document.getElementById('setCancelBtn').style.display = tile.instant ? 'none' : '';
+            document.getElementById('setDoneBtn').textContent = tile.instant ? 'Close' : '✓ Done';
+            refreshSectionNotes();
+            document.getElementById('setModal').classList.add('active');
+            renderSettingsPreview();
+            setTimeout(() => sec.querySelector('input:not([type=hidden]):not([type=checkbox]):not([type=file]),select')?.focus({ preventScroll: true }), 50);
+        };
+
+        window.closeSetting = async (save) => {
+            const id = openSettingId;
+            if (!id) return;
+            const tile = SET_TILES.find(t => t.id === id);
+            if (save && !tile.instant) {
+                const btn = document.getElementById('setDoneBtn');
+                btn.disabled = true; btn.textContent = 'Saving…';
+                const ok = await window.saveAllSettings();
+                btn.disabled = false; btn.textContent = '✓ Done';
+                if (!ok) return; // keep the window open so nothing typed is lost
+            } else if (!save && !tile.instant && settingSnapshot) {
+                // Cancel: put the form back to the last saved settings (logo uploads are saved straight away, so keep those)
+                const keep = { logo_url: settings.logo_url, logo_path: settings.logo_path, pi_reboot_requested_at: settings.pi_reboot_requested_at, cache_version: settings.cache_version };
+                settings = { ...JSON.parse(settingSnapshot), ...keep };
+                const layoutNow = currentLayout;
+                populateSettings(settings);
+                currentLayout = layoutNow; renderLayoutEditor();
+                const geo = document.getElementById('geoResult'); if (geo) geo.style.display = 'none';
+            }
+            const sec = document.querySelector(`#setModalSlot .set-sec[data-sec="${id}"]`);
+            if (sec) document.getElementById('setSections').appendChild(sec);
+            document.getElementById('setModal').classList.remove('active');
+            openSettingId = null; settingSnapshot = null;
+            renderSettingTiles(); renderSettingsPreview();
+        };
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && openSettingId) closeSetting(false); });
+
+        function refreshSectionNotes() {
+            const isWv = val('sDisplayTheme') === 'waterview-classic';
+            const wn = document.getElementById('tickerWaterviewNote'); if (wn) wn.style.display = isWv ? '' : 'none';
+            const cn = document.getElementById('contactsLayoutNote');
+            if (cn) cn.innerHTML = layoutHas('emergency_contacts') ? 'These show in the Contacts box on the TVs. Leave a row empty to remove it.'
+                : '⚠️ The Contacts box isn\'t in your layout, so these numbers aren\'t on the TVs right now. Add it in the <b>Layout</b> tab.';
+            const ls = document.getElementById('setLayoutSummary'); if (ls) ls.innerHTML = layoutLabels().map(l => `<span>${escapeHtml(l)}</span>`).join('') || '<span>Nothing yet</span>';
+            const lt = document.getElementById('setLoopText'); if (lt) lt.textContent = loopText();
+        }
+
+        // ── Live mini-TV: reads the form as it is now (not the saved settings) ──
+        const TVP_THEMES = {
+            'dark-modern':      { bg:'#0a0e1a', card:'#111827', accent:'#3b82f6', text:'#e5e7eb' },
+            'light-classic':    { bg:'#f0f2f5', card:'#ffffff', accent:'#2563eb', text:'#0e1628' },
+            'warm-luxury':      { bg:'#1a1410', card:'#241e17', accent:'#d4a553', text:'#f3e7d3' },
+            'corporate-navy':   { bg:'#0c1829', card:'#132035', accent:'#4da6ff', text:'#e2ecf7' },
+            'nature-green':     { bg:'#0a1a12', card:'#112118', accent:'#34d399', text:'#dcf5e9' },
+            'waterview-classic':{ bg:'linear-gradient(135deg,#0a3d6b,#0891b2)', card:'rgba(255,255,255,.13)', accent:'#0d1f3c', text:'#ffffff' },
+        };
+        let previewTimer = null;
+        function schedulePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(() => { renderSettingsPreview(); if (openSettingId) refreshSectionNotes(); }, 60); }
+        function renderSettingsPreview() {
+            const screens = document.querySelectorAll('.tvp');
+            if (!screens.length) return;
+            const themeId = val('sDisplayTheme') || 'dark-modern', th = TVP_THEMES[themeId] || TVP_THEMES['dark-modern'];
+            const wv = themeId === 'waterview-classic';
+            const z = parseFloat(val('sDisplayZoom')) || 1;
+            const f = (cqw) => `font-size:${(cqw * z).toFixed(2)}cqw`;
+            const name = escapeHtml(val('sBuildingName') || 'Building');
+            const logoImg = document.getElementById('logoPreview');
+            const logoSrc = logoImg && logoImg.style.display !== 'none' && logoImg.getAttribute('src') ? logoImg.src : '';
+            const ls = (5.5 * (parseInt(val('sLogoSize')) || 100) / 100 * z).toFixed(2);
+            const logo = logoSrc ? `<img class="tvp-logo" src="${logoSrc}" style="width:${ls}cqw;height:${ls}cqw;background:transparent" alt="">`
+                : `<span class="tvp-logo" style="width:${ls}cqw;height:${ls}cqw;${f(2.4)}">${name[0] || 'W'}</span>`;
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-CA', { hour:'numeric', minute:'2-digit' });
+            const notices = activeNotices();
+            const feeds = formRows('feedList'), contacts = formRows('contactList');
+            const card = `background:${th.card};`;
+            const widgets = (currentLayout || []).map(w => {
+                const pos = `left:${w.x / 12 * 100}%;top:${w.y / 8 * 100}%;width:calc(${w.w / 12 * 100}% - .8cqw);height:calc(${w.h / 8 * 100}% - .8cqw);${card}`;
+                if (w.id === 'notices') {
+                    const n = notices[0];
+                    if (!n) return `<div class="tvp-w n" style="${pos}${f(2)}">No notices on right now</div>`;
+                    const ft = n.file_type || getFileType(n.media_url || '');
+                    if (n.media_url && ft === 'image') return `<div class="tvp-w n" style="${pos}"><img src="${n.media_url}" alt=""></div>`;
+                    const icon = ft === 'video' ? '🎬' : ft === 'pdf' ? '📄' : (CATEGORIES[n.category] || CATEGORIES.general).icon;
+                    return `<div class="tvp-w n" style="${pos}"><div style="${f(7)}">${icon}</div><div style="${f(2.4)};font-weight:800;padding:0 2cqw">${escapeHtml(n.title || '')}</div></div>`;
+                }
+                if (w.id === 'notice_list') return `<div class="tvp-w" style="${pos}${f(1.5)}"><div class="wt">📋 All Notices</div>${notices.slice(0, 6).map(n => `<div class="ln">• ${escapeHtml(n.title || '')}</div>`).join('')}</div>`;
+                if (w.id.startsWith('news_')) {
+                    const fd = feeds[parseInt(w.id.split('_')[1])];
+                    return `<div class="tvp-w" style="${pos}${f(1.5)}"><div class="wt">📰 ${escapeHtml(fd ? fd[0] : 'News')}</div><div style="flex:1;border-radius:.8cqw;background:${th.accent};opacity:.25"></div><div class="ln">Latest headlines…</div></div>`;
+                }
+                if (w.id === 'emergency_contacts') return `<div class="tvp-w" style="${pos}${f(1.45)}"><div class="wt">🚨 Contacts</div>${contacts.map(c => `<div class="ln" style="display:flex;justify-content:space-between;gap:1cqw"><span style="overflow:hidden;text-overflow:ellipsis">${escapeHtml(c[0] || '')}</span><b>${escapeHtml(c[1] || '')}</b></div>`).join('')}</div>`;
+                if (w.id === 'weather') return `<div class="tvp-w" style="${pos}${f(1.6)}"><div class="wt">${escapeHtml((val('sWeatherLocation') || 'Weather').split(',')[0])}</div><div style="${f(4)}">⛅</div><div class="ln">Weather &amp; forecast</div></div>`;
+                if (w.id === 'clock') return `<div class="tvp-w n" style="${pos}"><div style="${f(4)};font-weight:800">${time}</div><div style="${f(1.5)};opacity:.7">${now.toLocaleDateString('en-CA', { weekday:'long', month:'long', day:'numeric' })}</div></div>`;
+                return '';
+            }).join('');
+            const showTick = wv || checked('sShowTicker');
+            const msgs = getTickerMessages();
+            const tickText = val('sTickerMode') === 'custom' && msgs.length ? msgs.map(escapeHtml).join(' &nbsp;◆&nbsp; ') : (feeds[0] ? escapeHtml(feeds[0][0]) + ' · Latest headlines scroll here ◆ …' : 'News headlines scroll here');
+            const tickLabel = val('sTickerMode') === 'custom' && msgs.length ? 'INFO' : 'NEWS';
+            const header = wv ? '' : `<div class="tvp-hdr" style="${f(2.4)}">${logo}<div style="min-width:0;flex:1"><div class="tvp-name">${name}</div><div class="tvp-co" style="${f(1.5)}">${escapeHtml(val('sManagementCompany'))}</div></div>${checked('sShowWeather') ? `<div style="${f(1.7)};display:flex;align-items:center;gap:.8cqw;padding:0 1.5cqw;border-right:1px solid ${th.text}22"><span style="${f(3)}">⛅</span><span><b>--°</b><br><span style="opacity:.7">${escapeHtml((val('sWeatherLocation') || '').split(',')[0])}</span></span></div>` : ''}<div style="text-align:right"><div style="${f(1.4)};opacity:.7">${now.toLocaleDateString('en-CA', { weekday:'short', month:'short', day:'numeric' })}</div><div style="font-weight:800">${time}</div></div></div>`;
+            const bottom = wv ? `<div class="tvp-tick" style="background:${th.accent};height:${(6 * z).toFixed(2)}cqw;${f(1.6)}">${logo}<span style="font-weight:800">${name}</span><span style="font-weight:800">${time}</span>${showTick ? `<b>${tickLabel}</b><span>${tickText}</span>` : ''}</div>`
+                : (showTick ? `<div class="tvp-tick" style="background:${th.accent};height:${(4 * z).toFixed(2)}cqw;${f(1.6)}"><b>${tickLabel}</b><span>${tickText}</span></div>` : '');
+            const html = `${header}<div class="tvp-grid" style="${wv ? 'margin-top:1.6cqw' : ''}">${widgets}</div>${bottom}`;
+            screens.forEach(s => { s.style.background = th.bg; s.style.color = th.text; s.innerHTML = html; });
+        }
+        ['panel-settings', 'setModal'].forEach(id => {
+            const el = document.getElementById(id);
+            ['input', 'change', 'click'].forEach(ev => el?.addEventListener(ev, schedulePreview));
+        });
+        setInterval(() => { if (document.getElementById('panel-settings')?.classList.contains('active')) renderSettingsPreview(); }, 30000);
 
         // ═══ Layout Editor ═══
         function renderLayoutEditor() {
